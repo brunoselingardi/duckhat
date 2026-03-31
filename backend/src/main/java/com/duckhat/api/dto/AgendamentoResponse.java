@@ -1,0 +1,29 @@
+package com.duckhat.api.dto;
+
+import com.duckhat.api.entity.Agendamento;
+
+import java.time.LocalDateTime;
+
+public record AgendamentoResponse(
+        Long id,
+        Long clienteId,
+        Long servicoId,
+        LocalDateTime inicioEm,
+        LocalDateTime fimEm,
+        String status,
+        String observacoes,
+        LocalDateTime criadoEm
+) {
+    public static AgendamentoResponse fromEntity(Agendamento agendamento) {
+        return new AgendamentoResponse(
+                agendamento.getId(),
+                agendamento.getCliente().getId(),
+                agendamento.getServico().getId(),
+                agendamento.getInicioEm(),
+                agendamento.getFimEm(),
+                agendamento.getStatus(),
+                agendamento.getObservacoes(),
+                agendamento.getCriadoEm()
+        );
+    }
+}
