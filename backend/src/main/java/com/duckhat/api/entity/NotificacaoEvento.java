@@ -4,8 +4,10 @@ import com.duckhat.api.entity.enums.CanalNotificacao;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import com.duckhat.api.entity.enums.StatusNotificacao;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;@Entity
 
-@Entity
 @Table(name = "notificacao_eventos")
 public class NotificacaoEvento {
 
@@ -27,8 +29,9 @@ public class NotificacaoEvento {
     @Column(name = "enviado_em")
     private LocalDateTime enviadoEm;
 
-    @Column(nullable = false, length = 10)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusNotificacao status;
 
     public NotificacaoEvento() {
     }
@@ -52,11 +55,9 @@ public class NotificacaoEvento {
     public LocalDateTime getEnviadoEm() {
         return enviadoEm;
     }
-
-    public String getStatus() {
+    public StatusNotificacao getStatus() {
         return status;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
@@ -77,7 +78,7 @@ public class NotificacaoEvento {
         this.enviadoEm = enviadoEm;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StatusNotificacao status) {
         this.status = status;
     }
 }

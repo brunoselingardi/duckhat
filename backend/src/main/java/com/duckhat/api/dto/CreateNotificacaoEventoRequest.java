@@ -4,24 +4,20 @@ import com.duckhat.api.entity.enums.CanalNotificacao;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
+import com.duckhat.api.entity.enums.StatusNotificacao;
 import java.time.LocalDateTime;
 
 public record CreateNotificacaoEventoRequest(
 
-        @NotNull
-        Long agendamentoId,
+    @NotNull Long agendamentoId,
 
-        @NotNull
-        CanalNotificacao canal,
+    @NotNull CanalNotificacao canal,
 
-        @NotNull
-        LocalDateTime agendadoPara,
+    @NotNull LocalDateTime agendadoPara,
 
-        LocalDateTime enviadoEm,
+    LocalDateTime enviadoEm,
 
-        @NotBlank
-        @Size(max = 10)
-        String status
+    @NotNull StatusNotificacao status
+
 ) {
 }

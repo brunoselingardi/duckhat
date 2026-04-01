@@ -7,6 +7,7 @@ import com.duckhat.api.entity.NotificacaoEvento;
 import com.duckhat.api.entity.enums.CanalNotificacao;
 import com.duckhat.api.repository.AgendamentoRepository;
 import com.duckhat.api.repository.NotificacaoEventoRepository;
+import com.duckhat.api.entity.enums.StatusNotificacao;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,88 +19,76 @@ import java.util.Set;
 @Service
 public class NotificacaoEventoService {
 
-    private static final Set<String> STATUS_VALIDOS = Set.of("PENDENTE", "ENVIADO", "FALHA");
+  private final NotificacaoEventoRepository notificacaoEventoRepository;
+  private final AgendamentoRepository agendamentoRepository;
 
-    private final NotificacaoEventoRepository notificacaoEventoRepository;
-    private final AgendamentoRepository agendamentoRepository;
+  public NotificacaoEventoService(NotificacaoEventoRepository notificacaoEventoRepository,
+      AgendamentoRepository agendamentoRepository) {
+    this.notificacaoEventoRepository = notificacaoEventoRepository;
+    this.agendamentoRepository = agendamentoRepository;
+  }
 
-    public NotificacaoEventoService(NotificacaoEventoRepository notificacaoEventoRepository,
-                                    AgendamentoRepository agendamentoRepository) {
-        this.notificacaoEventoRepository = notificacaoEventoRepository;
-        this.agendamentoRepository = agendamentoRepository;
+  @Transactional
+  public NotificacaoEventoResponse criar(CreateNotificacaoEventoRequest request) {
+    Agendamento agendamento = agendamentoRepository.findById(request.agendamentoId())
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Agendamento não encontrado"));
+
+    if (request.canal() == null) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Canal inválido. Use APP, EMAIL ou SMS");
     }
 
-    @Transactional
-    public NotificacaoEventoResponse criar(CreateNotificacaoEventoRequest request) {
-        Agendamento agendamento = agendamentoRepository.findById(request.agendamentoId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Agendamento não encontrado"
-                ));
+    NotificacaoEvento notificacaoEvento = new NotificacaoEvento();
+    notificacaoEvento.setAgendamento(agendamento);
+    notificacaoEvento.setCanal(request.canal());
+    notificacaoEvento.setAgendadoPara(request.agendadoPara());
+    notificacaoEvento.setEnviadoEm(request.enviadoEm());
+    notificacaoEvento.setStatus(request.status());
 
-        if (request.canal() == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Canal inválido. Use APP, EMAIL ou SMS"
-            );
-        }
+    NotificacaoEvento salva = notificacaoEventoRepository.save(notificacaoEvento);
+    return NotificacaoEventoResponse.fromEntity(salva);
+  }
 
-        if (!STATUS_VALIDOS.contains(request.status())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Status inválido. Use PENDENTE, ENVIADO ou FALHA"
-            );
-        }
+  @Transactional(readOnly = true)
+  public List<NotificacaoEventoResponse> listarTodas() {
+    return notificacaoEventoRepository.findAll()
+        .stream()
+        .map(NotificacaoEventoResponse::fromEntity)
+        .toList();
+  }
 
-        NotificacaoEvento notificacaoEvento = new NotificacaoEvento();
-        notificacaoEvento.setAgendamento(agendamento);
-        notificacaoEvento.setCanal(request.canal());
-        notificacaoEvento.setAgendadoPara(request.agendadoPara());
-        notificacaoEvento.setEnviadoEm(request.enviadoEm());
-        notificacaoEvento.setStatus(request.status());
+  @Transactional(readOnly = true)
+  public NotificacaoEventoResponse buscarPorId(Long id) {
+    NotificacaoEvento notificacaoEvento = notificacaoEventoRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Notificação não encontrada"));
 
-        NotificacaoEvento salva = notificacaoEventoRepository.save(notificacaoEvento);
-        return NotificacaoEventoResponse.fromEntity(salva);
-    }
+    return NotificacaoEventoResponse.fromEntity(notificacaoEvento);
+  }
 
-    @Transactional(readOnly = true)
-    public List<NotificacaoEventoResponse> listarTodas() {
-        return notificacaoEventoRepository.findAll()
-                .stream()
-                .map(NotificacaoEventoResponse::fromEntity)
-                .toList();
-    }
+  @Transactional(readOnly = true)
+  public List<NotificacaoEventoResponse> listarPorAgendamento(Long agendamentoId) {
+    return notificacaoEventoRepository.findByAgendamentoId(agendamentoId)
+        .stream()
+        .map(NotificacaoEventoResponse::fromEntity)
+        .toList();
+  }
 
-    @Transactional(readOnly = true)
-    public NotificacaoEventoResponse buscarPorId(Long id) {
-        NotificacaoEvento notificacaoEvento = notificacaoEventoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Notificação não encontrada"
-                ));
+  @Transactional(readOnly = true)
+  public List<NotificacaoEventoResponse> listarPorStatus(StatusNotificacao status) {
+    return notificacaoEventoRepository.findByStatus(status)
+        .stream()
+        .map(NotificacaoEventoResponse::fromEntity)
+        .toList();
+  }
 
-        return NotificacaoEventoResponse.fromEntity(notificacaoEvento);
-    }
-
-    @Transactional(readOnly = true)
-    public List<NotificacaoEventoResponse> listarPorAgendamento(Long agendamentoId) {
-        return notificacaoEventoRepository.findByAgendamentoId(agendamentoId)
-                .stream()
-                .map(NotificacaoEventoResponse::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<NotificacaoEventoResponse> listarPorStatus(String status) {
-        return notificacaoEventoRepository.findByStatus(status)
-                .stream()
-                .map(NotificacaoEventoResponse::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<NotificacaoEventoResponse> listarPorCanal(CanalNotificacao canal) {
-        return notificacaoEventoRepository.findByCanal(canal)
-                .stream()
-                .map(NotificacaoEventoResponse::fromEntity)
-                .toList();
-    }
+  @Transactional(readOnly = true)
+  public List<NotificacaoEventoResponse> listarPorCanal(CanalNotificacao canal) {
+    return notificacaoEventoRepository.findByCanal(canal)
+        .stream()
+        .map(NotificacaoEventoResponse::fromEntity)
+        .toList();
+  }
 }
