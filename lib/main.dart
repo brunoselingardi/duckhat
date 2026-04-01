@@ -1,3 +1,4 @@
+import 'package:duckhat/login.dart';
 import 'package:flutter/material.dart';
 import 'home.dart';
 
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Meu App',
       debugShowCheckedModeBanner: false,
-      home: const Home(),
+      home: const LoginScreen(),
     );
   }
 }
