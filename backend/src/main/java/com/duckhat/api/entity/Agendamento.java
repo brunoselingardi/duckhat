@@ -3,6 +3,9 @@ package com.duckhat.api.entity;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import com.duckhat.api.entity.enums.StatusAgendamento;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
 @Entity
 @Table(name = "agendamentos")
@@ -29,9 +32,10 @@ public class Agendamento {
 
     @Column(name = "fim_at", nullable = false)
     private LocalDateTime fimEm;
-
-    @Column(nullable = false, length = 30)
-    private String status;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StatusAgendamento status;
 
     @Column(columnDefinition = "TEXT")
     private String observacoes;
@@ -66,10 +70,11 @@ public class Agendamento {
         return fimEm;
     }
 
-    public String getStatus() {
-        return status;
+    public StatusAgendamento getStatus() {
+    return status;
     }
 
+ 
     public String getObservacoes() {
         return observacoes;
     }
@@ -102,9 +107,10 @@ public class Agendamento {
         this.fimEm = fimEm;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(StatusAgendamento status) {
         this.status = status;
     }
+
 
     public void setObservacoes(String observacoes) {
         this.observacoes = observacoes;

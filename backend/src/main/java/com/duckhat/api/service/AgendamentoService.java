@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import com.duckhat.api.entity.enums.StatusAgendamento;
 import java.util.List;
 
 @Service
@@ -102,12 +102,12 @@ public class AgendamentoService {
     }
 
     @Transactional(readOnly = true)
-    public List<AgendamentoResponse> listarPorStatus(String status) {
-        return agendamentoRepository.findByStatus(status)
-                .stream()
-                .map(AgendamentoResponse::fromEntity)
-                .toList();
-    }
+    public List<AgendamentoResponse> listarPorStatus(StatusAgendamento status) {
+         return agendamentoRepository.findByStatus(status)
+            .stream()
+            .map(AgendamentoResponse::fromEntity)
+            .toList();
+    } 
 
     @Transactional(readOnly = true)
     public AgendamentoResponse buscarPorId(Long id) {

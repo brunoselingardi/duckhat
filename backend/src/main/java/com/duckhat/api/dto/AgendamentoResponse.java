@@ -3,6 +3,8 @@ package com.duckhat.api.dto;
 import com.duckhat.api.entity.Agendamento;
 
 import java.time.LocalDateTime;
+import com.duckhat.api.entity.enums.StatusAgendamento;
+
 
 public record AgendamentoResponse(
         Long id,
@@ -10,7 +12,7 @@ public record AgendamentoResponse(
         Long servicoId,
         LocalDateTime inicioEm,
         LocalDateTime fimEm,
-        String status,
+        StatusAgendamento status,
         String observacoes,
         LocalDateTime criadoEm
 ) {

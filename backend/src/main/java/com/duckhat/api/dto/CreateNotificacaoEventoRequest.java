@@ -1,5 +1,6 @@
 package com.duckhat.api.dto;
 
+import com.duckhat.api.entity.enums.CanalNotificacao;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -11,9 +12,8 @@ public record CreateNotificacaoEventoRequest(
         @NotNull
         Long agendamentoId,
 
-        @NotBlank
-        @Size(max = 10)
-        String canal,
+        @NotNull
+        CanalNotificacao canal,
 
         @NotNull
         LocalDateTime agendadoPara,

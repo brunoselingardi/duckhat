@@ -3,6 +3,7 @@ package com.duckhat.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import com.duckhat.api.entity.enums.StatusAgendamento;
 
 import java.time.LocalDateTime;
 
@@ -20,9 +21,8 @@ public record CreateAgendamentoRequest(
         @NotNull
         LocalDateTime fimEm,
 
-        @NotBlank
-        @Size(max = 30)
-        String status,
+        @NotNull
+        StatusAgendamento status,
 
         @Size(max = 1000)
         String observacoes

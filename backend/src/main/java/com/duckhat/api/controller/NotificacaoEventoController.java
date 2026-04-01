@@ -2,6 +2,7 @@ package com.duckhat.api.controller;
 
 import com.duckhat.api.dto.CreateNotificacaoEventoRequest;
 import com.duckhat.api.dto.NotificacaoEventoResponse;
+import com.duckhat.api.entity.enums.CanalNotificacao;
 import com.duckhat.api.service.NotificacaoEventoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,7 @@ public class NotificacaoEventoController {
     }
 
     @GetMapping("/canal/{canal}")
-    public List<NotificacaoEventoResponse> listarPorCanal(@PathVariable String canal) {
+    public List<NotificacaoEventoResponse> listarPorCanal(@PathVariable CanalNotificacao canal) {
         return notificacaoEventoService.listarPorCanal(canal);
     }
 }

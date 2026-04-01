@@ -1,13 +1,13 @@
 package com.duckhat.api.dto;
 
 import com.duckhat.api.entity.NotificacaoEvento;
-
+import com.duckhat.api.entity.enums.CanalNotificacao;
 import java.time.LocalDateTime;
 
 public record NotificacaoEventoResponse(
         Long id,
         Long agendamentoId,
-        String canal,
+        CanalNotificacao canal,
         LocalDateTime agendadoPara,
         LocalDateTime enviadoEm,
         String status

@@ -1,5 +1,6 @@
 package com.duckhat.api.entity;
 
+import com.duckhat.api.entity.enums.CanalNotificacao;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,8 +17,9 @@ public class NotificacaoEvento {
     @JoinColumn(name = "agendamento_id", nullable = false)
     private Agendamento agendamento;
 
-    @Column(nullable = false, length = 10)
-    private String canal;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CanalNotificacao canal;
 
     @Column(name = "agendado_para", nullable = false)
     private LocalDateTime agendadoPara;
@@ -39,7 +41,7 @@ public class NotificacaoEvento {
         return agendamento;
     }
 
-    public String getCanal() {
+    public CanalNotificacao getCanal() {
         return canal;
     }
 
@@ -63,7 +65,7 @@ public class NotificacaoEvento {
         this.agendamento = agendamento;
     }
 
-    public void setCanal(String canal) {
+    public void setCanal(CanalNotificacao canal) {
         this.canal = canal;
     }
 

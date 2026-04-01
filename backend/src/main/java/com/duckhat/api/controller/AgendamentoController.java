@@ -2,6 +2,7 @@ package com.duckhat.api.controller;
 
 import com.duckhat.api.dto.AgendamentoResponse;
 import com.duckhat.api.dto.CreateAgendamentoRequest;
+import com.duckhat.api.entity.enums.StatusAgendamento;
 import com.duckhat.api.service.AgendamentoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -46,7 +47,7 @@ public class AgendamentoController {
     }
 
     @GetMapping("/status/{status}")
-    public List<AgendamentoResponse> listarPorStatus(@PathVariable String status) {
+    public List<AgendamentoResponse> listarPorStatus(@PathVariable StatusAgendamento status) {
         return agendamentoService.listarPorStatus(status);
     }
 }

@@ -4,6 +4,7 @@ import com.duckhat.api.dto.CreateNotificacaoEventoRequest;
 import com.duckhat.api.dto.NotificacaoEventoResponse;
 import com.duckhat.api.entity.Agendamento;
 import com.duckhat.api.entity.NotificacaoEvento;
+import com.duckhat.api.entity.enums.CanalNotificacao;
 import com.duckhat.api.repository.AgendamentoRepository;
 import com.duckhat.api.repository.NotificacaoEventoRepository;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,6 @@ import java.util.Set;
 @Service
 public class NotificacaoEventoService {
 
-    private static final Set<String> CANAIS_VALIDOS = Set.of("APP", "EMAIL", "SMS");
     private static final Set<String> STATUS_VALIDOS = Set.of("PENDENTE", "ENVIADO", "FALHA");
 
     private final NotificacaoEventoRepository notificacaoEventoRepository;
@@ -36,7 +36,7 @@ public class NotificacaoEventoService {
                         HttpStatus.NOT_FOUND, "Agendamento não encontrado"
                 ));
 
-        if (!CANAIS_VALIDOS.contains(request.canal())) {
+        if (request.canal() == null) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Canal inválido. Use APP, EMAIL ou SMS"
@@ -96,7 +96,7 @@ public class NotificacaoEventoService {
     }
 
     @Transactional(readOnly = true)
-    public List<NotificacaoEventoResponse> listarPorCanal(String canal) {
+    public List<NotificacaoEventoResponse> listarPorCanal(CanalNotificacao canal) {
         return notificacaoEventoRepository.findByCanal(canal)
                 .stream()
                 .map(NotificacaoEventoResponse::fromEntity)
