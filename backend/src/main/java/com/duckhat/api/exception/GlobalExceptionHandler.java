@@ -15,41 +15,45 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new LinkedHashMap<>();
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Map<String, Object> handleValidation(MethodArgumentNotValidException ex) {
+    Map<String, String> errors = new LinkedHashMap<>();
 
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            errors.put(fieldError.getField(), fieldError.getDefaultMessage());
-        }
-
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", 400);
-        body.put("error", "Validation failed");
-        body.put("fields", errors);
-
-        return body;
+    for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+      errors.put(fieldError.getField(), fieldError.getDefaultMessage());
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleUnreadable(HttpMessageNotReadableException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", 400);
-        body.put("error", "Malformed request body");
-        body.put("message", ex.getMostSpecificCause().getMessage());
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("status", 400);
+    body.put("error", "Validation failed");
+    body.put("fields", errors);
 
-        return body;
-    }
+    return body;
+  }
 
-    @ExceptionHandler(ResponseStatusException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleResponseStatusException(ResponseStatusException ex) {
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("status", ex.getStatusCode().value());
-        body.put("error", "Request failed");
-        body.put("message", ex.getReason());
-        return body;
-    }
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public Map<String, Object> handleUnreadable(HttpMessageNotReadableException ex) {
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("status", 400);
+    body.put("error", "Malformed request body");
+    body.put("message", ex.getMostSpecificCause().getMessage());
+
+    return body;
+  }
+
+  @ExceptionHandler(ResponseStatusException.class)
+  public org.springframework.http.ResponseEntity<Map<String, Object>> handleResponseStatusException(
+      ResponseStatusException ex) {
+
+    Map<String, Object> body = new LinkedHashMap<>();
+    body.put("status", ex.getStatusCode().value());
+    body.put("error", "Request failed");
+    body.put("message", ex.getReason());
+
+    return org.springframework.http.ResponseEntity
+        .status(ex.getStatusCode())
+        .body(body);
+  }
 }
