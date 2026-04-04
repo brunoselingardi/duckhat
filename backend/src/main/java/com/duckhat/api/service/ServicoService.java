@@ -17,71 +17,81 @@ import java.util.List;
 @Service
 public class ServicoService {
 
-    private final ServicoRepository servicoRepository;
-    private final UsuarioRepository usuarioRepository;
+  private final ServicoRepository servicoRepository;
+  private final UsuarioRepository usuarioRepository;
 
-    public ServicoService(ServicoRepository servicoRepository, UsuarioRepository usuarioRepository) {
-        this.servicoRepository = servicoRepository;
-        this.usuarioRepository = usuarioRepository;
+  public ServicoService(ServicoRepository servicoRepository, UsuarioRepository usuarioRepository) {
+    this.servicoRepository = servicoRepository;
+    this.usuarioRepository = usuarioRepository;
+  }
+
+  @Transactional
+  public ServicoResponse criar(CreateServicoRequest request, Usuario prestador) {
+    if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O usuário autenticado não é um prestador");
+    }
+    Servico servico = new Servico();
+    servico.setPrestador(prestador);
+    servico.setNome(request.nome());
+    servico.setDescricao(request.descricao());
+    servico.setDuracaoMin(request.duracaoMin());
+    servico.setPreco(request.preco());
+    servico.setAtivo(request.ativo());
+
+    Servico salvo = servicoRepository.save(servico);
+    return ServicoResponse.fromEntity(salvo);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ServicoResponse> listarTodos(Usuario prestador) {
+    if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O usuário autenticado não é um prestador");
     }
 
-    @Transactional
-    public ServicoResponse criar(CreateServicoRequest request) {
-        Usuario prestador = usuarioRepository.findById(request.prestadorId())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Prestador não encontrado"
-                ));
+    return servicoRepository.findByPrestadorId(prestador.getId())
+        .stream()
+        .map(ServicoResponse::fromEntity)
+        .toList();
+  }
 
-        if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "O usuário informado não é um prestador"
-            );
-        }
+  @Transactional(readOnly = true)
+  public List<ServicoResponse> listarAtivos() {
+    return servicoRepository.findByAtivoTrue()
+        .stream()
+        .map(ServicoResponse::fromEntity)
+        .toList();
+  }
 
-        Servico servico = new Servico();
-        servico.setPrestador(prestador);
-        servico.setNome(request.nome());
-        servico.setDescricao(request.descricao());
-        servico.setDuracaoMin(request.duracaoMin());
-        servico.setPreco(request.preco());
-        servico.setAtivo(request.ativo());
+  @Transactional(readOnly = true)
+  public List<ServicoResponse> listarPorPrestador(Long prestadorId) {
+    return servicoRepository.findByPrestadorId(prestadorId)
+        .stream()
+        .map(ServicoResponse::fromEntity)
+        .toList();
+  }
 
-        Servico salvo = servicoRepository.save(servico);
-        return ServicoResponse.fromEntity(salvo);
+  @Transactional(readOnly = true)
+  public ServicoResponse buscarPorId(Long id, Usuario prestador) {
+    if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O usuário autenticado não é um prestador");
     }
 
-    @Transactional(readOnly = true)
-    public List<ServicoResponse> listarTodos() {
-        return servicoRepository.findAll()
-                .stream()
-                .map(ServicoResponse::fromEntity)
-                .toList();
+    Servico servico = servicoRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Serviço não encontrado"));
+
+    if (!servico.getPrestador().getId().equals(prestador.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "Você não pode acessar um serviço que não é seu");
     }
 
-    @Transactional(readOnly = true)
-    public List<ServicoResponse> listarAtivos() {
-        return servicoRepository.findByAtivoTrue()
-                .stream()
-                .map(ServicoResponse::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<ServicoResponse> listarPorPrestador(Long prestadorId) {
-        return servicoRepository.findByPrestadorId(prestadorId)
-                .stream()
-                .map(ServicoResponse::fromEntity)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
-    public ServicoResponse buscarPorId(Long id) {
-        Servico servico = servicoRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "Serviço não encontrado"
-                ));
-
-        return ServicoResponse.fromEntity(servico);
-    }
+    return ServicoResponse.fromEntity(servico);
+  }
 }

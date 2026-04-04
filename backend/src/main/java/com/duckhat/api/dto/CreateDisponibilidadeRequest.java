@@ -6,19 +6,11 @@ import java.time.LocalTime;
 
 public record CreateDisponibilidadeRequest(
 
-        @NotNull
-        Long prestadorId,
+    @NotNull Byte diaSemana,
 
-        @NotNull
-        Byte diaSemana,
+    @NotNull LocalTime horaInicio,
 
-        @NotNull
-        LocalTime horaInicio,
+    @NotNull LocalTime horaFim,
 
-        @NotNull
-        LocalTime horaFim,
-
-        @NotNull
-        Boolean ativo
-) {
+    @NotNull Boolean ativo) {
 }

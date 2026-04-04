@@ -13,4 +13,10 @@ public interface NotificacaoEventoRepository extends JpaRepository<NotificacaoEv
   List<NotificacaoEvento> findByStatus(StatusNotificacao status);
 
   List<NotificacaoEvento> findByCanal(CanalNotificacao canal);
+
+  List<NotificacaoEvento> findByAgendamentoClienteId(Long clienteId);
+
+  List<NotificacaoEvento> findByAgendamentoClienteIdAndStatus(Long clienteId, StatusNotificacao status);
+
+  List<NotificacaoEvento> findByAgendamentoClienteIdAndCanal(Long clienteId, CanalNotificacao canal);
 }

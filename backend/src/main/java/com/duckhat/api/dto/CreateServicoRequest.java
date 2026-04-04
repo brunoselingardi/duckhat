@@ -10,25 +10,13 @@ import java.math.BigDecimal;
 
 public record CreateServicoRequest(
 
-        @NotNull
-        Long prestadorId,
+    @NotBlank @Size(max = 120) String nome,
 
-        @NotBlank
-        @Size(max = 120)
-        String nome,
+    @Size(max = 1000) String descricao,
 
-        @Size(max = 1000)
-        String descricao,
+    @NotNull @Positive Integer duracaoMin,
 
-        @NotNull
-        @Positive
-        Integer duracaoMin,
+    @NotNull @DecimalMin(value = "0.0", inclusive = false) BigDecimal preco,
 
-        @NotNull
-        @DecimalMin(value = "0.0", inclusive = false)
-        BigDecimal preco,
-
-        @NotNull
-        Boolean ativo
-) {
+    @NotNull Boolean ativo) {
 }
