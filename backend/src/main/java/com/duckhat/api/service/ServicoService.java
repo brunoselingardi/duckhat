@@ -94,4 +94,26 @@ public class ServicoService {
 
     return ServicoResponse.fromEntity(servico);
   }
+
+  @Transactional(readOnly = true)
+  public ServicoResponse buscarAtivoPorIdPublico(Long id) {
+    Servico servico = servicoRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Serviço não encontrado"));
+
+    if (!Boolean.TRUE.equals(servico.getAtivo())) {
+      throw new ResponseStatusException(
+          HttpStatus.NOT_FOUND, "Serviço não encontrado");
+    }
+
+    return ServicoResponse.fromEntity(servico);
+  }
+
+  @Transactional(readOnly = true)
+  public List<ServicoResponse> buscarAtivosPorNomePublico(String nome) {
+    return servicoRepository.findByAtivoTrueAndNomeContainingIgnoreCase(nome)
+        .stream()
+        .map(ServicoResponse::fromEntity)
+        .toList();
+  }
 }

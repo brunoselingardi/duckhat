@@ -5,6 +5,7 @@ import com.duckhat.api.dto.CreateAvaliacaoRequest;
 import com.duckhat.api.entity.Agendamento;
 import com.duckhat.api.entity.Avaliacao;
 import com.duckhat.api.entity.Usuario;
+import com.duckhat.api.entity.enums.StatusAgendamento;
 import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.AgendamentoRepository;
 import com.duckhat.api.repository.AvaliacaoRepository;
@@ -44,7 +45,11 @@ public class AvaliacaoService {
           HttpStatus.FORBIDDEN,
           "Você não pode avaliar um agendamento que não é seu");
     }
-
+    if (agendamento.getStatus() != StatusAgendamento.CONCLUIDO) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Só é possível avaliar um agendamento concluído");
+    }
     if (avaliacaoRepository.existsByAgendamentoId(request.agendamentoId())) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,

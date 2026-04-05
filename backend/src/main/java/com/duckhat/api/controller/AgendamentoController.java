@@ -35,6 +35,12 @@ public class AgendamentoController {
     return agendamentoService.listarTodos(usuario);
   }
 
+  @GetMapping("/prestador")
+  public List<AgendamentoResponse> listarParaPrestador(
+      @AuthenticationPrincipal Usuario usuario) {
+    return agendamentoService.listarParaPrestador(usuario);
+  }
+
   @GetMapping("/{id}")
   public AgendamentoResponse buscarPorId(
       @PathVariable Long id,
@@ -61,5 +67,26 @@ public class AgendamentoController {
       @PathVariable StatusAgendamento status,
       @AuthenticationPrincipal Usuario usuario) {
     return agendamentoService.listarPorStatus(status, usuario);
+  }
+
+  @PatchMapping("/{id}/cancelar")
+  public AgendamentoResponse cancelar(
+      @PathVariable Long id,
+      @AuthenticationPrincipal Usuario usuario) {
+    return agendamentoService.cancelar(id, usuario);
+  }
+
+  @PatchMapping("/{id}/confirmar")
+  public AgendamentoResponse confirmar(
+      @PathVariable Long id,
+      @AuthenticationPrincipal Usuario usuario) {
+    return agendamentoService.confirmar(id, usuario);
+  }
+
+  @PatchMapping("/{id}/concluir")
+  public AgendamentoResponse concluir(
+      @PathVariable Long id,
+      @AuthenticationPrincipal Usuario usuario) {
+    return agendamentoService.concluir(id, usuario);
   }
 }

@@ -7,9 +7,11 @@ import java.util.List;
 
 public interface DisponibilidadeRepository extends JpaRepository<Disponibilidade, Long> {
 
-    List<Disponibilidade> findByPrestadorId(Long prestadorId);
+  List<Disponibilidade> findByPrestadorId(Long prestadorId);
 
-    List<Disponibilidade> findByPrestadorIdAndAtivoTrue(Long prestadorId);
+  List<Disponibilidade> findByPrestadorIdAndAtivoTrue(Long prestadorId);
 
-    List<Disponibilidade> findByAtivoTrue();
+  List<Disponibilidade> findByAtivoTrue();
+
+  List<Disponibilidade> findByPrestadorIdAndDiaSemanaAndAtivoTrue(Long prestadorId, Byte diaSemana);
 }

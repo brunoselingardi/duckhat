@@ -28,6 +28,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/auth/**").permitAll()
             .requestMatchers("/api/health").permitAll()
+            .requestMatchers("/api/catalogo/**").permitAll()
 
             .requestMatchers(HttpMethod.POST, "/api/usuarios").permitAll()
             .requestMatchers("/api/usuarios/**").denyAll()
@@ -35,6 +36,9 @@ public class SecurityConfig {
             .requestMatchers("/api/servicos/**").hasRole("PRESTADOR")
             .requestMatchers("/api/disponibilidades/**").hasRole("PRESTADOR")
 
+            .requestMatchers(HttpMethod.GET, "/api/agendamentos/prestador").hasRole("PRESTADOR")
+            .requestMatchers(HttpMethod.PATCH, "/api/agendamentos/{id}/confirmar").hasRole("PRESTADOR")
+            .requestMatchers(HttpMethod.PATCH, "/api/agendamentos/{id}/concluir").hasRole("PRESTADOR")
             .requestMatchers("/api/agendamentos/**").hasRole("CLIENTE")
             .requestMatchers("/api/avaliacoes/**").hasRole("CLIENTE")
             .requestMatchers("/api/notificacoes/**").hasRole("CLIENTE")

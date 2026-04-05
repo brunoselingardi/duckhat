@@ -7,9 +7,11 @@ import java.util.List;
 
 public interface ServicoRepository extends JpaRepository<Servico, Long> {
 
-    List<Servico> findByPrestadorId(Long prestadorId);
+  List<Servico> findByPrestadorId(Long prestadorId);
 
-    List<Servico> findByAtivoTrue();
+  List<Servico> findByAtivoTrue();
 
-    List<Servico> findByPrestadorIdAndAtivoTrue(Long prestadorId);
+  List<Servico> findByPrestadorIdAndAtivoTrue(Long prestadorId);
+
+  List<Servico> findByAtivoTrueAndNomeContainingIgnoreCase(String nome);
 }
