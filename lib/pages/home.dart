@@ -7,6 +7,10 @@ import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
 import 'package:duckhat/components/bottomnav.dart';
 
+const bkColor = Color(0xFFF2F8FF),
+    secondaryColor = Color(0xFF50E3C2),
+    accentColor = Color(0xFFFFC107);
+
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -28,7 +32,7 @@ class _HomeState extends State<Home> {
       ),
 
       child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 232, 241, 255),
+        backgroundColor: bkColor,
 
         body: SafeArea(
           bottom: false,
@@ -40,7 +44,6 @@ class _HomeState extends State<Home> {
                 const HomeHeader(),
 
                 const SizedBox(height: 10),
-
                 SearchDuck(
                   controller: searchController,
                   onChanged: (value) {

@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+const barColor = Color(0xFFF2F8FF),
+    textColor = Color(0xCC2F4987),
+    gradientColor1 = Color(0xFF8EB5F0),
+    gradientColor2 = Color(0xFF291970),
+    shadowColor1 = Color(0x66A2D7EC),
+    shadowColor2 = Color(0x4D80C3F8);
+
 class SearchDuck extends StatelessWidget {
   final TextEditingController? controller;
   final Function(String)? onChanged;
@@ -11,31 +18,24 @@ class SearchDuck extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.all(2),
+        padding: const EdgeInsets.all(1.7),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           gradient: const LinearGradient(
-            colors: [
-              Color.fromRGBO(141, 181, 240, 1),
-              Color.fromRGBO(41, 25, 112, 1),
-            ],
+            colors: [gradientColor1, gradientColor2],
           ),
           boxShadow: const [
             BoxShadow(
-              color: Color.fromRGBO(128, 194, 248, 0.5),
-              offset: Offset(0, 4),
-              blurRadius: 4,
-            ),
-            BoxShadow(
-              color: Color.fromRGBO(162, 215, 236, 1),
+              color: shadowColor1,
               offset: Offset(0, -2),
-              blurRadius: 4,
+              blurRadius: 5,
             ),
+            BoxShadow(color: shadowColor2, offset: Offset(0, 2), blurRadius: 3),
           ],
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 239, 245, 255),
+            color: barColor,
             borderRadius: BorderRadius.circular(28),
           ),
           child: TextField(
@@ -47,11 +47,17 @@ class SearchDuck extends StatelessWidget {
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
 
               hintText: "Encontre os melhores serviços...",
-              hintStyle: TextStyle(color: Color.fromRGBO(41, 25, 112, 0.8)),
+              hintStyle: TextStyle(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
 
-              suffixIcon: Icon(Icons.search, size: 20),
+              suffixIcon: Padding(
+                padding: EdgeInsets.only(right: 20),
+                child: Icon(Icons.search, size: 20, color: textColor),
+              ),
 
-              // 🔑 ISSO resolve
               suffixIconConstraints: BoxConstraints(
                 minHeight: 32,
                 minWidth: 32,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+const Color filterColor = Color(0x4DDEE9F5), textColor = Color(0xCC2F4987);
+
 class FilterSection extends StatelessWidget {
   const FilterSection({super.key});
 
@@ -57,26 +59,19 @@ class FilterSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 218, 235, 255),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 9, 65, 0.08),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+        color: filterColor,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color.fromRGBO(41, 25, 112, 0.8)),
+          Icon(icon, size: 18, color: textColor),
           const SizedBox(width: 6),
           Text(
             label,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: Color.fromRGBO(41, 25, 112, 0.8),
+              color: textColor,
             ),
           ),
         ],
