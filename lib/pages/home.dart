@@ -7,9 +7,7 @@ import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
 import 'package:duckhat/components/bottomnav.dart';
 
-const bkColor = Color(0xFFF2F8FF),
-    secondaryColor = Color(0xFF50E3C2),
-    accentColor = Color(0xFFFFC107);
+const bkColor = Color.fromARGB(255, 251, 252, 254);
 
 class Home extends StatefulWidget {
   const Home({super.key});

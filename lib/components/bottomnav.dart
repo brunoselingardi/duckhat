@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+const primaryColor = Color(0xFFFFFFFF),
+    shadowColor = Color(0x803A7FD5),
+    splashColor = Color.fromRGBO(142, 181, 240, 0.302),
+    selectedColor = Color.fromRGBO(58, 127, 213, 1),
+    unselectedColor = Color(0xCC2F4987),
+    highlightColor = Color.fromRGBO(142, 181, 240, 0.15);
+
 class DuckHatBottomNav extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
@@ -14,27 +21,22 @@ class DuckHatBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: primaryColor,
         boxShadow: [
-          BoxShadow(
-            color: Color.fromRGBO(128, 194, 248, 0.5),
-            offset: Offset(0, -2),
-            blurRadius: 4,
-          ),
+          BoxShadow(color: shadowColor, offset: Offset(0, -2), blurRadius: 4),
         ],
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(
-          splashColor: const Color.fromRGBO(142, 181, 240, 0.3),
-          highlightColor: const Color.fromRGBO(142, 181, 240, 0.15),
-        ),
+        data: Theme.of(
+          context,
+        ).copyWith(splashColor: splashColor, highlightColor: highlightColor),
         child: BottomNavigationBar(
           currentIndex: selectedIndex,
           onTap: onTap,
           type: BottomNavigationBarType.fixed,
 
-          selectedItemColor: const Color.fromRGBO(58, 127, 213, 1),
-          unselectedItemColor: const Color.fromRGBO(41, 25, 112, 0.5),
+          selectedItemColor: selectedColor,
+          unselectedItemColor: unselectedColor,
 
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
