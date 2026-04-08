@@ -1,0 +1,13 @@
+:root {
+  --single-line-body-base-font-family: "Inter", Helvetica;
+  --single-line-body-base-font-weight: 400;
+  --single-line-body-base-font-size: 16px;
+  --single-line-body-base-letter-spacing: 0px;
+  --single-line-body-base-line-height: 100%;
+  --single-line-body-base-font-style: normal;
+  --size-space-200: 8px;
+  --size-space-400: 16px;
+  --size-space-300: 12px;
+  --size-radius-200: 8px;
+  --size-radius-full: 9999px;
+}
