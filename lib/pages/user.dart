@@ -1,158 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/components/user/editar_perfil.dart';
 
-const Color kBackgroundColor = Color(0xFFF0F4F8);
-const Color kPrimaryColor = Color(0xFF3A7FD5);
-const Color kPrimaryLightOpaque = Color(0xFF8EB5F0);
-const Color kPrimaryLight25 = Color(0x408EB5F0);
-const Color kSecondaryBackgroundColor = Color(0xFFFFFFFF);
-const Color kBlackColor = Color(0xFF0C0041);
-const Color kGray70Color = Color(0xB30F172A);
-
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Perfil',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: kPrimaryColor),
-        useMaterial3: true,
-      ),
-      home: const PerfilPage(),
-    );
-  }
-}
-
-class PerfilPage extends StatefulWidget {
+class PerfilPage extends StatelessWidget {
   const PerfilPage({super.key});
 
-  @override
-  State<PerfilPage> createState() => _PerfilPageState();
-}
-
-class _PerfilPageState extends State<PerfilPage> {
-  int _selectedIndex = 2;
+  static const Color kBackgroundColor = Color(0xFFF0F4F8);
+  static const Color kPrimaryColor = Color(0xFF3A7FD5);
+  static const Color kPrimaryLightOpaque = Color(0xFF8EB5F0);
+  static const Color kSecondaryBackgroundColor = Color(0xFFFFFFFF);
+  static const Color kBlackColor = Color(0xFF0C0041);
+  static const Color kGray70Color = Color(0xB30F172A);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackgroundColor,
-      body: Column(
-        children: [
-          // Header com gradiente azul
-          _buildHeader(context),
-
-          // Conteúdo scrollável
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 16),
-
-                  // Seção MINHA CONTA
-                  _buildSectionLabel('MINHA CONTA', Icons.account_circle),
-                  _buildMenuCard([
-                    _buildMenuItem(
-                      icon: Icons.person_outline,
-                      iconColor: kPrimaryColor,
-                      title: 'Editar Perfil',
-                    ),
-                    _buildDivider(),
-                    _buildMenuItem(
-                      icon: Icons.credit_card_outlined,
-                      iconColor: kPrimaryColor,
-                      title: 'Métodos de Pagamento',
-                    ),
-                    _buildDivider(),
-                    _buildMenuItem(
-                      icon: Icons.notifications_none_outlined,
-                      iconColor: kPrimaryColor,
-                      title: 'Notificações',
-                    ),
-                    _buildDivider(),
-                    _buildMenuItem(
-                      icon: Icons.lock_outline,
-                      iconColor: kPrimaryColor,
-                      title: 'Segurança e Privacidade',
-                    ),
-                  ]),
-
-                  const SizedBox(height: 16),
-
-                  // Seção CONFIGURAÇÕES
-                  _buildSectionLabel('CONFIGURAÇÕES', Icons.tune),
-                  _buildMenuCard([
-                    _buildMenuItem(
-                      icon: Icons.settings_outlined,
-                      iconColor: kPrimaryColor,
-                      title: 'Configurações',
-                    ),
-                    _buildDivider(),
-                    _buildMenuItem(
-                      icon: Icons.help_outline,
-                      iconColor: kPrimaryColor,
-                      title: 'Ajuda',
-                    ),
-                    _buildDivider(),
-                    _buildMenuItem(
-                      icon: Icons.logout,
-                      iconColor: Colors.redAccent,
-                      title: 'Sair',
-                      titleColor: Colors.redAccent,
-                      showArrow: false,
-                    ),
-                  ]),
-
-                  const SizedBox(height: 80),
-                ],
-              ),
-            ),
+      body: Builder(
+        builder: (ctx) => SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 16),
+              _buildSectionLabel('MINHA CONTA', Icons.account_circle),
+              _buildMenuCard([
+                _buildMenuItem(
+                  icon: Icons.person_outline,
+                  title: 'Editar Perfil',
+                  onTap: () => Navigator.push(
+                    ctx,
+                    MaterialPageRoute(builder: (_) => const EditarPerfilPage()),
+                  ),
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  icon: Icons.credit_card_outlined,
+                  title: 'Métodos de Pagamento',
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  icon: Icons.notifications_none_outlined,
+                  title: 'Notificações',
+                ),
+                _buildDivider(),
+                _buildMenuItem(
+                  icon: Icons.lock_outline,
+                  title: 'Segurança e Privacidade',
+                ),
+              ]),
+              const SizedBox(height: 16),
+              _buildSectionLabel('CONFIGURAÇÕES', Icons.tune),
+              _buildMenuCard([
+                _buildMenuItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Configurações',
+                ),
+                _buildDivider(),
+                _buildMenuItem(icon: Icons.help_outline, title: 'Ajuda'),
+                _buildDivider(),
+                _buildMenuItem(
+                  icon: Icons.logout,
+                  title: 'Sair',
+                  titleColor: Colors.red,
+                  showArrow: false,
+                ),
+              ]),
+              const SizedBox(height: 80),
+            ],
           ),
-        ],
-      ),
-
-      // Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Color.fromRGBO(128, 194, 248, 0.5),
-              offset: Offset(0, -2),
-              blurRadius: 4,
-              spreadRadius: 0,
-            ),
-          ],
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) => setState(() => _selectedIndex = index),
-          selectedItemColor: Color.fromRGBO(58, 127, 213, 1),
-          unselectedItemColor: Color.fromRGBO(41, 25, 112, 0.5),
-          selectedFontSize: 14,
-          unselectedFontSize: 12,
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.schedule),
-              label: 'Agenda',
-            ),
-            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader() {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -164,117 +85,46 @@ class _PerfilPageState extends State<PerfilPage> {
       ),
       child: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            // AppBar row
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {},
-                  ),
-                  const Expanded(
-                    child: Text(
-                      'Perfil',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        decoration: TextDecoration.underline,
-                        decorationColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.more_vert, color: Colors.white),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Avatar
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    gradient: const LinearGradient(
-                      colors: [kPrimaryColor, kBackgroundColor],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'E',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  color: kPrimaryColor,
                 ),
-                Positioned(
-                  right: 2,
-                  bottom: 2,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
+                child: const Center(
+                  child: Text(
+                    'E',
+                    style: TextStyle(
                       color: Colors.white,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: kPrimaryColor, width: 1.5),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_outlined,
-                      size: 16,
-                      color: kPrimaryColor,
+                      fontSize: 40,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Nome
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  'Estadosunilson',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Estadosunilson',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(width: 6),
-                const Icon(Icons.edit, color: Colors.white70, size: 18),
-              ],
-            ),
-
-            const SizedBox(height: 4),
-
-            // Email
-            const Text(
-              'estadosunilson@hotmail.com.br',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
-            ),
-
-            const SizedBox(height: 20),
-          ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'estadosunilson@hotmail.com.br',
+                style: TextStyle(color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -321,14 +171,15 @@ class _PerfilPageState extends State<PerfilPage> {
 
   Widget _buildMenuItem({
     required IconData icon,
-    required Color iconColor,
     required String title,
     Color? titleColor,
     bool showArrow = true,
+    VoidCallback? onTap,
   }) {
+    final iconColor = titleColor ?? kPrimaryColor;
     return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(

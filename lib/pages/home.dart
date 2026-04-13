@@ -68,15 +68,6 @@ class _HomeState extends State<Home> {
             ),
           ),
         ),
-
-        bottomNavigationBar: DuckHatBottomNav(
-          selectedIndex: selectedNavIndex,
-          onTap: (index) {
-            setState(() {
-              selectedNavIndex = index;
-            });
-          },
-        ),
       ),
     );
   }
