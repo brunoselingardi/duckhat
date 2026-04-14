@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/theme.dart';
 import 'pages/home.dart';
 
 void main() {
@@ -11,8 +12,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Meu App',
-      theme: ThemeData(fontFamily: 'Poppins'),
+      title: 'DuckHat',
+      theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
       home: const Home(),
     );

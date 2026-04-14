@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-
-const cardColor = Color.fromARGB(255, 255, 255, 255),
-    color = Color(0xFFC0C2D56),
-    filterBackground = Color.fromARGB(255, 244, 245, 248),
-    filterShadow = Color(0x330C0041),
-    filterSelected = Color.fromARGB(255, 100, 149, 237);
+import 'package:duckhat/theme.dart';
 
 class FilterCard extends StatelessWidget {
   final IconData icon;
@@ -31,29 +26,31 @@ class FilterCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: cardColor,
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(blurRadius: 6, color: filterShadow)],
+          boxShadow: const [
+            BoxShadow(blurRadius: 6, color: AppColors.filterShadow),
+          ],
           border: isSelected
-              ? Border.all(color: filterSelected, width: 2)
+              ? Border.all(color: AppColors.filterSelected, width: 2)
               : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedScale(
-              scale: isSelected ? 1.15 : 1,
+              scale: isSelected ? 1.15 : 1.0,
               duration: const Duration(milliseconds: 200),
-              child: Icon(icon, size: 28, color: color),
+              child: Icon(icon, size: 28, color: AppColors.accent),
             ),
             const SizedBox(height: 6),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: color,
+                color: AppColors.accent,
               ),
             ),
           ],
