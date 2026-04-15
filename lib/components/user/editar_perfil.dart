@@ -1,42 +1,76 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/theme.dart';
 
-class EditarPerfilPage extends StatelessWidget {
+class EditarPerfilPage extends StatefulWidget {
   const EditarPerfilPage({super.key});
 
-  static const Color kPrimaryColor = Color(0xFF3A7FD5);
-  static const Color kPrimaryLightOpaque = Color(0xFF8EB5F0);
-  static const Color kBackgroundColor = Color(0xFFF0F4F8);
-  static const Color kSecondaryBackgroundColor = Color(0xFFFFFFFF);
-  static const Color kBlackColor = Color(0xFF0C0041);
-  static const Color kGrayColor = Color(0xFF6B7280);
+  @override
+  State<EditarPerfilPage> createState() => _EditarPerfilPageState();
+}
+
+class _EditarPerfilPageState extends State<EditarPerfilPage> {
+  late TextEditingController _nomeController;
+  late TextEditingController _emailController;
+  late TextEditingController _telefoneController;
+  late TextEditingController _nascimentoController;
+  late TextEditingController _enderecoController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nomeController = TextEditingController(text: 'Estadosunilson');
+    _emailController = TextEditingController(
+      text: 'estadosunilson@hotmail.com.br',
+    );
+    _telefoneController = TextEditingController(text: '(11) 99999-9999');
+    _nascimentoController = TextEditingController(text: '01/01/1990');
+    _enderecoController = TextEditingController(text: 'Rua Example, 123');
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _emailController.dispose();
+    _telefoneController.dispose();
+    _nascimentoController.dispose();
+    _enderecoController.dispose();
+    super.dispose();
+  }
+
+  void _salvar() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Perfil salvo com sucesso!')));
+    Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
+      backgroundColor: AppColors.backgroundAlt,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kPrimaryColor),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Editar Perfil',
           style: TextStyle(
-            color: kPrimaryColor,
+            color: AppColors.accent,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: _salvar,
             child: const Text(
               'Salvar',
               style: TextStyle(
-                color: kPrimaryColor,
+                color: AppColors.accent,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -56,7 +90,7 @@ class EditarPerfilPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3),
-                      color: kPrimaryColor,
+                      color: AppColors.accent,
                     ),
                     child: const Center(
                       child: Text(
@@ -78,12 +112,12 @@ class EditarPerfilPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: kPrimaryColor, width: 1.5),
+                        border: Border.all(color: AppColors.accent, width: 1.5),
                       ),
                       child: const Icon(
                         Icons.camera_alt_outlined,
                         size: 16,
-                        color: kPrimaryColor,
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
@@ -91,29 +125,25 @@ class EditarPerfilPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            _buildTextField('Nome', 'Estadosunilson', Icons.person_outline),
+            _buildTextField('Nome', _nomeController, Icons.person_outline),
             const SizedBox(height: 16),
-            _buildTextField(
-              'Email',
-              'estadosunilson@hotmail.com.br',
-              Icons.email_outlined,
-            ),
+            _buildTextField('Email', _emailController, Icons.email_outlined),
             const SizedBox(height: 16),
             _buildTextField(
               'Telefone',
-              '(11) 99999-9999',
+              _telefoneController,
               Icons.phone_outlined,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               'Data de Nascimento',
-              '01/01/1990',
+              _nascimentoController,
               Icons.cake_outlined,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               'Endereço',
-              'Rua Example, 123',
+              _enderecoController,
               Icons.location_on_outlined,
             ),
           ],
@@ -122,10 +152,14 @@ class EditarPerfilPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String label, String hint, IconData icon) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) {
     return Container(
       decoration: BoxDecoration(
-        color: kSecondaryBackgroundColor,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -136,18 +170,17 @@ class EditarPerfilPage extends StatelessWidget {
         ],
       ),
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          hintText: hint,
-          labelStyle: TextStyle(color: kGrayColor),
-          hintStyle: TextStyle(color: kGrayColor.withOpacity(0.5)),
-          prefixIcon: Icon(icon, color: kPrimaryColor),
+          labelStyle: TextStyle(color: AppColors.grayField),
+          prefixIcon: Icon(icon, color: AppColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: kSecondaryBackgroundColor,
+          fillColor: AppColors.cardBackground,
         ),
       ),
     );
