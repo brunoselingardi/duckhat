@@ -5,7 +5,6 @@ import 'package:duckhat/components/home/searchbar.dart';
 import 'package:duckhat/components/home/filtersection.dart';
 import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
-
 import 'package:duckhat/theme.dart';
 
 class Home extends StatefulWidget {

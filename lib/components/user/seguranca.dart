@@ -43,7 +43,7 @@ class SegurancaPage extends StatelessWidget {
             trailing: Switch(
               value: true,
               onChanged: (v) {},
-              activeColor: AppColors.accent,
+              activeThumbColor: AppColors.accent,
             ),
           ),
           _buildItem(
@@ -62,7 +62,7 @@ class SegurancaPage extends StatelessWidget {
             trailing: Switch(
               value: false,
               onChanged: (v) {},
-              activeColor: AppColors.accent,
+              activeThumbColor: AppColors.accent,
             ),
           ),
           _buildItem(

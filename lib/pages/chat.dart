@@ -83,7 +83,7 @@ class _ChatPageState extends State<ChatPage> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -96,7 +96,7 @@ class _ChatPageState extends State<ChatPage> {
             Text(
               "Buscar conversas",
               style: TextStyle(
-                color: AppColors.grayField.withOpacity(0.7),
+                color: AppColors.grayField.withValues(alpha: 0.7),
                 fontSize: 14,
               ),
             ),
@@ -141,7 +141,7 @@ class _ChatPageState extends State<ChatPage> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.accentLight.withOpacity(0.2),
+                    color: AppColors.accentLight.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(

@@ -135,7 +135,7 @@ class _NotificacoesPageState extends State<NotificacoesPage> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppColors.accent,
+            activeThumbColor: AppColors.accent,
           ),
         ],
       ),

@@ -25,6 +25,9 @@ class AppColors {
   static const chatBackground = Color(0xFFFAFBFC);
   static const messageOther = Color(0xFFF0F0F0);
   static const inputField = Color(0xFFF5F5F5);
+  static const shadow10 = Color(0x1A000000);
+  static const shadow20 = Color(0x33000000);
+  static const shadow30 = Color(0x4D000000);
 }
 
 class AppTheme {
