@@ -1,72 +1,100 @@
+USE duckhat;
+
 CREATE TABLE usuarios (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL AUTO_INCREMENT,
     nome VARCHAR(120) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
+    email VARCHAR(150) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    telefone VARCHAR(20),
+    telefone VARCHAR(20) NULL,
     tipo ENUM('CLIENTE', 'PRESTADOR') NOT NULL,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_usuarios PRIMARY KEY (id),
+    CONSTRAINT uq_usuarios_email UNIQUE (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE servicos (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL AUTO_INCREMENT,
     prestador_id BIGINT NOT NULL,
     nome VARCHAR(120) NOT NULL,
-    descricao TEXT,
+    descricao TEXT NULL,
     duracao_min INT NOT NULL,
     preco DECIMAL(10,2) NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_servicos_prestador
-        FOREIGN KEY (prestador_id) REFERENCES usuarios(id)
-);
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_servicos PRIMARY KEY (id),
+    CONSTRAINT fk_servicos_prestador FOREIGN KEY (prestador_id) REFERENCES usuarios(id),
+    CONSTRAINT chk_servicos_duracao_min CHECK (duracao_min > 0),
+    CONSTRAINT chk_servicos_preco CHECK (preco > 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE disponibilidades (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL AUTO_INCREMENT,
     prestador_id BIGINT NOT NULL,
     dia_semana TINYINT NOT NULL,
     hora_inicio TIME NOT NULL,
     hora_fim TIME NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
-    CONSTRAINT fk_disponibilidades_prestador
-        FOREIGN KEY (prestador_id) REFERENCES usuarios(id)
-);
+    CONSTRAINT pk_disponibilidades PRIMARY KEY (id),
+    CONSTRAINT fk_disponibilidades_prestador FOREIGN KEY (prestador_id) REFERENCES usuarios(id),
+    CONSTRAINT chk_disponibilidades_dia_semana CHECK (dia_semana BETWEEN 1 AND 7),
+    CONSTRAINT chk_disponibilidades_intervalo CHECK (hora_fim > hora_inicio)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE agendamentos (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL AUTO_INCREMENT,
     cliente_id BIGINT NOT NULL,
     prestador_id BIGINT NOT NULL,
     servico_id BIGINT NOT NULL,
     inicio_at DATETIME NOT NULL,
     fim_at DATETIME NOT NULL,
     status ENUM('PENDENTE', 'CONFIRMADO', 'CANCELADO', 'CONCLUIDO') NOT NULL DEFAULT 'PENDENTE',
-    observacoes TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_agendamentos_cliente
-        FOREIGN KEY (cliente_id) REFERENCES usuarios(id),
-    CONSTRAINT fk_agendamentos_prestador
-        FOREIGN KEY (prestador_id) REFERENCES usuarios(id),
-    CONSTRAINT fk_agendamentos_servico
-        FOREIGN KEY (servico_id) REFERENCES servicos(id)
-);
+    observacoes TEXT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_agendamentos PRIMARY KEY (id),
+    CONSTRAINT fk_agendamentos_cliente FOREIGN KEY (cliente_id) REFERENCES usuarios(id),
+    CONSTRAINT fk_agendamentos_prestador FOREIGN KEY (prestador_id) REFERENCES usuarios(id),
+    CONSTRAINT fk_agendamentos_servico FOREIGN KEY (servico_id) REFERENCES servicos(id),
+    CONSTRAINT chk_agendamentos_intervalo CHECK (fim_at > inicio_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE avaliacoes (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    agendamento_id BIGINT NOT NULL UNIQUE,
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    agendamento_id BIGINT NOT NULL,
     nota INT NOT NULL,
-    comentario TEXT,
-    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_avaliacoes_agendamento
-        FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id)
-);
+    comentario TEXT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_avaliacoes PRIMARY KEY (id),
+    CONSTRAINT uq_avaliacoes_agendamento UNIQUE (agendamento_id),
+    CONSTRAINT fk_avaliacoes_agendamento FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id),
+    CONSTRAINT chk_avaliacoes_nota CHECK (nota BETWEEN 1 AND 5)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE notificacao_eventos (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT NOT NULL AUTO_INCREMENT,
     agendamento_id BIGINT NOT NULL,
     canal ENUM('APP', 'EMAIL', 'SMS') NOT NULL DEFAULT 'APP',
     agendado_para DATETIME NOT NULL,
     enviado_em DATETIME NULL,
     status ENUM('PENDENTE', 'ENVIADO', 'FALHA') NOT NULL DEFAULT 'PENDENTE',
-    CONSTRAINT fk_notificacao_agendamento
-        FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id)
-);
+    CONSTRAINT pk_notificacao_eventos PRIMARY KEY (id),
+    CONSTRAINT fk_notificacao_eventos_agendamento FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_servicos_prestador_id ON servicos (prestador_id);
+CREATE INDEX idx_servicos_ativo ON servicos (ativo);
+CREATE INDEX idx_servicos_prestador_ativo ON servicos (prestador_id, ativo);
+
+CREATE INDEX idx_disponibilidades_prestador_id ON disponibilidades (prestador_id);
+CREATE INDEX idx_disponibilidades_ativo ON disponibilidades (ativo);
+CREATE INDEX idx_disponibilidades_prestador_dia_ativo ON disponibilidades (prestador_id, dia_semana, ativo);
+
+CREATE INDEX idx_agendamentos_cliente_id ON agendamentos (cliente_id);
+CREATE INDEX idx_agendamentos_prestador_id ON agendamentos (prestador_id);
+CREATE INDEX idx_agendamentos_servico_id ON agendamentos (servico_id);
+CREATE INDEX idx_agendamentos_status ON agendamentos (status);
+CREATE INDEX idx_agendamentos_cliente_status ON agendamentos (cliente_id, status);
+CREATE INDEX idx_agendamentos_prestador_status_intervalo ON agendamentos (prestador_id, status, inicio_at, fim_at);
+
+CREATE INDEX idx_notificacao_eventos_agendamento_id ON notificacao_eventos (agendamento_id);
+CREATE INDEX idx_notificacao_eventos_status ON notificacao_eventos (status);
+CREATE INDEX idx_notificacao_eventos_canal ON notificacao_eventos (canal);
