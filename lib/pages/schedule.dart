@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:duckhat/components/bottomnav.dart';
-
-const kBackgroundColor = Color(0xFFFAFBFC);
-const kPrimaryColor = Color(0xFF3A7FD5);
-const kPrimaryLightOpaque = Color(0xFF8EB5F0);
-const kTextColor = Color(0xFF2F4987);
-const kGrayColor = Color(0xFF6B7280);
+import 'package:duckhat/theme.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -15,8 +9,6 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-  int _selectedIndex = 1;
-
   final List<Map<String, dynamic>> appointments = [
     {
       "day": "SÁB",
@@ -49,7 +41,7 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
+      backgroundColor: AppColors.chatBackground,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -77,16 +69,16 @@ class _SchedulePageState extends State<SchedulePage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: kTextColor,
+              color: AppColors.secondary,
             ),
           ),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: kPrimaryColor.withOpacity(0.1),
+              color: AppColors.accent.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.add, color: kPrimaryColor),
+            child: const Icon(Icons.add, color: AppColors.accent),
           ),
         ],
       ),
@@ -109,18 +101,18 @@ class _SchedulePageState extends State<SchedulePage> {
             width: 50,
             margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
-              color: isSelected ? kPrimaryColor : Colors.white,
+              color: isSelected ? AppColors.accent : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: hasServices
-                    ? (isSelected ? kPrimaryColor : kPrimaryLightOpaque)
+                    ? (isSelected ? AppColors.accent : AppColors.accentLight)
                     : Colors.transparent,
                 width: 2,
               ),
               boxShadow: hasServices
                   ? [
                       BoxShadow(
-                        color: kPrimaryLightOpaque.withOpacity(0.3),
+                        color: AppColors.accentLight.withOpacity(0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -135,7 +127,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : kGrayColor,
+                    color: isSelected ? Colors.white : AppColors.grayField,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -144,7 +136,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : kTextColor,
+                    color: isSelected ? Colors.white : AppColors.secondary,
                   ),
                 ),
               ],
@@ -167,14 +159,14 @@ class _SchedulePageState extends State<SchedulePage> {
             Icon(
               Icons.event_available,
               size: 64,
-              color: kGrayColor.withOpacity(0.5),
+              color: AppColors.grayField.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
               "Nenhum agendamento",
               style: TextStyle(
                 fontSize: 16,
-                color: kGrayColor.withOpacity(0.7),
+                color: AppColors.grayField.withOpacity(0.7),
               ),
             ),
             const SizedBox(height: 8),
@@ -182,7 +174,7 @@ class _SchedulePageState extends State<SchedulePage> {
               "Clique no + para agendamento",
               style: TextStyle(
                 fontSize: 12,
-                color: kGrayColor.withOpacity(0.5),
+                color: AppColors.grayField.withOpacity(0.5),
               ),
             ),
           ],
@@ -215,7 +207,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 width: 4,
                 height: 60,
                 decoration: BoxDecoration(
-                  color: kPrimaryColor,
+                  color: AppColors.accent,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -229,17 +221,23 @@ class _SchedulePageState extends State<SchedulePage> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: kTextColor,
+                        color: AppColors.secondary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       service["service"],
-                      style: const TextStyle(fontSize: 14, color: kTextColor),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.secondary,
+                      ),
                     ),
                     Text(
                       service["place"],
-                      style: TextStyle(fontSize: 12, color: kGrayColor),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.grayField,
+                      ),
                     ),
                   ],
                 ),
@@ -247,10 +245,10 @@ class _SchedulePageState extends State<SchedulePage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: kPrimaryColor.withOpacity(0.1),
+                  color: AppColors.accent.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.more_vert, color: kPrimaryColor, size: 20),
+                child: Icon(Icons.more_vert, color: AppColors.accent, size: 20),
               ),
             ],
           ),

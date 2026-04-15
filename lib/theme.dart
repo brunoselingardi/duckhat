@@ -19,6 +19,12 @@ class AppColors {
   static const filterSelected = Color(0xFF6497ED);
   static const filterShadow = Color(0x600334A7);
   static const cardShadow = Color(0x6680C2F8);
+  static const darkAlt = Color(0xFF0C0041);
+  static const grayField = Color(0xFF6B7280);
+  static const backgroundAlt = Color(0xFFF0F4F8);
+  static const chatBackground = Color(0xFFFAFBFC);
+  static const messageOther = Color(0xFFF0F0F0);
+  static const inputField = Color(0xFFF5F5F5);
 }
 
 class AppTheme {
