@@ -73,8 +73,28 @@ public class DisponibilidadeService {
   }
 
   @Transactional(readOnly = true)
-  public List<DisponibilidadeResponse> listarPorPrestador(Long prestadorId) {
+  public List<DisponibilidadeResponse> listarPorPrestador(Long prestadorId, Usuario usuario) {
+    if (usuario.getTipo() != TipoUsuario.PRESTADOR) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O usuário autenticado não é um prestador");
+    }
+
+    if (!prestadorId.equals(usuario.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "Você não pode acessar disponibilidades de outro prestador");
+    }
+
     return disponibilidadeRepository.findByPrestadorId(prestadorId)
+        .stream()
+        .map(DisponibilidadeResponse::fromEntity)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<DisponibilidadeResponse> listarCatalogoPorPrestador(Long prestadorId) {
+    return disponibilidadeRepository.findByPrestadorIdAndAtivoTrue(prestadorId)
         .stream()
         .map(DisponibilidadeResponse::fromEntity)
         .toList();

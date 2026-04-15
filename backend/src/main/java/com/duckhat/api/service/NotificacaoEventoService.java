@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ObjectInputFilter.Status;
 import java.util.List;
 
 @Service
@@ -47,24 +48,12 @@ public class NotificacaoEventoService {
           "Você não pode criar notificação para um agendamento que não é seu");
     }
 
-    if (request.canal() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Canal inválido. Use APP, EMAIL ou SMS");
-    }
-
-    if (request.status() == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "Status inválido. Use PENDENTE, ENVIADO ou FALHA");
-    }
-
     NotificacaoEvento notificacaoEvento = new NotificacaoEvento();
     notificacaoEvento.setAgendamento(agendamento);
     notificacaoEvento.setCanal(request.canal());
     notificacaoEvento.setAgendadoPara(request.agendadoPara());
-    notificacaoEvento.setEnviadoEm(request.enviadoEm());
-    notificacaoEvento.setStatus(request.status());
+    notificacaoEvento.setEnviadoEm(null);
+    notificacaoEvento.setStatus(StatusNotificacao.PENDENTE);
 
     NotificacaoEvento salva = notificacaoEventoRepository.save(notificacaoEvento);
     return NotificacaoEventoResponse.fromEntity(salva);
