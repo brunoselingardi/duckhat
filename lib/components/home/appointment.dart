@@ -15,13 +15,11 @@ class EmptyAppointmentState extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.schedule, color: Colors.black54),
-
             SizedBox(width: 8),
-
             Text(
               "Nenhum agendamento hoje",
               style: TextStyle(color: Colors.black54),
@@ -50,33 +48,27 @@ class AppointmentSection extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
-
         const SizedBox(height: 12),
-
-        /// estado vazio
         if (appointments.isEmpty)
           const EmptyAppointmentState()
-        /// lista de agendamentos
         else
-          SizedBox(
-            height: 120,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: appointments.length,
-              itemBuilder: (context, index) {
-                final appointment = appointments[index];
-
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: AppointmentCard(
-                    time: appointment["time"],
-                    service: appointment["service"],
-                    place: appointment["place"],
-                  ),
-                );
-              },
-            ),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: appointments.length,
+            itemBuilder: (context, index) {
+              final appointment = appointments[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: AppointmentCard(
+                  time: appointment["time"],
+                  service: appointment["service"],
+                  place: appointment["place"],
+                  image: appointment["image"],
+                ),
+              );
+            },
           ),
       ],
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/theme.dart';
 
 class HomeHeader extends StatelessWidget {
   final String username;
@@ -11,24 +12,18 @@ class HomeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          /// Duck icon
           Image.asset("assets/icon.png", width: 80, height: 80),
-
           const SizedBox(width: 12),
-
-          /// Greeting text
           Expanded(
             child: Text(
-              'Quack,$username!',
+              'Quack, $username!',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF0F172A),
+                color: AppColors.dark,
               ),
             ),
           ),
-
-          /// Notification / profile dot
         ],
       ),
     );

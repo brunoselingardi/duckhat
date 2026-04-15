@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-
-const barColor = Color(0xFFF2F8FF),
-    textColor = Color(0xCC2F4987),
-    gradientColor1 = Color(0xFF8EB5F0),
-    gradientColor2 = Color(0xFF291970),
-    shadowColor1 = Color(0x66A2D7EC),
-    shadowColor2 = Color(0x4D80C3F8);
+import 'package:duckhat/theme.dart';
 
 class SearchDuck extends StatelessWidget {
   final TextEditingController? controller;
@@ -22,20 +16,24 @@ class SearchDuck extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(30),
           gradient: const LinearGradient(
-            colors: [gradientColor1, gradientColor2],
+            colors: [AppColors.accentLight, AppColors.secondary],
           ),
           boxShadow: const [
             BoxShadow(
-              color: shadowColor1,
+              color: AppColors.shadowAccent,
               offset: Offset(0, -2),
               blurRadius: 5,
             ),
-            BoxShadow(color: shadowColor2, offset: Offset(0, 2), blurRadius: 3),
+            BoxShadow(
+              color: AppColors.cardShadow,
+              offset: Offset(0, 2),
+              blurRadius: 3,
+            ),
           ],
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: barColor,
+            color: AppColors.inputBackground,
             borderRadius: BorderRadius.circular(28),
           ),
           child: TextField(
@@ -43,26 +41,25 @@ class SearchDuck extends StatelessWidget {
             onChanged: onChanged,
             decoration: const InputDecoration(
               isDense: true,
-
               contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-
               hintText: "Encontre os melhores serviços...",
               hintStyle: TextStyle(
-                color: textColor,
+                color: AppColors.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
-
               suffixIcon: Padding(
                 padding: EdgeInsets.only(right: 20),
-                child: Icon(Icons.search, size: 20, color: textColor),
+                child: Icon(
+                  Icons.search,
+                  size: 20,
+                  color: AppColors.textSecondary,
+                ),
               ),
-
               suffixIconConstraints: BoxConstraints(
                 minHeight: 32,
                 minWidth: 32,
               ),
-
               border: InputBorder.none,
             ),
           ),
