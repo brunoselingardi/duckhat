@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import 'package:duckhat/pages/estabelecimento.dart';
 
 class RebookCard extends StatelessWidget {
   final String name;
@@ -104,12 +105,48 @@ class RebookCard extends StatelessWidget {
                       color: AppColors.accent,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      "Agendar",
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EstabelecimentoPage(
+                              nome: name,
+                              imagem: "assets/barbie.png",
+                              nota: rating,
+                              avaliacoes: reviews,
+                              endereco: "Rua Example, 123",
+                              horario: "Seg-Sex: 9h-18h",
+                              descricao:
+                                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                              servicos: const [
+                                {
+                                  "nome": "Corte de cabelo",
+                                  "duracao": "45 min",
+                                  "preco": "50,00",
+                                },
+                                {
+                                  "nome": "Barba",
+                                  "duracao": "30 min",
+                                  "preco": "35,00",
+                                },
+                                {
+                                  "nome": "Corte militar",
+                                  "duracao": "30 min",
+                                  "preco": "30,00",
+                                },
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Agendar",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
