@@ -1,53 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:duckhat/theme.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
-class EditarPerfilPage extends StatefulWidget {
+class EditarPerfilPage extends StatelessWidget {
   const EditarPerfilPage({super.key});
-
-  @override
-  State<EditarPerfilPage> createState() => _EditarPerfilPageState();
-}
-
-class _EditarPerfilPageState extends State<EditarPerfilPage> {
-  late TextEditingController _nomeController;
-  late TextEditingController _emailController;
-  late TextEditingController _telefoneController;
-  late TextEditingController _nascimentoController;
-  late TextEditingController _enderecoController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nomeController = TextEditingController(text: 'Estadosunilson');
-    _emailController = TextEditingController(
-      text: 'estadosunilson@hotmail.com.br',
-    );
-    _telefoneController = TextEditingController(text: '(11) 99999-9999');
-    _nascimentoController = TextEditingController(text: '01/01/1990');
-    _enderecoController = TextEditingController(text: 'Rua Example, 123');
-  }
-
-  @override
-  void dispose() {
-    _nomeController.dispose();
-    _emailController.dispose();
-    _telefoneController.dispose();
-    _nascimentoController.dispose();
-    _enderecoController.dispose();
-    super.dispose();
-  }
-
-  void _salvar() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Perfil salvo com sucesso!')));
-    Navigator.pop(context);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
@@ -66,7 +26,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         ),
         actions: [
           TextButton(
-            onPressed: _salvar,
+            onPressed: () => Navigator.pop(context),
             child: const Text(
               'Salvar',
               style: TextStyle(
@@ -125,25 +85,29 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
               ),
             ),
             const SizedBox(height: 32),
-            _buildTextField('Nome', _nomeController, Icons.person_outline),
+            _buildTextField('Nome', 'Estadosunilson', Icons.person_outline),
             const SizedBox(height: 16),
-            _buildTextField('Email', _emailController, Icons.email_outlined),
+            _buildTextField(
+              'Email',
+              'estadosunilson@hotmail.com.br',
+              Icons.email_outlined,
+            ),
             const SizedBox(height: 16),
             _buildTextField(
               'Telefone',
-              _telefoneController,
+              '(11) 99999-9999',
               Icons.phone_outlined,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               'Data de Nascimento',
-              _nascimentoController,
+              '01/01/1990',
               Icons.cake_outlined,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               'Endereço',
-              _enderecoController,
+              'Rua Example, 123',
               Icons.location_on_outlined,
             ),
           ],
@@ -152,28 +116,27 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller,
-    IconData icon,
-  ) {
+  Widget _buildTextField(String label, String hint, IconData icon) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.cardShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: TextField(
-        controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: AppColors.grayField),
+          hintText: hint,
+          labelStyle: const TextStyle(color: AppColors.textMuted),
+          hintStyle: TextStyle(
+            color: AppColors.textMuted.withValues(alpha: 0.5),
+          ),
           prefixIcon: Icon(icon, color: AppColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

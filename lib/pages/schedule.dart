@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:duckhat/theme.dart';
+import 'package:duckhat/components/bottomnav.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -9,6 +10,8 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
+  int _selectedIndex = 1;
+
   final List<Map<String, dynamic>> appointments = [
     {
       "day": "SÁB",
@@ -41,7 +44,7 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.chatBackground,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -64,12 +67,12 @@ class _SchedulePageState extends State<SchedulePage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const SizedBox(width: 48),
-          const Text(
+          Text(
             "Agenda",
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: AppColors.secondary,
+              color: AppColors.textBold,
             ),
           ),
           Container(
@@ -127,7 +130,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.grayField,
+                    color: isSelected ? Colors.white : AppColors.textMuted,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -136,7 +139,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: isSelected ? Colors.white : AppColors.secondary,
+                    color: isSelected ? Colors.white : AppColors.textBold,
                   ),
                 ),
               ],
@@ -156,26 +159,16 @@ class _SchedulePageState extends State<SchedulePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.event_available,
-              size: 64,
-              color: AppColors.grayField.withValues(alpha: 0.5),
-            ),
+            Icon(Icons.event_available, size: 64, color: AppColors.textMuted),
             const SizedBox(height: 16),
             Text(
               "Nenhum agendamento",
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.grayField.withValues(alpha: 0.7),
-              ),
+              style: TextStyle(fontSize: 16, color: AppColors.textRegular),
             ),
             const SizedBox(height: 8),
             Text(
               "Clique no + para agendamento",
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.grayField.withValues(alpha: 0.5),
-              ),
+              style: TextStyle(fontSize: 12, color: AppColors.textMutedLight),
             ),
           ],
         ),
@@ -195,7 +188,7 @@ class _SchedulePageState extends State<SchedulePage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: AppColors.cardShadow,
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -218,25 +211,22 @@ class _SchedulePageState extends State<SchedulePage> {
                   children: [
                     Text(
                       service["time"],
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.secondary,
+                        color: AppColors.textBold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       service["service"],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.secondary,
-                      ),
+                      style: TextStyle(fontSize: 14, color: AppColors.textBold),
                     ),
                     Text(
                       service["place"],
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.grayField,
+                        color: AppColors.textMuted,
                       ),
                     ),
                   ],
@@ -248,7 +238,11 @@ class _SchedulePageState extends State<SchedulePage> {
                   color: AppColors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.more_vert, color: AppColors.accent, size: 20),
+                child: const Icon(
+                  Icons.more_vert,
+                  color: AppColors.accent,
+                  size: 20,
+                ),
               ),
             ],
           ),

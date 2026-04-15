@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/components/user/editar_perfil.dart';
-import 'package:duckhat/components/user/metodos_pagamento.dart';
-import 'package:duckhat/components/user/notificacoes.dart';
-import 'package:duckhat/components/user/seguranca.dart';
-import 'package:duckhat/components/user/configuracoes.dart';
-import 'package:duckhat/components/user/ajuda.dart';
-import 'package:duckhat/theme.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
 class PerfilPage extends StatelessWidget {
   const PerfilPage({super.key});
@@ -13,7 +8,7 @@ class PerfilPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+      backgroundColor: AppColors.background,
       body: Builder(
         builder: (ctx) => SingleChildScrollView(
           child: Column(
@@ -35,30 +30,16 @@ class PerfilPage extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.credit_card_outlined,
                   title: 'Métodos de Pagamento',
-                  onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(
-                      builder: (_) => const MetodosPagamentoPage(),
-                    ),
-                  ),
                 ),
                 _buildDivider(),
                 _buildMenuItem(
                   icon: Icons.notifications_none_outlined,
                   title: 'Notificações',
-                  onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(builder: (_) => const NotificacoesPage()),
-                  ),
                 ),
                 _buildDivider(),
                 _buildMenuItem(
                   icon: Icons.lock_outline,
                   title: 'Segurança e Privacidade',
-                  onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(builder: (_) => const SegurancaPage()),
-                  ),
                 ),
               ]),
               const SizedBox(height: 16),
@@ -67,29 +48,15 @@ class PerfilPage extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.settings_outlined,
                   title: 'Configurações',
-                  onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(
-                      builder: (_) => const ConfiguracoesPage(),
-                    ),
-                  ),
                 ),
                 _buildDivider(),
-                _buildMenuItem(
-                  icon: Icons.help_outline,
-                  title: 'Ajuda',
-                  onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(builder: (_) => const AjudaPage()),
-                  ),
-                ),
+                _buildMenuItem(icon: Icons.help_outline, title: 'Ajuda'),
                 _buildDivider(),
                 _buildMenuItem(
                   icon: Icons.logout,
                   title: 'Sair',
                   titleColor: Colors.red,
                   showArrow: false,
-                  onTap: () => _showLogoutDialog(ctx),
                 ),
               ]),
               const SizedBox(height: 80),
@@ -103,7 +70,7 @@ class PerfilPage extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.accent, AppColors.accentLight],
           begin: Alignment.topLeft,
@@ -162,14 +129,14 @@ class PerfilPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textMuted),
+          Icon(icon, size: 16, color: AppColors.textRegular),
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              color: AppColors.textRegular,
               letterSpacing: 1.0,
             ),
           ),
@@ -186,7 +153,7 @@ class PerfilPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.cardShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -227,16 +194,12 @@ class PerfilPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: titleColor ?? AppColors.darkAlt,
+                  color: titleColor ?? AppColors.textBold,
                 ),
               ),
             ),
             if (showArrow)
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textMuted,
-                size: 22,
-              ),
+              Icon(Icons.chevron_right, color: AppColors.textRegular, size: 22),
           ],
         ),
       ),
@@ -248,29 +211,7 @@ class PerfilPage extends StatelessWidget {
       height: 1,
       indent: 66,
       endIndent: 16,
-      color: Color(0xFFF0F0F0),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext ctx) {
-    showDialog(
-      context: ctx,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sair'),
-        content: const Text('Tem certeza que deseja sair?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-            },
-            child: const Text('Sair', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+      color: AppColors.divider,
     );
   }
 }
