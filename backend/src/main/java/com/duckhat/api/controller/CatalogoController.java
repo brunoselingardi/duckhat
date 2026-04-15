@@ -40,17 +40,11 @@ public class CatalogoController {
 
   @GetMapping("/api/catalogo/servicos/prestador/{prestadorId}")
   public List<ServicoResponse> listarServicosAtivosPorPrestador(@PathVariable Long prestadorId) {
-    return servicoService.listarPorPrestador(prestadorId)
-        .stream()
-        .filter(ServicoResponse::ativo)
-        .toList();
+    return servicoService.listarCatalogoPorPrestador(prestadorId);
   }
 
   @GetMapping("/api/catalogo/disponibilidades/prestador/{prestadorId}")
   public List<DisponibilidadeResponse> listarDisponibilidadesAtivasPorPrestador(@PathVariable Long prestadorId) {
-    return disponibilidadeService.listarPorPrestador(prestadorId)
-        .stream()
-        .filter(DisponibilidadeResponse::ativo)
-        .toList();
+    return disponibilidadeService.listarCatalogoPorPrestador(prestadorId);
   }
 }

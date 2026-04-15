@@ -13,11 +13,7 @@ public record CreateNotificacaoEventoRequest(
 
     @NotNull CanalNotificacao canal,
 
-    @NotNull LocalDateTime agendadoPara,
-
-    LocalDateTime enviadoEm,
-
-    @NotNull StatusNotificacao status
+    @NotNull LocalDateTime agendadoPara
 
 ) {
 }

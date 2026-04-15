@@ -2,12 +2,13 @@ package com.duckhat.api.controller;
 
 import com.duckhat.api.dto.CreateServicoRequest;
 import com.duckhat.api.dto.ServicoResponse;
+import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.service.ServicoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import com.duckhat.api.entity.Usuario;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -46,7 +47,9 @@ public class ServicoController {
   }
 
   @GetMapping("/prestador/{prestadorId}")
-  public List<ServicoResponse> listarPorPrestador(@PathVariable Long prestadorId) {
-    return servicoService.listarPorPrestador(prestadorId);
+  public List<ServicoResponse> listarPorPrestador(
+      @PathVariable Long prestadorId,
+      @AuthenticationPrincipal Usuario usuario) {
+    return servicoService.listarPorPrestador(prestadorId, usuario);
   }
 }
