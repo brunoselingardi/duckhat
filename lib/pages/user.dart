@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/components/user/editar_perfil.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
 class PerfilPage extends StatelessWidget {
   const PerfilPage({super.key});
 
-  static const Color kBackgroundColor = Color(0xFFF0F4F8);
-  static const Color kPrimaryColor = Color(0xFF3A7FD5);
-  static const Color kPrimaryLightOpaque = Color(0xFF8EB5F0);
-  static const Color kSecondaryBackgroundColor = Color(0xFFFFFFFF);
-  static const Color kBlackColor = Color(0xFF0C0041);
-  static const Color kGray70Color = Color(0xB30F172A);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
+      backgroundColor: AppColors.background,
       body: Builder(
         builder: (ctx) => SingleChildScrollView(
           child: Column(
@@ -78,7 +72,7 @@ class PerfilPage extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [kPrimaryColor, kPrimaryLightOpaque],
+          colors: [AppColors.accent, AppColors.accentLight],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -96,7 +90,7 @@ class PerfilPage extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 3),
-                  color: kPrimaryColor,
+                  color: AppColors.accent,
                 ),
                 child: const Center(
                   child: Text(
@@ -135,14 +129,14 @@ class PerfilPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: kGray70Color),
+          Icon(icon, size: 16, color: AppColors.textRegular),
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: kGray70Color,
+              color: AppColors.textRegular,
               letterSpacing: 1.0,
             ),
           ),
@@ -155,11 +149,11 @@ class PerfilPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: kSecondaryBackgroundColor,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppColors.cardShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -176,7 +170,7 @@ class PerfilPage extends StatelessWidget {
     bool showArrow = true,
     VoidCallback? onTap,
   }) {
-    final iconColor = titleColor ?? kPrimaryColor;
+    final iconColor = titleColor ?? AppColors.accent;
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: onTap ?? () {},
@@ -188,7 +182,7 @@ class PerfilPage extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: iconColor, size: 20),
@@ -200,12 +194,12 @@ class PerfilPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: titleColor ?? kBlackColor,
+                  color: titleColor ?? AppColors.textBold,
                 ),
               ),
             ),
             if (showArrow)
-              const Icon(Icons.chevron_right, color: kGray70Color, size: 22),
+              Icon(Icons.chevron_right, color: AppColors.textRegular, size: 22),
           ],
         ),
       ),
@@ -217,7 +211,7 @@ class PerfilPage extends StatelessWidget {
       height: 1,
       indent: 66,
       endIndent: 16,
-      color: Color(0xFFF0F0F0),
+      color: AppColors.divider,
     );
   }
 }

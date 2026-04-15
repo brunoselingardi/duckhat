@@ -24,7 +24,7 @@ class AppointmentCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
-            color: AppColors.filterShadow,
+            color: AppColors.cardShadow,
             blurRadius: 6,
             offset: Offset(0, 3),
           ),
@@ -55,7 +55,7 @@ class AppointmentCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.dark,
+                          color: AppColors.textBold,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,

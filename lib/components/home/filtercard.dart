@@ -29,7 +29,7 @@ class FilterCard extends StatelessWidget {
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(14),
           boxShadow: const [
-            BoxShadow(blurRadius: 6, color: AppColors.filterShadow),
+            BoxShadow(blurRadius: 6, color: AppColors.cardShadow),
           ],
           border: isSelected
               ? Border.all(color: AppColors.filterSelected, width: 2)

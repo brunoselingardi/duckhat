@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
 class EditarPerfilPage extends StatelessWidget {
   const EditarPerfilPage({super.key});
 
-  static const Color kPrimaryColor = Color(0xFF3A7FD5);
-  static const Color kPrimaryLightOpaque = Color(0xFF8EB5F0);
-  static const Color kBackgroundColor = Color(0xFFF0F4F8);
-  static const Color kSecondaryBackgroundColor = Color(0xFFFFFFFF);
-  static const Color kBlackColor = Color(0xFF0C0041);
-  static const Color kGrayColor = Color(0xFF6B7280);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: kPrimaryColor),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'Editar Perfil',
           style: TextStyle(
-            color: kPrimaryColor,
+            color: AppColors.accent,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -36,7 +30,7 @@ class EditarPerfilPage extends StatelessWidget {
             child: const Text(
               'Salvar',
               style: TextStyle(
-                color: kPrimaryColor,
+                color: AppColors.accent,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -56,7 +50,7 @@ class EditarPerfilPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3),
-                      color: kPrimaryColor,
+                      color: AppColors.accent,
                     ),
                     child: const Center(
                       child: Text(
@@ -78,12 +72,12 @@ class EditarPerfilPage extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
-                        border: Border.all(color: kPrimaryColor, width: 1.5),
+                        border: Border.all(color: AppColors.accent, width: 1.5),
                       ),
                       child: const Icon(
                         Icons.camera_alt_outlined,
                         size: 16,
-                        color: kPrimaryColor,
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
@@ -125,11 +119,11 @@ class EditarPerfilPage extends StatelessWidget {
   Widget _buildTextField(String label, String hint, IconData icon) {
     return Container(
       decoration: BoxDecoration(
-        color: kSecondaryBackgroundColor,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppColors.cardShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -139,15 +133,17 @@ class EditarPerfilPage extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          labelStyle: TextStyle(color: kGrayColor),
-          hintStyle: TextStyle(color: kGrayColor.withOpacity(0.5)),
-          prefixIcon: Icon(icon, color: kPrimaryColor),
+          labelStyle: const TextStyle(color: AppColors.textMuted),
+          hintStyle: TextStyle(
+            color: AppColors.textMuted.withValues(alpha: 0.5),
+          ),
+          prefixIcon: Icon(icon, color: AppColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: kSecondaryBackgroundColor,
+          fillColor: AppColors.cardBackground,
         ),
       ),
     );
