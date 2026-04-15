@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/theme.dart';
 import 'pages/home.dart';
 import 'pages/schedule.dart';
 import 'pages/chat.dart';
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'DuckHat',
-      theme: ThemeData(fontFamily: 'Poppins'),
+      theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
       home: const MainNavigator(),
     );
