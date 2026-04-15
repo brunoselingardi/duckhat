@@ -80,7 +80,7 @@ class MetodosPagamentoPage extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
-    Widget? trailing,
+    Widget trailing = const SizedBox.shrink(),
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -127,7 +127,7 @@ class MetodosPagamentoPage extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) trailing,
+          trailing,
         ],
       ),
     );

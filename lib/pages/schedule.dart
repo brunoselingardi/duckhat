@@ -75,7 +75,7 @@ class _SchedulePageState extends State<SchedulePage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.1),
+              color: AppColors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.add, color: AppColors.accent),
@@ -112,7 +112,7 @@ class _SchedulePageState extends State<SchedulePage> {
               boxShadow: hasServices
                   ? [
                       BoxShadow(
-                        color: AppColors.accentLight.withOpacity(0.3),
+                        color: AppColors.accentLight.withValues(alpha: 0.3),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -159,14 +159,14 @@ class _SchedulePageState extends State<SchedulePage> {
             Icon(
               Icons.event_available,
               size: 64,
-              color: AppColors.grayField.withOpacity(0.5),
+              color: AppColors.grayField.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
               "Nenhum agendamento",
               style: TextStyle(
                 fontSize: 16,
-                color: AppColors.grayField.withOpacity(0.7),
+                color: AppColors.grayField.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 8),
@@ -174,7 +174,7 @@ class _SchedulePageState extends State<SchedulePage> {
               "Clique no + para agendamento",
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.grayField.withOpacity(0.5),
+                color: AppColors.grayField.withValues(alpha: 0.5),
               ),
             ),
           ],
@@ -195,7 +195,7 @@ class _SchedulePageState extends State<SchedulePage> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -245,7 +245,7 @@ class _SchedulePageState extends State<SchedulePage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.1),
+                  color: AppColors.accent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(Icons.more_vert, color: AppColors.accent, size: 20),

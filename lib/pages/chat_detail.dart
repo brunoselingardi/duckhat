@@ -149,7 +149,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -159,8 +159,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         top: false,
         child: Row(
           children: [
-            const Icon(Icons.mic, color: AppColors.grayField),
-            const SizedBox(width: 12),
             const Icon(
               Icons.emoji_emotions_outlined,
               color: AppColors.grayField,
