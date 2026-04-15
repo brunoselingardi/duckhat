@@ -5,7 +5,7 @@ import 'package:duckhat/components/home/searchbar.dart';
 import 'package:duckhat/components/home/filtersection.dart';
 import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
-import 'package:duckhat/components/bottomnav.dart';
+
 import 'package:duckhat/theme.dart';
 
 class Home extends StatefulWidget {
@@ -16,8 +16,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  int _selectedNavIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -148,10 +146,6 @@ class _HomeState extends State<Home> {
               ),
             ],
           ),
-        ),
-        bottomNavigationBar: DuckHatBottomNav(
-          selectedIndex: _selectedNavIndex,
-          onTap: (index) => setState(() => _selectedNavIndex = index),
         ),
       ),
     );
