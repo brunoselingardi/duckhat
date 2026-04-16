@@ -286,64 +286,72 @@ class _GallerySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Galeria',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: AppColors.textBold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: onOpenGallery,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: AspectRatio(
-                aspectRatio: 1.35,
-                child: Image.asset(images[selectedIndex], fit: BoxFit.cover),
+    return RepaintBoundary(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Galeria',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textBold,
               ),
             ),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 110,
-            child: PageView.builder(
-              controller: controller,
-              onPageChanged: onChanged,
-              itemCount: images.length,
-              itemBuilder: (context, index) {
-                final isSelected = index == selectedIndex;
-                return GestureDetector(
-                  onTap: () => onSelected(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.accent
-                            : Colors.transparent,
-                        width: 2,
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: onOpenGallery,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: AspectRatio(
+                  aspectRatio: 1.35,
+                  child: _AssetGalleryImage(
+                    imagePath: images[selectedIndex],
+                    cacheWidth: 1200,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 110,
+              child: PageView.builder(
+                controller: controller,
+                onPageChanged: onChanged,
+                itemCount: images.length,
+                itemBuilder: (context, index) {
+                  final isSelected = index == selectedIndex;
+                  return GestureDetector(
+                    onTap: () => onSelected(index),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.accent
+                              : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: _AssetGalleryImage(
+                          imagePath: images[index],
+                          cacheWidth: 320,
+                        ),
                       ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(images[index], fit: BoxFit.cover),
-                    ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -394,64 +402,84 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFDFCF9),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE8EDF6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.star_rounded,
-                color: Color(0xFFFFB547),
-                size: 18,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                review.rating,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textBold,
+    return RepaintBoundary(
+      child: Container(
+        width: 250,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFDFCF9),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFE8EDF6)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.star_rounded,
+                  color: Color(0xFFFFB547),
+                  size: 18,
                 ),
-              ),
-              const Spacer(),
-              Text(
-                review.date,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textRegular,
+                const SizedBox(width: 4),
+                Text(
+                  review.rating,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textBold,
+                  ),
                 ),
+                const Spacer(),
+                Text(
+                  review.date,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textRegular,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Text(
+              review.comment,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.6,
+                color: AppColors.textBold,
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            review.comment,
-            maxLines: 5,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.6,
-              color: AppColors.textBold,
             ),
-          ),
-          const Spacer(),
-          Text(
-            review.name,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.textRegular,
+            const Spacer(),
+            Text(
+              review.name,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.textRegular,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _AssetGalleryImage extends StatelessWidget {
+  final String imagePath;
+  final int cacheWidth;
+
+  const _AssetGalleryImage({required this.imagePath, required this.cacheWidth});
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      filterQuality: FilterQuality.low,
+      cacheWidth: cacheWidth,
+      gaplessPlayback: true,
     );
   }
 }
