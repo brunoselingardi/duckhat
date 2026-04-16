@@ -28,11 +28,26 @@ class _ServicePageState extends State<ServicePage> {
   int _selectedTabIndex = 0;
   int _selectedGalleryIndex = 0;
   bool _isAutoScrolling = false;
+  bool _imagesPrecached = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_imagesPrecached) {
+      return;
+    }
+
+    for (final image in serviceGalleryImages) {
+      precacheImage(AssetImage(image), context);
+    }
+
+    _imagesPrecached = true;
   }
 
   @override
