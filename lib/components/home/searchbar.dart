@@ -20,7 +20,7 @@ class SearchDuck extends StatelessWidget {
           ),
           boxShadow: const [
             BoxShadow(
-              color: AppColors.shadowAccent,
+              color: AppColors.cardShadow,
               offset: Offset(0, -2),
               blurRadius: 5,
             ),
@@ -33,30 +33,33 @@ class SearchDuck extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.inputBackground,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(28),
           ),
           child: TextField(
             controller: controller,
             onChanged: onChanged,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
               hintText: "Encontre os melhores serviços...",
               hintStyle: TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.textRegular,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
               suffixIcon: Padding(
-                padding: EdgeInsets.only(right: 20),
+                padding: const EdgeInsets.only(right: 20),
                 child: Icon(
                   Icons.search,
                   size: 20,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textRegular,
                 ),
               ),
-              suffixIconConstraints: BoxConstraints(
+              suffixIconConstraints: const BoxConstraints(
                 minHeight: 32,
                 minWidth: 32,
               ),

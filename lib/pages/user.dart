@@ -5,7 +5,7 @@ import 'package:duckhat/components/user/notificacoes.dart';
 import 'package:duckhat/components/user/seguranca.dart';
 import 'package:duckhat/components/user/configuracoes.dart';
 import 'package:duckhat/components/user/ajuda.dart';
-import 'package:duckhat/theme.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
 class PerfilPage extends StatelessWidget {
   const PerfilPage({super.key});
@@ -13,7 +13,7 @@ class PerfilPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+      backgroundColor: AppColors.background,
       body: Builder(
         builder: (ctx) => SingleChildScrollView(
           child: Column(
@@ -162,14 +162,14 @@ class PerfilPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textMuted),
+          Icon(icon, size: 16, color: AppColors.textRegular),
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              color: AppColors.textRegular,
               letterSpacing: 1.0,
             ),
           ),
@@ -186,7 +186,7 @@ class PerfilPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.cardShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -227,16 +227,12 @@ class PerfilPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: titleColor ?? AppColors.darkAlt,
+                  color: titleColor ?? AppColors.textBold,
                 ),
               ),
             ),
             if (showArrow)
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textMuted,
-                size: 22,
-              ),
+              Icon(Icons.chevron_right, color: AppColors.textRegular, size: 22),
           ],
         ),
       ),
@@ -248,7 +244,7 @@ class PerfilPage extends StatelessWidget {
       height: 1,
       indent: 66,
       endIndent: 16,
-      color: Color(0xFFF0F0F0),
+      color: AppColors.divider,
     );
   }
 

@@ -1,5 +1,5 @@
+import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
-import 'package:duckhat/theme.dart';
 
 class EditarPerfilPage extends StatefulWidget {
   const EditarPerfilPage({super.key});
@@ -37,17 +37,10 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     super.dispose();
   }
 
-  void _salvar() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Perfil salvo com sucesso!')));
-    Navigator.pop(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
@@ -66,7 +59,12 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         ),
         actions: [
           TextButton(
-            onPressed: _salvar,
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Perfil salvo com sucesso!')),
+              );
+              Navigator.pop(context);
+            },
             child: const Text(
               'Salvar',
               style: TextStyle(
@@ -163,7 +161,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.cardShadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -173,7 +171,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: AppColors.grayField),
+          labelStyle: const TextStyle(color: AppColors.textMuted),
           prefixIcon: Icon(icon, color: AppColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
