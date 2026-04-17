@@ -1,13 +1,8 @@
-import 'package:duckhat/components/bottomnav.dart';
 import 'package:duckhat/components/service/service_data.dart';
 import 'package:duckhat/components/service/service_hero.dart';
 import 'package:duckhat/components/service/service_info_card.dart';
 import 'package:duckhat/components/service/service_sections.dart';
-import 'package:duckhat/components/service/service_tab_menu.dart';
-import 'package:duckhat/pages/chat.dart';
-import 'package:duckhat/pages/home.dart';
-import 'package:duckhat/pages/schedule.dart';
-import 'package:duckhat/pages/user.dart';
+import 'package:duckhat/pages/schedule_date.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -19,103 +14,32 @@ class ServicePage extends StatefulWidget {
 }
 
 class _ServicePageState extends State<ServicePage> {
-  final ScrollController _scrollController = ScrollController();
   final PageController _galleryController = PageController(
     viewportFraction: 0.42,
   );
-  final List<GlobalKey> _sectionKeys = List.generate(5, (_) => GlobalKey());
 
   int _selectedTabIndex = 0;
   int _selectedGalleryIndex = 0;
-  bool _isAutoScrolling = false;
-  bool _imagesPrecached = false;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_handleScroll);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_imagesPrecached) {
-      return;
-    }
-
-    for (final image in serviceGalleryImages) {
-      precacheImage(AssetImage(image), context);
-    }
-
-    _imagesPrecached = true;
+    Future.microtask(() {
+      if (!mounted) return;
+      for (final image in serviceGalleryImages) {
+        precacheImage(AssetImage(image), context);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _scrollController.removeListener(_handleScroll);
-    _scrollController.dispose();
     _galleryController.dispose();
     super.dispose();
   }
 
-  void _handleScroll() {
-    if (_isAutoScrolling || !mounted) {
-      return;
-    }
-
-    int nearestIndex = _selectedTabIndex;
-    double nearestDistance = double.infinity;
-
-    for (int i = 0; i < _sectionKeys.length; i++) {
-      final context = _sectionKeys[i].currentContext;
-      if (context == null) {
-        continue;
-      }
-
-      final box = context.findRenderObject() as RenderBox?;
-      if (box == null || !box.hasSize) {
-        continue;
-      }
-
-      final distance = (box.localToGlobal(Offset.zero).dy - 160).abs();
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearestIndex = i;
-      }
-    }
-
-    if (nearestIndex != _selectedTabIndex) {
-      setState(() => _selectedTabIndex = nearestIndex);
-    }
-  }
-
-  Future<void> _scrollToSection(int index) async {
-    final context = _sectionKeys[index].currentContext;
-    if (context == null) {
-      return;
-    }
-
-    setState(() {
-      _selectedTabIndex = index;
-      _isAutoScrolling = true;
-    });
-
-    await Scrollable.ensureVisible(
-      context,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeInOut,
-      alignment: 0.04,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    Future.delayed(const Duration(milliseconds: 180), () {
-      if (mounted) {
-        _isAutoScrolling = false;
-      }
-    });
+  void _onTabSelected(int index) {
+    setState(() => _selectedTabIndex = index);
   }
 
   void _onGalleryPageChanged(int index) {
@@ -137,7 +61,7 @@ class _ServicePageState extends State<ServicePage> {
     showDialog<void>(
       context: context,
       barrierColor: Colors.black,
-      builder: (context) {
+      builder: (ctx) {
         return Dialog.fullscreen(
           backgroundColor: Colors.black,
           child: Stack(
@@ -156,7 +80,7 @@ class _ServicePageState extends State<ServicePage> {
                 top: 24,
                 right: 16,
                 child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () => Navigator.of(ctx).pop(),
                   icon: const Icon(Icons.close, color: Colors.white, size: 28),
                 ),
               ),
@@ -167,42 +91,17 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
-  void _onBottomNavTap(int index) {
-    if (index == 0) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const Home()),
-        (route) => false,
-      );
-      return;
-    }
-
-    final page = switch (index) {
-      1 => const SchedulePage(),
-      2 => const ChatPage(),
-      3 => const PerfilPage(),
-      _ => const Home(),
-    };
-
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => page));
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      bottomNavigationBar: DuckHatBottomNav(
-        selectedIndex: 0,
-        onTap: _onBottomNavTap,
-      ),
       body: SingleChildScrollView(
-        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ServiceHero(onBack: () => Navigator.pop(context)),
-            Transform.translate(
-              offset: const Offset(0, -28),
+            Container(
+              transform: Matrix4.translationValues(0, -28, 0),
               child: Column(
                 children: [
                   const ServiceInfoCard(),
@@ -210,10 +109,10 @@ class _ServicePageState extends State<ServicePage> {
                   ServiceTabMenu(
                     tabs: serviceTabs,
                     selectedIndex: _selectedTabIndex,
-                    onTap: _scrollToSection,
+                    onTap: _onTabSelected,
                   ),
                   ServiceSections(
-                    sectionKeys: _sectionKeys,
+                    selectedIndex: _selectedTabIndex,
                     offers: serviceOffers,
                     reviews: serviceReviews,
                     faqs: serviceFaqs,
@@ -221,16 +120,42 @@ class _ServicePageState extends State<ServicePage> {
                     selectedGalleryIndex: _selectedGalleryIndex,
                     galleryController: _galleryController,
                     onGalleryChanged: _onGalleryPageChanged,
-                    onGallerySelected: (index) {
-                      _selectGalleryImage(index);
-                    },
+                    onGallerySelected: _selectGalleryImage,
                     onOpenGallery: _openGalleryFullscreen,
+                    onBookTap: (offer) {
+                      Navigator.pushNamed(
+                        context,
+                        '/schedule-date',
+                        arguments: {
+                          'serviceName': offer.title,
+                          'establishmentName': 'Barbie Dream Barber',
+                        },
+                      );
+                    },
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.pushNamed(
+            context,
+            '/schedule-date',
+            arguments: {
+              'serviceName': serviceOffers.isNotEmpty
+                  ? serviceOffers.first.title
+                  : 'Servico',
+              'establishmentName': 'Barbie Dream Barber',
+            },
+          );
+        },
+        backgroundColor: AppColors.accent,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.calendar_today),
+        label: const Text('Agendar'),
       ),
     );
   }

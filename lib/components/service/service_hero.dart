@@ -12,7 +12,12 @@ class ServiceHero extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset('assets/barbie.png', fit: BoxFit.cover),
+          Image.asset(
+            'assets/barbie.png',
+            fit: BoxFit.cover,
+            cacheWidth: 800,
+            filterQuality: FilterQuality.medium,
+          ),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -27,18 +32,22 @@ class ServiceHero extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 12,
+            top: 48,
             left: 16,
             right: 16,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _HeroAction(icon: Icons.arrow_back_ios_new, onTap: onBack),
-                const Row(
+                _HeroAction(
+                  icon: Icons.arrow_back_ios_new,
+                  onTap: onBack,
+                  iconSize: 20,
+                ),
+                Row(
                   children: [
-                    _HeroAction(icon: Icons.share_outlined),
-                    SizedBox(width: 10),
-                    _HeroAction(icon: Icons.favorite_border),
+                    _HeroAction(icon: Icons.share_outlined, iconSize: 20),
+                    const SizedBox(width: 10),
+                    _HeroAction(icon: Icons.favorite_border, iconSize: 20),
                   ],
                 ),
               ],
@@ -53,22 +62,30 @@ class ServiceHero extends StatelessWidget {
 class _HeroAction extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
+  final double iconSize;
 
-  const _HeroAction({required this.icon, this.onTap});
+  const _HeroAction({required this.icon, this.onTap, this.iconSize = 18});
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.black.withValues(alpha: 0.24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      color: Colors.white.withValues(alpha: 0.22),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: InkWell(
         customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(24),
         ),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Icon(icon, size: 18, color: Colors.white),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Icon(icon, size: iconSize, color: Colors.white),
         ),
       ),
     );
