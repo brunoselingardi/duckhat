@@ -13,7 +13,7 @@ class ServiceHero extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset(
-            'assets/barbie.png',
+            'assets/barbie.jpg',
             fit: BoxFit.cover,
             cacheWidth: 800,
             filterQuality: FilterQuality.medium,

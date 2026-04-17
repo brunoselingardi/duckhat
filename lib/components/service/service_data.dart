@@ -9,10 +9,10 @@ const serviceTabs = [
 ];
 
 const serviceGalleryImages = [
-  'assets/barbie.png',
-  'assets/barbiesalon.png',
-  'assets/mariano.png',
-  'assets/jamessalon.png',
+  'assets/barbie.jpg',
+  'assets/barbiesalon.jpg',
+  'assets/mariano.jpg',
+  'assets/jamessalon.jpg',
 ];
 
 const serviceOffers = [

@@ -74,7 +74,7 @@ class ServiceInfoCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: Image.asset('assets/barbielogo.png', fit: BoxFit.cover),
+                child: Image.asset('assets/barbielogo.jpg', fit: BoxFit.cover),
               ),
             ],
           ),
