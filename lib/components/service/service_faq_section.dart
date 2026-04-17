@@ -24,7 +24,11 @@ class ServiceFaqSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          ...faqs.map((faq) => _FaqItem(faq: faq)),
+          RepaintBoundary(
+            child: Column(
+              children: faqs.map((faq) => _FaqItem(faq: faq)).toList(),
+            ),
+          ),
         ],
       ),
     );

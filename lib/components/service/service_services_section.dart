@@ -4,8 +4,13 @@ import 'package:flutter/material.dart';
 
 class ServiceServicesSection extends StatelessWidget {
   final List<ServiceOffer> offers;
+  final void Function(ServiceOffer offer)? onBookTap;
 
-  const ServiceServicesSection({super.key, required this.offers});
+  const ServiceServicesSection({
+    super.key,
+    required this.offers,
+    this.onBookTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +29,19 @@ class ServiceServicesSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          for (int index = 0; index < offers.length; index++) ...[
-            _ServiceRow(offer: offers[index]),
-            if (index != offers.length - 1)
-              const Divider(height: 28, color: Color(0xFFE8EDF6)),
-          ],
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: offers.length,
+            separatorBuilder: (_, __) =>
+                const Divider(height: 28, color: Color(0xFFE8EDF6)),
+            itemBuilder: (context, index) => _ServiceRow(
+              offer: offers[index],
+              onBookTap: onBookTap != null
+                  ? () => onBookTap!(offers[index])
+                  : null,
+            ),
+          ),
         ],
       ),
     );
@@ -37,8 +50,9 @@ class ServiceServicesSection extends StatelessWidget {
 
 class _ServiceRow extends StatelessWidget {
   final ServiceOffer offer;
+  final VoidCallback? onBookTap;
 
-  const _ServiceRow({required this.offer});
+  const _ServiceRow({required this.offer, this.onBookTap});
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +107,7 @@ class _ServiceRow extends StatelessWidget {
           SizedBox(
             width: 136,
             child: FilledButton(
-              onPressed: () {},
+              onPressed: onBookTap,
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFF3EFE8),
                 foregroundColor: AppColors.textBold,

@@ -33,6 +33,15 @@ class AppColors {
   static const navUnselected = Color(0xB3291970);
   static const blackText = Color(0xFF0C0041);
   static const greenText = Color(0xA60C0041);
+  static const darkAlt = Color(0xFF0C0041);
+  static const grayField = Color(0xFF6B7280);
+  static const backgroundAlt = Color(0xFFF0F4F8);
+  static const chatBackground = Color(0xFFFAFBFC);
+  static const messageOther = Color(0xFFF0F0F0);
+  static const inputField = Color(0xFFF5F5F5);
+  static const shadow10 = Color(0x1A000000);
+  static const shadow20 = Color(0x33000000);
+  static const shadow30 = Color(0x4D000000);
 }
 
 class AppTheme {

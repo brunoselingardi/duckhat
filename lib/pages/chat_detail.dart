@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart' show AppColors;
+import 'package:flutter/material.dart';
 
 class ChatDetailPage extends StatefulWidget {
   final String name;
@@ -38,6 +38,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     },
     {"text": "Pode vir amanhã às 14h?", "isMe": false, "time": "10:30"},
   ];
+
+  void _sendMessage() {
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() {
+      _messages.add({"text": text, "isMe": true, "time": "Agora"});
+    });
+    _messageController.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,7 +190,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 color: AppColors.accent,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.send, color: Colors.white, size: 18),
+              child: GestureDetector(
+                onTap: _sendMessage,
+                child: const Icon(Icons.send, color: Colors.white, size: 18),
+              ),
             ),
           ],
         ),

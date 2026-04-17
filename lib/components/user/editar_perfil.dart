@@ -1,8 +1,41 @@
-import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart' show AppColors;
+import 'package:flutter/material.dart';
 
-class EditarPerfilPage extends StatelessWidget {
+class EditarPerfilPage extends StatefulWidget {
   const EditarPerfilPage({super.key});
+
+  @override
+  State<EditarPerfilPage> createState() => _EditarPerfilPageState();
+}
+
+class _EditarPerfilPageState extends State<EditarPerfilPage> {
+  late TextEditingController _nomeController;
+  late TextEditingController _emailController;
+  late TextEditingController _telefoneController;
+  late TextEditingController _nascimentoController;
+  late TextEditingController _enderecoController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nomeController = TextEditingController(text: 'Estadosunilson');
+    _emailController = TextEditingController(
+      text: 'estadosunilson@hotmail.com.br',
+    );
+    _telefoneController = TextEditingController(text: '(11) 99999-9999');
+    _nascimentoController = TextEditingController(text: '01/01/1990');
+    _enderecoController = TextEditingController(text: 'Rua Example, 123');
+  }
+
+  @override
+  void dispose() {
+    _nomeController.dispose();
+    _emailController.dispose();
+    _telefoneController.dispose();
+    _nascimentoController.dispose();
+    _enderecoController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +59,12 @@ class EditarPerfilPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Perfil salvo com sucesso!')),
+              );
+              Navigator.pop(context);
+            },
             child: const Text(
               'Salvar',
               style: TextStyle(
@@ -85,29 +123,25 @@ class EditarPerfilPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 32),
-            _buildTextField('Nome', 'Estadosunilson', Icons.person_outline),
+            _buildTextField('Nome', _nomeController, Icons.person_outline),
             const SizedBox(height: 16),
-            _buildTextField(
-              'Email',
-              'estadosunilson@hotmail.com.br',
-              Icons.email_outlined,
-            ),
+            _buildTextField('Email', _emailController, Icons.email_outlined),
             const SizedBox(height: 16),
             _buildTextField(
               'Telefone',
-              '(11) 99999-9999',
+              _telefoneController,
               Icons.phone_outlined,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               'Data de Nascimento',
-              '01/01/1990',
+              _nascimentoController,
               Icons.cake_outlined,
             ),
             const SizedBox(height: 16),
             _buildTextField(
               'Endereço',
-              'Rua Example, 123',
+              _enderecoController,
               Icons.location_on_outlined,
             ),
           ],
@@ -116,7 +150,11 @@ class EditarPerfilPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String label, String hint, IconData icon) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -130,13 +168,10 @@ class EditarPerfilPage extends StatelessWidget {
         ],
       ),
       child: TextField(
+        controller: controller,
         decoration: InputDecoration(
           labelText: label,
-          hintText: hint,
           labelStyle: const TextStyle(color: AppColors.textMuted),
-          hintStyle: TextStyle(
-            color: AppColors.textMuted.withValues(alpha: 0.5),
-          ),
           prefixIcon: Icon(icon, color: AppColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),

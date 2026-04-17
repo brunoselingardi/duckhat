@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:duckhat/components/bottomnav.dart';
 import 'package:duckhat/theme.dart' show AppColors;
+import 'package:flutter/material.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -10,8 +10,6 @@ class SchedulePage extends StatefulWidget {
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-  int _selectedIndex = 1;
-
   final List<Map<String, dynamic>> appointments = [
     {
       "day": "SÁB",
