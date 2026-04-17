@@ -2,12 +2,13 @@ package com.duckhat.api.controller;
 
 import com.duckhat.api.dto.CreateDisponibilidadeRequest;
 import com.duckhat.api.dto.DisponibilidadeResponse;
+import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.service.DisponibilidadeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import com.duckhat.api.entity.Usuario;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -46,7 +47,9 @@ public class DisponibilidadeController {
   }
 
   @GetMapping("/prestador/{prestadorId}")
-  public List<DisponibilidadeResponse> listarPorPrestador(@PathVariable Long prestadorId) {
-    return disponibilidadeService.listarPorPrestador(prestadorId);
+  public List<DisponibilidadeResponse> listarPorPrestador(
+      @PathVariable Long prestadorId,
+      @AuthenticationPrincipal Usuario usuario) {
+    return disponibilidadeService.listarPorPrestador(prestadorId, usuario);
   }
 }

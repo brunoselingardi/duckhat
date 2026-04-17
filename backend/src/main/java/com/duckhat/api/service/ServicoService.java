@@ -67,8 +67,28 @@ public class ServicoService {
   }
 
   @Transactional(readOnly = true)
-  public List<ServicoResponse> listarPorPrestador(Long prestadorId) {
+  public List<ServicoResponse> listarPorPrestador(Long prestadorId, Usuario usuario) {
+    if (usuario.getTipo() != TipoUsuario.PRESTADOR) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O usuário autenticado não é um prestador");
+    }
+
+    if (!prestadorId.equals(usuario.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "Você não pode acessar serviços de outro prestador");
+    }
+
     return servicoRepository.findByPrestadorId(prestadorId)
+        .stream()
+        .map(ServicoResponse::fromEntity)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<ServicoResponse> listarCatalogoPorPrestador(Long prestadorId) {
+    return servicoRepository.findByPrestadorIdAndAtivoTrue(prestadorId)
         .stream()
         .map(ServicoResponse::fromEntity)
         .toList();

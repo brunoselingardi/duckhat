@@ -14,7 +14,5 @@ public record CreateAgendamentoRequest(
 
     @NotNull LocalDateTime fimEm,
 
-    @NotNull StatusAgendamento status,
-
     @Size(max = 1000) String observacoes) {
 }

@@ -94,7 +94,7 @@ public class AgendamentoService {
     agendamento.setServico(servico);
     agendamento.setInicioEm(request.inicioEm());
     agendamento.setFimEm(request.fimEm());
-    agendamento.setStatus(request.status());
+    agendamento.setStatus(StatusAgendamento.PENDENTE);
     agendamento.setObservacoes(request.observacoes());
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
