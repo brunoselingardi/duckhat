@@ -14,16 +14,20 @@ class ServicePage extends StatefulWidget {
 }
 
 class _ServicePageState extends State<ServicePage> {
+  final ScrollController _scrollController = ScrollController();
   final PageController _galleryController = PageController(
     viewportFraction: 0.42,
   );
+  final List<GlobalKey> _sectionKeys = List.generate(5, (_) => GlobalKey());
 
   int _selectedTabIndex = 0;
   int _selectedGalleryIndex = 0;
+  bool _isAutoScrolling = false;
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_handleScroll);
     Future.microtask(() {
       if (!mounted) return;
       for (final image in serviceGalleryImages) {
@@ -34,12 +38,58 @@ class _ServicePageState extends State<ServicePage> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_handleScroll);
+    _scrollController.dispose();
     _galleryController.dispose();
     super.dispose();
   }
 
-  void _onTabSelected(int index) {
-    setState(() => _selectedTabIndex = index);
+  void _handleScroll() {
+    if (_isAutoScrolling || !mounted) return;
+
+    int nearestIndex = _selectedTabIndex;
+    double nearestDistance = double.infinity;
+
+    for (int i = 0; i < _sectionKeys.length; i++) {
+      final context = _sectionKeys[i].currentContext;
+      if (context == null) continue;
+
+      final box = context.findRenderObject() as RenderBox?;
+      if (box == null || !box.hasSize) continue;
+
+      final distance = (box.localToGlobal(Offset.zero).dy - 160).abs();
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearestIndex = i;
+      }
+    }
+
+    if (nearestIndex != _selectedTabIndex) {
+      setState(() => _selectedTabIndex = nearestIndex);
+    }
+  }
+
+  Future<void> _scrollToSection(int index) async {
+    final context = _sectionKeys[index].currentContext;
+    if (context == null) return;
+
+    setState(() {
+      _selectedTabIndex = index;
+      _isAutoScrolling = true;
+    });
+
+    await Scrollable.ensureVisible(
+      context,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeInOut,
+      alignment: 0.04,
+    );
+
+    if (!mounted) return;
+
+    Future.delayed(const Duration(milliseconds: 180), () {
+      if (mounted) _isAutoScrolling = false;
+    });
   }
 
   void _onGalleryPageChanged(int index) {
@@ -96,6 +146,7 @@ class _ServicePageState extends State<ServicePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -109,10 +160,10 @@ class _ServicePageState extends State<ServicePage> {
                   ServiceTabMenu(
                     tabs: serviceTabs,
                     selectedIndex: _selectedTabIndex,
-                    onTap: _onTabSelected,
+                    onTap: _scrollToSection,
                   ),
                   ServiceSections(
-                    selectedIndex: _selectedTabIndex,
+                    sectionKeys: _sectionKeys,
                     offers: serviceOffers,
                     reviews: serviceReviews,
                     faqs: serviceFaqs,
