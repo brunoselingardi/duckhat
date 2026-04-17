@@ -3,6 +3,7 @@ import 'package:duckhat/theme.dart';
 import 'package:duckhat/components/bottomnav.dart';
 import 'pages/home.dart';
 import 'pages/schedule.dart';
+import 'pages/schedule_date.dart';
 import 'pages/chat.dart';
 import 'pages/user.dart';
 
@@ -20,6 +21,18 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.theme,
       debugShowCheckedModeBanner: false,
       home: const MainNavigator(),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/schedule-date') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) => ScheduleDatePage(
+              serviceName: args['serviceName'] ?? '',
+              establishmentName: args['establishmentName'] ?? '',
+            ),
+          );
+        }
+        return null;
+      },
     );
   }
 }
