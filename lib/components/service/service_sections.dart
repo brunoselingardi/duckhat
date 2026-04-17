@@ -79,7 +79,7 @@ class ServiceTabMenu extends StatelessWidget {
 }
 
 class ServiceSections extends StatelessWidget {
-  final int selectedIndex;
+  final List<GlobalKey> sectionKeys;
   final List<ServiceOffer> offers;
   final List<ServiceReview> reviews;
   final List<ServiceFaq> faqs;
@@ -93,7 +93,7 @@ class ServiceSections extends StatelessWidget {
 
   const ServiceSections({
     super.key,
-    required this.selectedIndex,
+    required this.sectionKeys,
     required this.offers,
     required this.reviews,
     required this.faqs,
@@ -114,12 +114,18 @@ class ServiceSections extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
-      child: IndexedStack(
-        index: selectedIndex,
+      child: Column(
         children: [
-          const ServiceExperienceSection(),
-          ServiceServicesSection(offers: offers, onBookTap: onBookTap),
+          ServiceExperienceSection(key: sectionKeys[0]),
+          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          ServiceServicesSection(
+            key: sectionKeys[1],
+            offers: offers,
+            onBookTap: onBookTap,
+          ),
+          const Divider(height: 1, color: Color(0xFFE8EDF6)),
           ServiceGallerySection(
+            key: sectionKeys[2],
             images: galleryImages,
             selectedIndex: selectedGalleryIndex,
             controller: galleryController,
@@ -127,8 +133,10 @@ class ServiceSections extends StatelessWidget {
             onSelected: onGallerySelected,
             onOpenGallery: onOpenGallery,
           ),
-          ServiceReviewsSection(reviews: reviews),
-          ServiceFaqSection(faqs: faqs),
+          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          ServiceReviewsSection(key: sectionKeys[3], reviews: reviews),
+          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          ServiceFaqSection(key: sectionKeys[4], faqs: faqs),
         ],
       ),
     );
