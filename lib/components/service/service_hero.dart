@@ -12,12 +12,7 @@ class ServiceHero extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            'assets/barbie.png',
-            fit: BoxFit.cover,
-            cacheWidth: 800,
-            filterQuality: FilterQuality.medium,
-          ),
+          Image.asset('assets/barbie.jpg', fit: BoxFit.cover),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
