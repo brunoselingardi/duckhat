@@ -11,7 +11,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 INSERT INTO usuarios (id, nome, email, senha_hash, telefone, tipo, criado_em) VALUES
     (1, 'Login Teste', 'login@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999999', 'CLIENTE', '2026-04-03 19:26:19'),
-    (2, 'Prestador Teste', 'prestador@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999999', 'PRESTADOR', '2026-04-04 12:43:06'),
+    (2, 'Barbie Dream Barber', 'prestador@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999999', 'PRESTADOR', '2026-04-04 12:43:06'),
     (3, 'Novo Usuario', 'novo@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999999', 'CLIENTE', '2026-04-04 12:48:35'),
     (4, 'Prestador API A', 'prestador.api.a@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999991', 'PRESTADOR', '2026-04-06 11:57:36'),
     (5, 'Prestador API B', 'prestador.api.b@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999992', 'PRESTADOR', '2026-04-06 11:57:42'),
@@ -21,13 +21,19 @@ INSERT INTO usuarios (id, nome, email, senha_hash, telefone, tipo, criado_em) VA
     (9, 'Cliente API B', 'cliente.api.b@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999994', 'CLIENTE', '2026-04-06 12:48:29');
 
 INSERT INTO servicos (id, prestador_id, nome, descricao, duracao_min, preco, ativo, criado_em) VALUES
-    (1, 2, 'Corte de cabelo', 'Corte masculino com acabamento', 45, 35.00, TRUE, '2026-04-04 13:26:33'),
-    (2, 2, 'Barba', 'Barba completa', 30, 25.00, TRUE, '2026-04-04 14:37:32'),
-    (3, 4, 'Corte Premium', 'Teste de serviço do prestador API A', 60, 80.00, TRUE, '2026-04-06 11:58:10');
+    (1, 2, 'Glow Cut Barbie', 'Corte com acabamento leve, volume alinhado e finalizacao com assinatura fashionista.', 50, 55.00, TRUE, '2026-04-04 13:26:33'),
+    (2, 2, 'Pink Beard Design', 'Desenho de barba com contorno preciso, toalha quente e cuidado premium.', 35, 42.00, TRUE, '2026-04-04 14:37:32'),
+    (3, 2, 'Dream Combo', 'Pacote completo com corte, barba e finalizacao pensado para um visual marcante.', 80, 89.00, TRUE, '2026-04-06 11:58:10'),
+    (4, 2, 'Ken Executive Finish', 'Acabamento rapido para quem quer elegancia, limpeza e presenca no mesmo horario.', 30, 38.00, TRUE, '2026-04-06 11:58:11');
 
 INSERT INTO disponibilidades (id, prestador_id, dia_semana, hora_inicio, hora_fim, ativo) VALUES
-    (1, 2, 1, '08:00:00', '12:00:00', TRUE),
-    (2, 4, 1, '09:00:00', '12:00:00', TRUE);
+    (1, 2, 1, '08:00:00', '19:00:00', TRUE),
+    (2, 2, 2, '08:00:00', '19:00:00', TRUE),
+    (3, 2, 3, '08:00:00', '19:00:00', TRUE),
+    (4, 2, 4, '08:00:00', '19:00:00', TRUE),
+    (5, 2, 5, '08:00:00', '19:00:00', TRUE),
+    (6, 2, 6, '08:00:00', '19:00:00', TRUE),
+    (7, 2, 7, '08:00:00', '19:00:00', TRUE);
 
 INSERT INTO agendamentos (id, cliente_id, prestador_id, servico_id, inicio_at, fim_at, status, observacoes, criado_em) VALUES
     (1, 1, 2, 1, '2026-04-05 10:00:00', '2026-04-05 10:45:00', 'CANCELADO', 'Agendamento cancelado para teste de fluxo', '2026-04-04 13:26:51'),
@@ -45,8 +51,8 @@ INSERT INTO notificacao_eventos (id, agendamento_id, canal, agendado_para, envia
     (3, 4, 'APP', '2026-04-13 09:30:00', NULL, 'PENDENTE');
 
 ALTER TABLE usuarios AUTO_INCREMENT = 10;
-ALTER TABLE servicos AUTO_INCREMENT = 4;
-ALTER TABLE disponibilidades AUTO_INCREMENT = 3;
+ALTER TABLE servicos AUTO_INCREMENT = 5;
+ALTER TABLE disponibilidades AUTO_INCREMENT = 8;
 ALTER TABLE agendamentos AUTO_INCREMENT = 5;
 ALTER TABLE avaliacoes AUTO_INCREMENT = 3;
 ALTER TABLE notificacao_eventos AUTO_INCREMENT = 4;

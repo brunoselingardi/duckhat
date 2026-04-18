@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/components/home/rebookcard.dart';
+import 'package:duckhat/theme.dart' show AppColors;
 
 class EmptyRebookState extends StatelessWidget {
   const EmptyRebookState({super.key});
@@ -15,14 +16,14 @@ class EmptyRebookState extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Column(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, color: Colors.black54),
-            SizedBox(height: 6),
+            Icon(Icons.history, color: AppColors.textMuted),
+            const SizedBox(height: 6),
             Text(
               "Você ainda não possui serviços recentes",
-              style: TextStyle(color: Colors.black54),
+              style: TextStyle(color: AppColors.textMuted),
             ),
           ],
         ),
@@ -41,11 +42,15 @@ class RebookSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             "Agende novamente:",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textBold,
+            ),
           ),
         ),
         const SizedBox(height: 12),

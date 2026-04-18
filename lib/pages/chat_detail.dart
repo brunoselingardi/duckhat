@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-
-const kBackgroundColor = Color(0xFFFAFBFC);
-const kPrimaryColor = Color(0xFF3A7FD5);
-const kPrimaryLightOpaque = Color(0xFF8EB5F0);
-const kTextColor = Color(0xFF2F4987);
-const kGrayColor = Color(0xFF6B7280);
+import 'package:duckhat/theme.dart' show AppColors;
 
 class ChatDetailPage extends StatefulWidget {
   final String name;
@@ -73,20 +68,20 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       backgroundColor: Colors.white,
       elevation: 1,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: kTextColor),
+        icon: Icon(Icons.arrow_back, color: AppColors.textBold),
         onPressed: () => Navigator.pop(context),
       ),
       title: Text(
         widget.name,
-        style: const TextStyle(
-          color: kTextColor,
+        style: TextStyle(
+          color: AppColors.textBold,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.more_vert, color: kTextColor),
+          icon: Icon(Icons.more_vert, color: AppColors.textBold),
           onPressed: () {},
         ),
       ],
@@ -105,7 +100,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isMe ? kPrimaryColor : const Color(0xFFF0F0F0),
+          color: isMe ? AppColors.chatBubbleSelf : AppColors.chatBubbleOther,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -119,7 +114,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             Text(
               msg["text"],
               style: TextStyle(
-                color: isMe ? Colors.white : kTextColor,
+                color: isMe ? Colors.white : AppColors.textBold,
                 fontSize: 14,
               ),
             ),
@@ -128,7 +123,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               msg["time"],
               style: TextStyle(
                 fontSize: 10,
-                color: isMe ? Colors.white70 : kGrayColor,
+                color: isMe ? Colors.white70 : AppColors.textMuted,
               ),
             ),
           ],
@@ -144,7 +139,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: AppColors.cardShadow,
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -154,22 +149,25 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         top: false,
         child: Row(
           children: [
-            const Icon(Icons.mic, color: kGrayColor),
+            Icon(Icons.mic, color: AppColors.textMuted),
             const SizedBox(width: 12),
-            const Icon(Icons.emoji_emotions_outlined, color: kGrayColor),
+            Icon(Icons.emoji_emotions_outlined, color: AppColors.textMuted),
             const SizedBox(width: 12),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
+                  color: AppColors.inputFill,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: TextField(
                   controller: _messageController,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: "Digite uma mensagem...",
-                    hintStyle: TextStyle(color: kGrayColor, fontSize: 14),
+                    hintStyle: TextStyle(
+                      color: AppColors.textMuted,
+                      fontSize: 14,
+                    ),
                     border: InputBorder.none,
                   ),
                 ),
@@ -179,7 +177,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: const BoxDecoration(
-                color: kPrimaryColor,
+                color: AppColors.accent,
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.send, color: Colors.white, size: 18),

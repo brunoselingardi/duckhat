@@ -33,6 +33,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Local database environment
+database/.env
+
 # Symbolication related
 app.*.symbols
 

@@ -12,7 +12,7 @@ class HomeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          Image.asset("assets/icon.png", width: 80, height: 80),
+          Image.asset("assets/icon.jpg", width: 80, height: 80),
           const SizedBox(width: 12),
           Expanded(
             child: Text(

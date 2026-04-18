@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:duckhat/components/bottomnav.dart';
 import 'package:duckhat/pages/chat_detail.dart';
-
-const kBackgroundColor = Color(0xFFFAFBFC);
-const kPrimaryColor = Color(0xFF3A7FD5);
-const kPrimaryLightOpaque = Color(0xFF8EB5F0);
-const kTextColor = Color(0xFF2F4987);
-const kGrayColor = Color(0xFF6B7280);
+import 'package:duckhat/theme.dart' show AppColors;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -16,8 +10,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  int _selectedIndex = 3;
-
   final List<Map<String, dynamic>> conversations = [
     {
       "name": "Barbearia Vila Nova",
@@ -52,7 +44,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBackgroundColor,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -70,12 +62,12 @@ class _ChatPageState extends State<ChatPage> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: const Text(
+      child: Text(
         "Mensagens",
         style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: kTextColor,
+          color: AppColors.textBold,
         ),
       ),
     );
@@ -91,7 +83,7 @@ class _ChatPageState extends State<ChatPage> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppColors.cardShadow,
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
@@ -99,14 +91,11 @@ class _ChatPageState extends State<ChatPage> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.search, color: kGrayColor, size: 20),
+            Icon(Icons.search, color: AppColors.textMuted, size: 20),
             const SizedBox(width: 12),
             Text(
               "Buscar conversas",
-              style: TextStyle(
-                color: kGrayColor.withOpacity(0.7),
-                fontSize: 14,
-              ),
+              style: TextStyle(color: AppColors.textRegular, fontSize: 14),
             ),
           ],
         ),
@@ -149,7 +138,7 @@ class _ChatPageState extends State<ChatPage> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: kPrimaryLightOpaque.withOpacity(0.2),
+                    color: AppColors.accentLight.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
@@ -158,7 +147,7 @@ class _ChatPageState extends State<ChatPage> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: kPrimaryColor,
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
@@ -170,16 +159,19 @@ class _ChatPageState extends State<ChatPage> {
                     children: [
                       Text(
                         chat["name"],
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: kTextColor,
+                          color: AppColors.textBold,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         chat["lastMessage"],
-                        style: TextStyle(fontSize: 13, color: kGrayColor),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textRegular,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -191,7 +183,10 @@ class _ChatPageState extends State<ChatPage> {
                   children: [
                     Text(
                       chat["time"],
-                      style: TextStyle(fontSize: 12, color: kGrayColor),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textMuted,
+                      ),
                     ),
                     if (chat["unread"] > 0) ...[
                       const SizedBox(height: 4),
@@ -201,7 +196,7 @@ class _ChatPageState extends State<ChatPage> {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: kPrimaryColor,
+                          color: AppColors.accent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(

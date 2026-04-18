@@ -22,14 +22,14 @@ class FilterCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 100,
-        height: 80,
+        height: 92,
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(14),
           boxShadow: const [
-            BoxShadow(blurRadius: 6, color: AppColors.filterShadow),
+            BoxShadow(blurRadius: 6, color: AppColors.cardShadow),
           ],
           border: isSelected
               ? Border.all(color: AppColors.filterSelected, width: 2)
