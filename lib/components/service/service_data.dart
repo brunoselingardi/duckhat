@@ -8,6 +8,9 @@ const serviceTabs = [
   'Perguntas',
 ];
 
+const serviceEstablishmentName = 'Barbie Dream Barber';
+const servicePrestadorId = 2;
+
 const serviceGalleryImages = [
   'assets/barbie.jpg',
   'assets/barbiesalon.jpg',
@@ -17,32 +20,40 @@ const serviceGalleryImages = [
 
 const serviceOffers = [
   ServiceOffer(
+    serviceId: 1,
+    prestadorId: servicePrestadorId,
     title: 'Glow Cut Barbie',
-    duration: '50 min',
-    price: 'R\$ 55',
     description:
         'Corte com acabamento leve, volume alinhado e finalizacao com assinatura fashionista.',
+    durationMin: 50,
+    priceValue: 55,
   ),
   ServiceOffer(
+    serviceId: 2,
+    prestadorId: servicePrestadorId,
     title: 'Pink Beard Design',
-    duration: '35 min',
-    price: 'R\$ 42',
     description:
         'Desenho de barba com contorno preciso, toalha quente e cuidado premium.',
+    durationMin: 35,
+    priceValue: 42,
   ),
   ServiceOffer(
+    serviceId: 3,
+    prestadorId: servicePrestadorId,
     title: 'Dream Combo',
-    duration: '1h 20 min',
-    price: 'R\$ 89',
     description:
         'Pacote completo com corte, barba e finalizacao pensado para um visual marcante.',
+    durationMin: 80,
+    priceValue: 89,
   ),
   ServiceOffer(
+    serviceId: 4,
+    prestadorId: servicePrestadorId,
     title: 'Ken Executive Finish',
-    duration: '30 min',
-    price: 'R\$ 38',
     description:
         'Acabamento rapido para quem quer elegancia, limpeza e presenca no mesmo horario.',
+    durationMin: 30,
+    priceValue: 38,
   ),
 ];
 

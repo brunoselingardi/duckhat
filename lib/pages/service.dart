@@ -1,8 +1,10 @@
 import 'package:duckhat/components/service/service_data.dart';
 import 'package:duckhat/components/service/service_hero.dart';
 import 'package:duckhat/components/service/service_info_card.dart';
+import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/components/service/service_sections.dart';
-import 'package:duckhat/pages/schedule_date.dart';
+import 'package:duckhat/models/servico_catalogo.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -23,6 +25,9 @@ class _ServicePageState extends State<ServicePage> {
   int _selectedTabIndex = 0;
   int _selectedGalleryIndex = 0;
   bool _isAutoScrolling = false;
+  bool _loadingServices = true;
+  String? _servicesError;
+  List<ServiceOffer> _offers = const [];
 
   @override
   void initState() {
@@ -34,6 +39,7 @@ class _ServicePageState extends State<ServicePage> {
         precacheImage(AssetImage(image), context);
       }
     });
+    _loadServices();
   }
 
   @override
@@ -98,6 +104,43 @@ class _ServicePageState extends State<ServicePage> {
     }
   }
 
+  Future<void> _loadServices() async {
+    setState(() {
+      _loadingServices = true;
+      _servicesError = null;
+    });
+
+    try {
+      final services = await DuckHatApi.instance.listarServicosPorPrestador(
+        servicePrestadorId,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _offers = services.map(_offerFromServico).toList();
+        _loadingServices = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _loadingServices = false;
+        _servicesError = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  ServiceOffer _offerFromServico(ServicoCatalogo service) {
+    return ServiceOffer(
+      serviceId: service.id,
+      prestadorId: service.prestadorId,
+      title: service.nome,
+      description: service.descricao ?? '',
+      durationMin: service.duracaoMin,
+      priceValue: service.preco,
+    );
+  }
+
   Future<void> _selectGalleryImage(int index) async {
     setState(() => _selectedGalleryIndex = index);
     await _galleryController.animateToPage(
@@ -141,6 +184,29 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
+  Future<void> _bookOffer(ServiceOffer offer) async {
+    final created = await Navigator.pushNamed(
+      context,
+      '/schedule-date',
+      arguments: {
+        'serviceId': offer.serviceId,
+        'prestadorId': offer.prestadorId,
+        'serviceName': offer.title,
+        'establishmentName': serviceEstablishmentName,
+        'durationMin': offer.durationMin,
+      },
+    );
+
+    if (!mounted || created != true) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Agendamento de ${offer.title} criado com sucesso.'),
+        backgroundColor: AppColors.accent,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,7 +230,10 @@ class _ServicePageState extends State<ServicePage> {
                   ),
                   ServiceSections(
                     sectionKeys: _sectionKeys,
-                    offers: serviceOffers,
+                    offers: _offers,
+                    isServicesLoading: _loadingServices,
+                    servicesError: _servicesError,
+                    onServicesRetry: _loadServices,
                     reviews: serviceReviews,
                     faqs: serviceFaqs,
                     galleryImages: serviceGalleryImages,
@@ -173,16 +242,7 @@ class _ServicePageState extends State<ServicePage> {
                     onGalleryChanged: _onGalleryPageChanged,
                     onGallerySelected: _selectGalleryImage,
                     onOpenGallery: _openGalleryFullscreen,
-                    onBookTap: (offer) {
-                      Navigator.pushNamed(
-                        context,
-                        '/schedule-date',
-                        arguments: {
-                          'serviceName': offer.title,
-                          'establishmentName': 'Barbie Dream Barber',
-                        },
-                      );
-                    },
+                    onBookTap: _bookOffer,
                   ),
                 ],
               ),
@@ -191,18 +251,7 @@ class _ServicePageState extends State<ServicePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.pushNamed(
-            context,
-            '/schedule-date',
-            arguments: {
-              'serviceName': serviceOffers.isNotEmpty
-                  ? serviceOffers.first.title
-                  : 'Servico',
-              'establishmentName': 'Barbie Dream Barber',
-            },
-          );
-        },
+        onPressed: _offers.isEmpty ? null : () => _bookOffer(_offers.first),
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.calendar_today),

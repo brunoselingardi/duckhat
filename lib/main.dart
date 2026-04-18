@@ -26,8 +26,11 @@ class MyApp extends StatelessWidget {
           final args = settings.arguments as Map<String, dynamic>;
           return MaterialPageRoute(
             builder: (context) => ScheduleDatePage(
+              serviceId: args['serviceId'] as int,
+              prestadorId: args['prestadorId'] as int,
               serviceName: args['serviceName'] ?? '',
               establishmentName: args['establishmentName'] ?? '',
+              durationMin: args['durationMin'] as int,
             ),
           );
         }

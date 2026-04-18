@@ -1,4 +1,3 @@
-import 'package:duckhat/components/service/service_data.dart';
 import 'package:duckhat/components/service/service_experience_section.dart';
 import 'package:duckhat/components/service/service_faq_section.dart';
 import 'package:duckhat/components/service/service_gallery_section.dart';
@@ -81,6 +80,9 @@ class ServiceTabMenu extends StatelessWidget {
 class ServiceSections extends StatelessWidget {
   final List<GlobalKey> sectionKeys;
   final List<ServiceOffer> offers;
+  final bool isServicesLoading;
+  final String? servicesError;
+  final VoidCallback? onServicesRetry;
   final List<ServiceReview> reviews;
   final List<ServiceFaq> faqs;
   final List<String> galleryImages;
@@ -95,6 +97,9 @@ class ServiceSections extends StatelessWidget {
     super.key,
     required this.sectionKeys,
     required this.offers,
+    this.isServicesLoading = false,
+    this.servicesError,
+    this.onServicesRetry,
     required this.reviews,
     required this.faqs,
     required this.galleryImages,
@@ -121,6 +126,9 @@ class ServiceSections extends StatelessWidget {
           ServiceServicesSection(
             key: sectionKeys[1],
             offers: offers,
+            isLoading: isServicesLoading,
+            error: servicesError,
+            onRetry: onServicesRetry,
             onBookTap: onBookTap,
           ),
           const Divider(height: 1, color: Color(0xFFE8EDF6)),

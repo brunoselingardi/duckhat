@@ -1,14 +1,22 @@
+import 'package:duckhat/models/disponibilidade_catalogo.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
 
 class ScheduleDatePage extends StatefulWidget {
+  final int serviceId;
+  final int prestadorId;
   final String serviceName;
   final String establishmentName;
+  final int durationMin;
 
   const ScheduleDatePage({
     super.key,
+    required this.serviceId,
+    required this.prestadorId,
     required this.serviceName,
     required this.establishmentName,
+    required this.durationMin,
   });
 
   @override
@@ -20,35 +28,57 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   DateTime? _selectedDate;
   TimeSlot? _selectedTime;
 
-  final List<TimeSlot> _availableSlots = [
-    TimeSlot(time: '08:00', available: true),
-    TimeSlot(time: '09:00', available: true),
-    TimeSlot(time: '10:00', available: true),
-    TimeSlot(time: '11:00', available: false),
-    TimeSlot(time: '12:00', available: true),
-    TimeSlot(time: '13:00', available: true),
-    TimeSlot(time: '14:00', available: true),
-    TimeSlot(time: '15:00', available: true),
-    TimeSlot(time: '16:00', available: false),
-    TimeSlot(time: '17:00', available: true),
-    TimeSlot(time: '18:00', available: true),
-  ];
+  bool _loadingSlots = true;
+  bool _saving = false;
+  String? _slotsError;
+  List<DisponibilidadeCatalogo> _disponibilidades = [];
 
   @override
   void initState() {
     super.initState();
-    _currentMonth = DateTime.now();
+    final now = DateTime.now();
+    _currentMonth = DateTime(now.year, now.month);
+    _loadDisponibilidades();
+  }
+
+  Future<void> _loadDisponibilidades() async {
+    setState(() {
+      _loadingSlots = true;
+      _slotsError = null;
+    });
+
+    try {
+      final items = await DuckHatApi.instance
+          .listarDisponibilidadesPorPrestador(widget.prestadorId);
+      if (!mounted) return;
+
+      setState(() {
+        _disponibilidades = items;
+        _loadingSlots = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _loadingSlots = false;
+        _slotsError = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
   }
 
   void _previousMonth() {
     setState(() {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
+      _selectedDate = null;
+      _selectedTime = null;
     });
   }
 
   void _nextMonth() {
     setState(() {
       _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
+      _selectedDate = null;
+      _selectedTime = null;
     });
   }
 
@@ -65,14 +95,14 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     }
   }
 
-  void _confirmAppointment() {
-    if (_selectedDate == null || _selectedTime == null) return;
+  Future<void> _confirmAppointment() async {
+    if (_selectedDate == null || _selectedTime == null || _saving) return;
 
-    showDialog<void>(
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Confirmar Agendamento"),
+        title: const Text('Confirmar agendamento'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,8 +115,8 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
             Text(widget.serviceName),
             const SizedBox(height: 8),
             Text(
-              "${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year} às ${_selectedTime!.time}",
-              style: TextStyle(
+              '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year} às ${_selectedTime!.time}',
+              style: const TextStyle(
                 color: AppColors.accent,
                 fontWeight: FontWeight.w600,
               ),
@@ -95,17 +125,14 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              "Cancelar",
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text(
+              'Cancelar',
               style: TextStyle(color: AppColors.textMuted),
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              Navigator.pop(context, true);
-            },
+            onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
@@ -113,11 +140,38 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text("Confirmar"),
+            child: const Text('Confirmar'),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    final start = _selectedTime!.dateTimeFor(_selectedDate!);
+    final end = start.add(Duration(minutes: widget.durationMin));
+
+    setState(() => _saving = true);
+    try {
+      await DuckHatApi.instance.criarAgendamento(
+        servicoId: widget.serviceId,
+        inicioEm: start,
+        fimEm: end,
+        observacoes: 'Agendado pelo app DuckHat',
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -128,11 +182,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textBold),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textBold),
+          onPressed: _saving ? null : () => Navigator.pop(context),
         ),
-        title: Text(
-          "Agendar",
+        title: const Text(
+          'Agendar',
           style: TextStyle(
             color: AppColors.textBold,
             fontWeight: FontWeight.bold,
@@ -161,11 +215,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.cardShadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -178,7 +232,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               color: AppColors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.content_cut, color: AppColors.accent),
+            child: const Icon(Icons.content_cut, color: AppColors.accent),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -187,14 +241,17 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               children: [
                 Text(
                   widget.serviceName,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textBold,
                   ),
                 ),
                 Text(
                   widget.establishmentName,
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
                 ),
               ],
             ),
@@ -211,11 +268,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: AppColors.cardShadow,
             blurRadius: 8,
-            offset: const Offset(0, 2),
+            offset: Offset(0, 2),
           ),
         ],
       ),
@@ -225,20 +282,23 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: Icon(Icons.chevron_left, color: AppColors.textBold),
-                onPressed: _previousMonth,
+                icon: const Icon(Icons.chevron_left, color: AppColors.textBold),
+                onPressed: _saving ? null : _previousMonth,
               ),
               Text(
                 _monthYearString(),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textBold,
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.chevron_right, color: AppColors.textBold),
-                onPressed: _nextMonth,
+                icon: const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textBold,
+                ),
+                onPressed: _saving ? null : _nextMonth,
               ),
             ],
           ),
@@ -253,24 +313,24 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
 
   String _monthYearString() {
     const months = [
-      "Janeiro",
-      "Fevereiro",
-      "Março",
-      "Abril",
-      "Maio",
-      "Junho",
-      "Julho",
-      "Agosto",
-      "Setembro",
-      "Outubro",
-      "Novembro",
-      "Dezembro",
+      'Janeiro',
+      'Fevereiro',
+      'Março',
+      'Abril',
+      'Maio',
+      'Junho',
+      'Julho',
+      'Agosto',
+      'Setembro',
+      'Outubro',
+      'Novembro',
+      'Dezembro',
     ];
-    return "${months[_currentMonth.month - 1]} ${_currentMonth.year}";
+    return '${months[_currentMonth.month - 1]} ${_currentMonth.year}';
   }
 
   Widget _buildWeekDayHeaders() {
-    const days = ["D", "S", "T", "Q", "Q", "S", "S"];
+    const days = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: days
@@ -280,7 +340,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               child: Text(
                 day,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   color: AppColors.textMuted,
                   fontSize: 12,
@@ -327,10 +387,13 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
           date.year == todayMidnight.year &&
           date.month == todayMidnight.month &&
           date.day == todayMidnight.day;
+      final hasAvailability = _slotsForDate(date).any((slot) => slot.available);
 
       dayWidgets.add(
         GestureDetector(
-          onTap: isPast ? null : () => _selectDate(date),
+          onTap: isPast || !hasAvailability || _saving
+              ? null
+              : () => _selectDate(date),
           child: Container(
             width: 36,
             height: 36,
@@ -351,7 +414,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
                 style: TextStyle(
                   color: isSelected
                       ? Colors.white
-                      : (isPast
+                      : (isPast || !hasAvailability
                             ? AppColors.textMutedLight
                             : AppColors.textBold),
                   fontWeight: isSelected || isToday
@@ -370,15 +433,43 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   }
 
   Widget _buildTimeSlots() {
-    if (_selectedDate == null) {
+    if (_loadingSlots) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_slotsError != null) {
       return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                _slotsError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.redAccent),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _loadDisponibilidades,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_selectedDate == null) {
+      return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.calendar_today, size: 48, color: AppColors.textMuted),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Text(
-              "Selecione uma data",
+              'Selecione uma data',
               style: TextStyle(color: AppColors.textMuted, fontSize: 16),
             ),
           ],
@@ -386,11 +477,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
       );
     }
 
-    final availableSlots = _availableSlots.where((s) => s.available).toList();
-    if (availableSlots.isEmpty) {
-      return Center(
+    final slots = _slotsForDate(_selectedDate!);
+    if (slots.isEmpty) {
+      return const Center(
         child: Text(
-          "Nenhum horário disponível",
+          'Nenhum horário disponível',
           style: TextStyle(color: AppColors.textMuted),
         ),
       );
@@ -401,7 +492,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Horarios disponiveis',
             style: TextStyle(
               fontWeight: FontWeight.bold,
@@ -418,14 +509,16 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
               ),
-              itemCount: _availableSlots.length,
+              itemCount: slots.length,
               itemBuilder: (context, index) {
-                final slot = _availableSlots[index];
+                final slot = slots[index];
                 final isSelected = _selectedTime?.time == slot.time;
                 final isAvailable = slot.available;
 
                 return GestureDetector(
-                  onTap: isAvailable ? () => _selectTime(slot) : null,
+                  onTap: isAvailable && !_saving
+                      ? () => _selectTime(slot)
+                      : null,
                   child: Container(
                     decoration: BoxDecoration(
                       color: isSelected
@@ -468,7 +561,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
         width: double.infinity,
         height: 52,
         child: ElevatedButton(
-          onPressed: canConfirm ? _confirmAppointment : null,
+          onPressed: canConfirm && !_saving ? _confirmAppointment : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.accent,
             disabledBackgroundColor: AppColors.textMutedLight,
@@ -477,19 +570,81 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          child: Text(
-            canConfirm ? "Confirmar Agendamento" : "Selecione data e horário",
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-          ),
+          child: _saving
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  canConfirm
+                      ? 'Confirmar Agendamento'
+                      : 'Selecione data e horário',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
         ),
       ),
     );
   }
+
+  List<TimeSlot> _slotsForDate(DateTime date) {
+    final daySlots =
+        _disponibilidades
+            .where((item) => item.ativo && item.diaSemana == date.weekday)
+            .expand((item) => _slotsFromDisponibilidade(date, item))
+            .toList()
+          ..sort((a, b) => a.start.compareTo(b.start));
+
+    return daySlots;
+  }
+
+  List<TimeSlot> _slotsFromDisponibilidade(
+    DateTime date,
+    DisponibilidadeCatalogo disponibilidade,
+  ) {
+    final start = _dateTimeWithTime(date, disponibilidade.horaInicio);
+    final end = _dateTimeWithTime(date, disponibilidade.horaFim);
+    final lastStart = end.subtract(Duration(minutes: widget.durationMin));
+    final today = DateTime.now();
+
+    if (lastStart.isBefore(start)) return [];
+
+    final slots = <TimeSlot>[];
+    var cursor = start;
+    while (!cursor.isAfter(lastStart)) {
+      final available = cursor.isAfter(today);
+      slots.add(TimeSlot(start: cursor, available: available));
+      cursor = cursor.add(const Duration(hours: 1));
+    }
+
+    return slots;
+  }
+
+  DateTime _dateTimeWithTime(DateTime date, String time) {
+    final parts = time.split(':').map(int.parse).toList();
+    return DateTime(date.year, date.month, date.day, parts[0], parts[1]);
+  }
 }
 
 class TimeSlot {
-  final String time;
+  final DateTime start;
   final bool available;
 
-  TimeSlot({required this.time, required this.available});
+  TimeSlot({required this.start, required this.available});
+
+  String get time {
+    final hour = start.hour.toString().padLeft(2, '0');
+    final minute = start.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  DateTime dateTimeFor(DateTime date) {
+    return DateTime(date.year, date.month, date.day, start.hour, start.minute);
+  }
 }

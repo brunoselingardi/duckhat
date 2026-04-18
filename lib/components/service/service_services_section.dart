@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 
 class ServiceServicesSection extends StatelessWidget {
   final List<ServiceOffer> offers;
+  final bool isLoading;
+  final String? error;
+  final VoidCallback? onRetry;
   final void Function(ServiceOffer offer)? onBookTap;
 
   const ServiceServicesSection({
     super.key,
     required this.offers,
+    this.isLoading = false,
+    this.error,
+    this.onRetry,
     this.onBookTap,
   });
 
@@ -29,19 +35,63 @@ class ServiceServicesSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: offers.length,
-            separatorBuilder: (_, __) =>
-                const Divider(height: 28, color: Color(0xFFE8EDF6)),
-            itemBuilder: (context, index) => _ServiceRow(
-              offer: offers[index],
-              onBookTap: onBookTap != null
-                  ? () => onBookTap!(offers[index])
-                  : null,
+          if (isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (error != null)
+            _ServiceError(message: error!, onRetry: onRetry)
+          else if (offers.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Text(
+                'Nenhum serviço disponível no momento.',
+                style: TextStyle(color: AppColors.textRegular),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: offers.length,
+              separatorBuilder: (_, _) =>
+                  const Divider(height: 28, color: Color(0xFFE8EDF6)),
+              itemBuilder: (context, index) => _ServiceRow(
+                offer: offers[index],
+                onBookTap: onBookTap != null
+                    ? () => onBookTap!(offers[index])
+                    : null,
+              ),
             ),
-          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceError extends StatelessWidget {
+  final String message;
+  final VoidCallback? onRetry;
+
+  const _ServiceError({required this.message, this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(message, style: const TextStyle(color: Colors.redAccent)),
+          if (onRetry != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
         ],
       ),
     );
