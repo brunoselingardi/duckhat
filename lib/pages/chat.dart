@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:duckhat/components/bottomnav.dart';
 import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 
@@ -11,8 +10,6 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  int _selectedIndex = 3;
-
   final List<Map<String, dynamic>> conversations = [
     {
       "name": "Barbearia Vila Nova",

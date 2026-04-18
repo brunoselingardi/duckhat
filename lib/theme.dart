@@ -7,6 +7,7 @@ class AppColors {
   static const accentLight = Color(0xFF8EB5F0);
   static const dark = Color(0xFF0F172A);
   static const background = Color(0xFFF0F4F8);
+  static const backgroundAlt = background;
   static const cardBackground = Color(0xFFFFFFFF);
   static const inputBackground = Color(0xFFCAD6F8);
   static const border = Color(0xFFB3D5FB);
@@ -26,12 +27,14 @@ class AppColors {
   static const divider = Color(0xFFE5E7EB);
   static const inputFill = Color(0xFFF5F5F5);
   static const textMuted = Color(0x99629170);
+  static const grayField = textMuted;
   static const textSecondary = Color(0xFF291970);
   static const textBold = Color(0xFF291970);
   static const textRegular = Color(0xB3291970);
   static const textMutedLight = Color(0x80291970);
   static const navUnselected = Color(0xB3291970);
   static const blackText = Color(0xFF0C0041);
+  static const darkAlt = blackText;
   static const greenText = Color(0xA60C0041);
 }
 
