@@ -17,6 +17,19 @@ class DuckHatApi {
 
   String? _token;
 
+  Future<LoginSession> login({
+    required String email,
+    required String password,
+  }) async {
+    final session = await _requestSession(email: email, password: password);
+    _token = session.token;
+    return session;
+  }
+
+  void clearSession() {
+    _token = null;
+  }
+
   Future<void> ensureAuthenticated() async {
     if (_token != null && _token!.isNotEmpty) return;
 
@@ -26,17 +39,34 @@ class DuckHatApi {
       );
     }
 
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({
-        'email': ApiConfig.loginEmail,
-        'senha': ApiConfig.loginPassword,
-      }),
+    final session = await _requestSession(
+      email: ApiConfig.loginEmail,
+      password: ApiConfig.loginPassword,
     );
+    _token = session.token;
+  }
+
+  Future<LoginSession> _requestSession({
+    required String email,
+    required String password,
+  }) async {
+    final http.Response response;
+    try {
+      response = await _client
+          .post(
+            Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'email': email.trim(), 'senha': password}),
+          )
+          .timeout(const Duration(seconds: 8));
+    } catch (_) {
+      throw Exception(
+        'Não foi possível conectar à API em ${ApiConfig.baseUrl}. Verifique se o backend está rodando e se o endereço está correto para o emulador ou dispositivo.',
+      );
+    }
 
     final body = _decodeBody(response);
 
@@ -53,7 +83,13 @@ class DuckHatApi {
       throw Exception('A API não retornou um token JWT válido.');
     }
 
-    _token = token;
+    return LoginSession(
+      id: _parseInt(body['id']),
+      nome: body['nome'] as String? ?? '',
+      email: body['email'] as String? ?? email.trim(),
+      tipo: body['tipo'] as String? ?? '',
+      token: token,
+    );
   }
 
   Future<List<Agendamento>> listarAgendamentos() async {
@@ -287,4 +323,23 @@ class DuckHatApi {
     }
     return null;
   }
+
+  int _parseInt(dynamic value) =>
+      value is int ? value : int.parse(value.toString());
+}
+
+class LoginSession {
+  final int id;
+  final String nome;
+  final String email;
+  final String tipo;
+  final String token;
+
+  LoginSession({
+    required this.id,
+    required this.nome,
+    required this.email,
+    required this.tipo,
+    required this.token,
+  });
 }

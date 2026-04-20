@@ -1,5 +1,12 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
-  static const _defaultBaseUrl = 'http://localhost:8081';
+  static String get _defaultBaseUrl {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:8081';
+    }
+    return 'http://localhost:8081';
+  }
 
   static String get baseUrl {
     const value = String.fromEnvironment('API_BASE_URL');
