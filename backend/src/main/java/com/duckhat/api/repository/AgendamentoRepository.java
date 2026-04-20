@@ -3,6 +3,7 @@ package com.duckhat.api.repository;
 import com.duckhat.api.entity.Agendamento;
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.duckhat.api.entity.enums.StatusAgendamento;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
@@ -19,9 +20,14 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
 
   List<Agendamento> findByPrestadorId(Long prestadorId);
 
+  List<Agendamento> findByPrestadorIdAndStatusNotAndFimEmAfterOrderByInicioEmAsc(
+      Long prestadorId,
+      StatusAgendamento status,
+      LocalDateTime inicio);
+
   boolean existsByPrestadorIdAndStatusNotAndInicioEmLessThanAndFimEmGreaterThan(
       Long prestadorId,
       StatusAgendamento status,
-      java.time.LocalDateTime fimEm,
-      java.time.LocalDateTime inicioEm);
+      LocalDateTime fimEm,
+      LocalDateTime inicioEm);
 }

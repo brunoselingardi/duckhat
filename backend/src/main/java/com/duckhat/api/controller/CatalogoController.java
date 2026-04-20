@@ -1,7 +1,9 @@
 package com.duckhat.api.controller;
 
+import com.duckhat.api.dto.OcupacaoPrestadorResponse;
 import com.duckhat.api.dto.DisponibilidadeResponse;
 import com.duckhat.api.dto.ServicoResponse;
+import com.duckhat.api.service.AgendamentoService;
 import com.duckhat.api.service.DisponibilidadeService;
 import com.duckhat.api.service.ServicoService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,11 +18,14 @@ public class CatalogoController {
 
   private final ServicoService servicoService;
   private final DisponibilidadeService disponibilidadeService;
+  private final AgendamentoService agendamentoService;
 
   public CatalogoController(ServicoService servicoService,
-      DisponibilidadeService disponibilidadeService) {
+      DisponibilidadeService disponibilidadeService,
+      AgendamentoService agendamentoService) {
     this.servicoService = servicoService;
     this.disponibilidadeService = disponibilidadeService;
+    this.agendamentoService = agendamentoService;
   }
 
   @GetMapping("/api/catalogo/servicos")
@@ -46,5 +51,10 @@ public class CatalogoController {
   @GetMapping("/api/catalogo/disponibilidades/prestador/{prestadorId}")
   public List<DisponibilidadeResponse> listarDisponibilidadesAtivasPorPrestador(@PathVariable Long prestadorId) {
     return disponibilidadeService.listarCatalogoPorPrestador(prestadorId);
+  }
+
+  @GetMapping("/api/catalogo/agendamentos/prestador/{prestadorId}/ocupados")
+  public List<OcupacaoPrestadorResponse> listarOcupacoesPorPrestador(@PathVariable Long prestadorId) {
+    return agendamentoService.listarOcupacoesPublicas(prestadorId);
   }
 }

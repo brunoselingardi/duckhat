@@ -1,11 +1,12 @@
 package com.duckhat.api.service;
 
-import com.duckhat.api.entity.Disponibilidade;
 import com.duckhat.api.repository.DisponibilidadeRepository;
-import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import com.duckhat.api.dto.AgendamentoResponse;
 import com.duckhat.api.dto.CreateAgendamentoRequest;
+import com.duckhat.api.dto.OcupacaoPrestadorResponse;
 import com.duckhat.api.entity.Agendamento;
 import com.duckhat.api.entity.Servico;
 import com.duckhat.api.entity.Usuario;
@@ -59,6 +60,19 @@ public class AgendamentoService {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "inicioEm deve ser menor que fimEm");
+    }
+
+    if (request.inicioEm().isBefore(LocalDateTime.now())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "Não é possível criar agendamento em horário passado");
+    }
+
+    long duracaoSolicitada = Duration.between(request.inicioEm(), request.fimEm()).toMinutes();
+    if (duracaoSolicitada != servico.getDuracaoMin().longValue()) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "A duração do agendamento deve ser igual à duração do serviço");
     }
 
     Byte diaSemana = (byte) request.inicioEm().getDayOfWeek().getValue();
@@ -231,6 +245,18 @@ public class AgendamentoService {
     return agendamentoRepository.findByPrestadorId(prestador.getId())
         .stream()
         .map(AgendamentoResponse::fromEntity)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<OcupacaoPrestadorResponse> listarOcupacoesPublicas(Long prestadorId) {
+    return agendamentoRepository
+        .findByPrestadorIdAndStatusNotAndFimEmAfterOrderByInicioEmAsc(
+            prestadorId,
+            StatusAgendamento.CANCELADO,
+            LocalDateTime.now())
+        .stream()
+        .map(OcupacaoPrestadorResponse::fromEntity)
         .toList();
   }
 

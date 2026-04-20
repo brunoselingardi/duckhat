@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../core/api_config.dart';
 import '../models/agendamento.dart';
 import '../models/disponibilidade_catalogo.dart';
+import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
 
 class DuckHatApi {
@@ -165,6 +166,38 @@ class DuckHatApi {
     return body
         .map(
           (item) => DisponibilidadeCatalogo.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList();
+  }
+
+  Future<List<OcupacaoPrestador>> listarOcupacoesPorPrestador(
+    int prestadorId,
+  ) async {
+    final response = await _client.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/catalogo/agendamentos/prestador/$prestadorId/ocupados',
+      ),
+      headers: {'Accept': 'application/json'},
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar os horários ocupados.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar horários ocupados.');
+    }
+
+    return body
+        .map(
+          (item) => OcupacaoPrestador.fromJson(
             Map<String, dynamic>.from(item as Map),
           ),
         )

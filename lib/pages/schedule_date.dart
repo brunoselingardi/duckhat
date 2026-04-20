@@ -1,4 +1,5 @@
 import 'package:duckhat/models/disponibilidade_catalogo.dart';
+import 'package:duckhat/models/ocupacao_prestador.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
@@ -32,6 +33,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   bool _saving = false;
   String? _slotsError;
   List<DisponibilidadeCatalogo> _disponibilidades = [];
+  List<OcupacaoPrestador> _ocupacoes = [];
 
   @override
   void initState() {
@@ -48,12 +50,17 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     });
 
     try {
-      final items = await DuckHatApi.instance
-          .listarDisponibilidadesPorPrestador(widget.prestadorId);
+      final results = await Future.wait([
+        DuckHatApi.instance.listarDisponibilidadesPorPrestador(
+          widget.prestadorId,
+        ),
+        DuckHatApi.instance.listarOcupacoesPorPrestador(widget.prestadorId),
+      ]);
       if (!mounted) return;
 
       setState(() {
-        _disponibilidades = items;
+        _disponibilidades = results[0] as List<DisponibilidadeCatalogo>;
+        _ocupacoes = results[1] as List<OcupacaoPrestador>;
         _loadingSlots = false;
       });
     } catch (error) {
@@ -618,7 +625,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     final slots = <TimeSlot>[];
     var cursor = start;
     while (!cursor.isAfter(lastStart)) {
-      final available = cursor.isAfter(today);
+      final slotEnd = cursor.add(Duration(minutes: widget.durationMin));
+      final hasConflict = _ocupacoes.any(
+        (ocupacao) => ocupacao.overlaps(cursor, slotEnd),
+      );
+      final available = cursor.isAfter(today) && !hasConflict;
       slots.add(TimeSlot(start: cursor, available: available));
       cursor = cursor.add(const Duration(hours: 1));
     }
