@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app_shell.dart';
+import 'forgot_password.dart';
+import 'signup.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -93,6 +95,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showForgotPassword() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const ForgotPasswordPage()));
+  }
+
+  /*
+  void _showForgotPasswordOld() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+    );
+    return;
+
     showDialog<void>(
       context: context,
       builder: (context) {
@@ -114,7 +128,15 @@ class _LoginPageState extends State<LoginPage> {
       },
     );
   }
+  */
 
+  void _openCreateAccount() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SignupPage()));
+  }
+
+  // ignore: unused_element
   void _showCreateAccount() {
     showDialog<void>(
       context: context,
@@ -150,7 +172,6 @@ class _LoginPageState extends State<LoginPage> {
           fit: StackFit.expand,
           children: [
             Image.asset('assets/ondas.jpg', fit: BoxFit.cover),
-            Container(color: Colors.white.withValues(alpha: 0.74)),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -196,7 +217,7 @@ class _LoginPageState extends State<LoginPage> {
                               },
                               onSubmit: _submit,
                               onForgotPassword: _showForgotPassword,
-                              onCreateAccount: _showCreateAccount,
+                              onCreateAccount: _openCreateAccount,
                             ),
                           ],
                         ),
@@ -247,10 +268,17 @@ class _HeaderArtwork extends StatelessWidget {
           'DuckHat',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppColors.textBold,
+            color: Colors.white,
             fontSize: 34,
             fontWeight: FontWeight.w800,
             height: 1,
+            shadows: [
+              Shadow(
+                color: Colors.black38,
+                blurRadius: 12,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
@@ -258,9 +286,16 @@ class _HeaderArtwork extends StatelessWidget {
           'Entre para cuidar dos seus horários',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: AppColors.textRegular,
+            color: Colors.white,
             fontSize: 15,
             fontWeight: FontWeight.w500,
+            shadows: [
+              Shadow(
+                color: Colors.black38,
+                blurRadius: 10,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
         ),
       ],
@@ -402,15 +437,22 @@ class _LoginForm extends StatelessWidget {
                   'Ainda não tem acesso?',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: AppColors.textRegular,
+                    color: Colors.white,
                     fontWeight: FontWeight.w500,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black38,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                 ),
               ),
               TextButton(
                 onPressed: loading ? null : onCreateAccount,
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
                   textStyle: const TextStyle(fontWeight: FontWeight.w800),
                 ),
                 child: const Text('Criar conta'),

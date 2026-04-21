@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/agendamento.dart';
 import '../models/servico_catalogo.dart';
+import '../pages/appointment_detail.dart';
 import '../services/duckhat_api.dart';
 
 const kBackgroundColor = Color(0xFFFAFBFC);
@@ -173,6 +174,24 @@ class _SchedulePageState extends State<SchedulePage> {
     } catch (e) {
       if (!mounted) return;
       _showSnackBar(_prettyError(e), isError: true);
+    }
+  }
+
+  Future<void> _abrirDetalheAgendamento(Agendamento agendamento) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => AppointmentDetailPage(
+          agendamento: agendamento,
+          onCancel: (item) async {
+            await _api.cancelarAgendamento(item.id);
+          },
+        ),
+      ),
+    );
+
+    if (changed == true && mounted) {
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento atualizado.');
     }
   }
 
@@ -487,6 +506,11 @@ class _SchedulePageState extends State<SchedulePage> {
                               side: const BorderSide(color: Colors.redAccent),
                             ),
                           ),
+                        TextButton.icon(
+                          onPressed: () => _abrirDetalheAgendamento(item),
+                          icon: const Icon(Icons.chevron_right, size: 18),
+                          label: const Text('Detalhes'),
+                        ),
                       ],
                     ),
                   ],
