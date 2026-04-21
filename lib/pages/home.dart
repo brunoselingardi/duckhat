@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:duckhat/components/home/header.dart';
-import 'package:duckhat/components/home/searchbar.dart';
-import 'package:duckhat/components/home/filtersection.dart';
 import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
+import 'package:duckhat/pages/search.dart';
 import 'package:duckhat/theme.dart';
 
 class Home extends StatefulWidget {
@@ -29,9 +28,7 @@ class _HomeState extends State<Home> {
             children: [
               const HomeHeader(),
               const SizedBox(height: 10),
-              const SearchDuck(),
-              const SizedBox(height: 16),
-              const FilterSection(),
+              const _SearchShortcut(),
               const SizedBox(height: 20),
               const _PromoBanner(),
               const SizedBox(height: 20),
@@ -69,6 +66,59 @@ class _HomeState extends State<Home> {
                 ],
               ),
               const SizedBox(height: 30),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchShortcut extends StatelessWidget {
+  const _SearchShortcut();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: InkWell(
+        onTap: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SearchPage()));
+        },
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.cardShadow,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.search, color: AppColors.accent),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Buscar serviços, profissionais ou reparos',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8),
+              Icon(Icons.tune, color: AppColors.accent),
             ],
           ),
         ),
