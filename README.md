@@ -1,17 +1,164 @@
-# duckhat
+# DuckHat
 
-A new Flutter project.
+Aplicativo acadêmico com frontend Flutter, backend Spring Boot e banco MySQL.
 
-## Getting Started
+## Stack
 
-This project is a starting point for a Flutter application.
+- Flutter
+- Java 17
+- Spring Boot
+- MySQL 8.4 via Docker Compose
 
-A few resources to get you started if this is your first Flutter project:
+## Estrutura
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```text
+duckhat/
+├── lib/                  # frontend Flutter
+├── backend/              # API Spring Boot
+├── database/             # compose, schema, migration e seed
+├── assets/               # imagens, fontes e ícones
+└── test/                 # testes Flutter
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Requisitos
+
+- Flutter instalado e disponível no PATH
+- Java 17
+- Docker + Docker Compose
+- Android Studio ou dispositivo Android para rodar o app mobile
+
+## Banco local
+
+Crie o arquivo de ambiente do banco:
+
+```bash
+cp database/.env.example database/.env
+```
+
+Suba o MySQL:
+
+```bash
+docker compose -f database/compose.yaml --env-file database/.env up -d
+```
+
+Se precisar de dados de desenvolvimento:
+
+```bash
+docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/001_seed_dev.sql
+```
+
+Para os serviços reais da Barbie Dream Barber usados no fluxo de agendamento:
+
+```bash
+docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/002_seed_barbie_services.sql
+```
+
+## Backend
+
+Crie um ambiente local opcional para sobrescrever as configurações padrão:
+
+```bash
+cp backend/.env.example backend/.env
+set -a
+source backend/.env
+set +a
+```
+
+As variáveis suportadas são:
+
+- `SERVER_PORT`
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_JPA_HIBERNATE_DDL_AUTO`
+- `SPRING_JPA_SHOW_SQL`
+- `SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL`
+- `JWT_SECRET`
+- `JWT_EXPIRATION`
+
+Se nenhuma variável for exportada, o backend continua funcionando com os defaults locais atuais.
+
+Rodar testes do backend:
+
+```bash
+cd backend
+./mvnw test
+```
+
+Subir a API:
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Health check esperado:
+
+```text
+GET http://localhost:8081/api/health
+```
+
+## Flutter
+
+Instalar dependências:
+
+```bash
+flutter pub get
+```
+
+Verificações:
+
+```bash
+flutter analyze
+flutter test
+```
+
+Rodar no host local:
+
+```bash
+flutter run \
+  --dart-define=API_BASE_URL=http://localhost:8081 \
+  --dart-define=DUCKHAT_LOGIN_EMAIL=login@duckhat.com \
+  --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
+```
+
+Rodar no emulador Android:
+
+```bash
+flutter run \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8081 \
+  --dart-define=DUCKHAT_LOGIN_EMAIL=login@duckhat.com \
+  --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
+```
+
+Rodar no celular físico via USB:
+
+```bash
+adb -s RQCWA0B35KX reverse tcp:8081 tcp:8081
+flutter run -d RQCWA0B35KX \
+  --dart-define=API_BASE_URL=http://127.0.0.1:8081 \
+  --dart-define=DUCKHAT_LOGIN_EMAIL=login@duckhat.com \
+  --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
+```
+
+## Fluxo real validado
+
+Fluxo principal integrado atualmente:
+
+1. Abrir a página do estabelecimento
+2. Entrar em `Serviços`
+3. Selecionar um serviço real
+4. Ir para `Agendar`
+5. Escolher data e horário em `schedule_date.dart`
+6. Criar agendamento via API Spring Boot
+7. Ver o item refletido na agenda integrada
+
+## Observações técnicas
+
+- O backend escuta por padrão em `8081`.
+- O banco local esperado fica em `localhost:3307`.
+- O app depende de `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD` para autenticar na API.
+- Parte do app ainda usa dados mockados, mas o fluxo de agendamento está integrado com API e MySQL.
+- O arquivo `backend/.env` é local e não deve ser versionado.

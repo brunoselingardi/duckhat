@@ -9,11 +9,14 @@ O schema está congruente com:
 - entidades JPA em `backend/src/main/java/com/duckhat/api/entity`
 - repositórios Spring Data e consultas atuais
 
-Credenciais esperadas pela API:
+Credenciais locais padrão esperadas pela API:
 - banco: `duckhat`
 - usuário: `duckhat_user`
 - senha: `duckhat_pass`
 - porta local padrão: `3307`
+
+Observacao:
+- o backend agora aceita sobrescrever porta, datasource e JWT por variáveis de ambiente; se nada for exportado, os valores locais acima continuam como fallback.
 
 ## Estrutura
 

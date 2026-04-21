@@ -3,6 +3,7 @@ import 'package:duckhat/components/service/service_hero.dart';
 import 'package:duckhat/components/service/service_info_card.dart';
 import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/components/service/service_sections.dart';
+import 'package:duckhat/components/service/service_tab_menu.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
