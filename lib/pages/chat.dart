@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 
@@ -105,6 +106,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildConversationsList() {
     return ListView.builder(
+      key: const PageStorageKey('chat-scroll'),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: conversations.length,
       itemBuilder: (context, index) {
@@ -124,7 +126,7 @@ class _ChatPageState extends State<ChatPage> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
+              AppRoute(
                 builder: (context) =>
                     ChatDetailPage(name: chat["name"], image: chat["image"]),
               ),

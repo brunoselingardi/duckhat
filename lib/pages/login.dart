@@ -3,6 +3,7 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/app_route.dart';
 import 'app_shell.dart';
 import 'forgot_password.dart';
 import 'signup.dart';
@@ -91,73 +92,17 @@ class _LoginPageState extends State<LoginPage> {
   void _openApp() {
     Navigator.of(
       context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const MainNavigator()));
+    ).pushReplacement(AppRoute(builder: (_) => const MainNavigator()));
   }
 
   void _showForgotPassword() {
     Navigator.of(
       context,
-    ).push(MaterialPageRoute(builder: (_) => const ForgotPasswordPage()));
+    ).push(AppRoute(builder: (_) => const ForgotPasswordPage()));
   }
-
-  /*
-  void _showForgotPasswordOld() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
-    );
-    return;
-
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('Recuperar senha'),
-          content: const Text(
-            'A recuperação de senha ainda não está disponível. Fale com o suporte do DuckHat para redefinir o acesso.',
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Entendi'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-  */
 
   void _openCreateAccount() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const SignupPage()));
-  }
-
-  // ignore: unused_element
-  void _showCreateAccount() {
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text('Criar conta'),
-          content: const Text(
-            'O cadastro ainda não tem tela própria. A API já aceita novos usuários, então este link fica pronto para conectar ao próximo passo.',
-          ),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Entendi'),
-            ),
-          ],
-        );
-      },
-    );
+    Navigator.of(context).push(AppRoute(builder: (_) => const SignupPage()));
   }
 
   @override

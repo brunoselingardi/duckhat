@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/agendamento.dart';
-import '../models/servico_catalogo.dart';
+import '../core/app_route.dart';
 import '../pages/appointment_detail.dart';
 import '../services/duckhat_api.dart';
 
@@ -22,7 +22,6 @@ class _SchedulePageState extends State<SchedulePage> {
   final _api = DuckHatApi.instance;
 
   bool _loading = true;
-  bool _creating = false;
   String? _error;
   List<Agendamento> _agendamentos = [];
   DateTime? _selectedDate;
@@ -92,55 +91,6 @@ class _SchedulePageState extends State<SchedulePage> {
       ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
   }
 
-  Future<void> _abrirNovoAgendamento() async {
-    try {
-      setState(() => _creating = true);
-      final servicos = await _api.listarServicosAtivos();
-
-      if (!mounted) return;
-
-      await showModalBottomSheet<void>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (sheetContext) {
-          final navigator = Navigator.of(sheetContext);
-          return _CreateAppointmentSheet(
-            servicos: servicos,
-            onSubmit:
-                ({
-                  required int servicoId,
-                  required DateTime inicioEm,
-                  required DateTime fimEm,
-                  String? observacoes,
-                }) async {
-                  await _api.criarAgendamento(
-                    servicoId: servicoId,
-                    inicioEm: inicioEm,
-                    fimEm: fimEm,
-                    observacoes: observacoes,
-                  );
-                  if (!mounted) return;
-                  navigator.pop();
-                  await _carregarAgendamentos();
-                  _showSnackBar('Agendamento criado com sucesso.');
-                },
-          );
-        },
-      );
-    } catch (e) {
-      if (!mounted) return;
-      _showSnackBar(_prettyError(e), isError: true);
-    } finally {
-      if (mounted) {
-        setState(() => _creating = false);
-      }
-    }
-  }
-
   Future<void> _cancelarAgendamento(Agendamento agendamento) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -179,7 +129,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
   Future<void> _abrirDetalheAgendamento(Agendamento agendamento) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => AppointmentDetailPage(
           agendamento: agendamento,
           onCancel: (item) async {
@@ -295,24 +245,6 @@ class _SchedulePageState extends State<SchedulePage> {
             icon: const Icon(Icons.refresh, color: kPrimaryColor),
             tooltip: 'Atualizar',
           ),
-          const SizedBox(width: 4),
-          Container(
-            decoration: BoxDecoration(
-              color: kPrimaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: IconButton(
-              onPressed: _creating ? null : _abrirNovoAgendamento,
-              icon: _creating
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add, color: kPrimaryColor),
-              tooltip: 'Novo agendamento',
-            ),
-          ),
         ],
       ),
     );
@@ -325,6 +257,7 @@ class _SchedulePageState extends State<SchedulePage> {
     return SizedBox(
       height: 84,
       child: ListView.builder(
+        key: const PageStorageKey('schedule-calendar-scroll'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: days.length,
@@ -393,6 +326,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
     if (items.isEmpty) {
       return ListView(
+        key: const PageStorageKey('schedule-empty-scroll'),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         children: [
@@ -421,6 +355,7 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     return ListView.builder(
+      key: const PageStorageKey('schedule-appointments-scroll'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: items.length,
@@ -597,229 +532,4 @@ class _StatusChip extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CreateAppointmentSheet extends StatefulWidget {
-  final List<ServicoCatalogo> servicos;
-  final Future<void> Function({
-    required int servicoId,
-    required DateTime inicioEm,
-    required DateTime fimEm,
-    String? observacoes,
-  })
-  onSubmit;
-
-  const _CreateAppointmentSheet({
-    required this.servicos,
-    required this.onSubmit,
-  });
-
-  @override
-  State<_CreateAppointmentSheet> createState() =>
-      _CreateAppointmentSheetState();
-}
-
-class _CreateAppointmentSheetState extends State<_CreateAppointmentSheet> {
-  final _formKey = GlobalKey<FormState>();
-  final _observacoesController = TextEditingController();
-
-  ServicoCatalogo? _servicoSelecionado;
-  DateTime? _dataSelecionada;
-  TimeOfDay? _horaSelecionada;
-  bool _saving = false;
-
-  @override
-  void dispose() {
-    _observacoesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
-
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 20, 20, bottom + 20),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Novo agendamento',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: kTextColor,
-                ),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<ServicoCatalogo>(
-                initialValue: _servicoSelecionado,
-                items: widget.servicos
-                    .map(
-                      (servico) => DropdownMenuItem(
-                        value: servico,
-                        child: Text(servico.nome),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) =>
-                    setState(() => _servicoSelecionado = value),
-                decoration: const InputDecoration(
-                  labelText: 'Serviço',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                    value == null ? 'Selecione um serviço' : null,
-              ),
-              if (_servicoSelecionado != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  '${_servicoSelecionado!.duracaoMin} min • R\$ ${_servicoSelecionado!.preco.toStringAsFixed(2)}',
-                  style: const TextStyle(color: kGrayColor),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickDate,
-                      icon: const Icon(Icons.calendar_month),
-                      label: Text(
-                        _dataSelecionada == null
-                            ? 'Selecionar data'
-                            : '${_twoDigits(_dataSelecionada!.day)}/${_twoDigits(_dataSelecionada!.month)}/${_dataSelecionada!.year}',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _pickTime,
-                      icon: const Icon(Icons.schedule),
-                      label: Text(
-                        _horaSelecionada == null
-                            ? 'Selecionar hora'
-                            : '${_twoDigits(_horaSelecionada!.hour)}:${_twoDigits(_horaSelecionada!.minute)}',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _observacoesController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Observações',
-                  hintText: 'Opcional',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _saving ? null : _submit,
-                  icon: _saving
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.check),
-                  label: Text(_saving ? 'Salvando...' : 'Criar agendamento'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final selected = await showDatePicker(
-      context: context,
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: now.add(const Duration(days: 180)),
-      initialDate: _dataSelecionada ?? now,
-    );
-
-    if (selected != null) {
-      setState(() => _dataSelecionada = selected);
-    }
-  }
-
-  Future<void> _pickTime() async {
-    final selected = await showTimePicker(
-      context: context,
-      initialTime: _horaSelecionada ?? const TimeOfDay(hour: 9, minute: 0),
-    );
-
-    if (selected != null) {
-      setState(() => _horaSelecionada = selected);
-    }
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    if (_servicoSelecionado == null) {
-      _showError('Selecione um serviço.');
-      return;
-    }
-
-    if (_dataSelecionada == null) {
-      _showError('Selecione uma data.');
-      return;
-    }
-
-    if (_horaSelecionada == null) {
-      _showError('Selecione um horário.');
-      return;
-    }
-
-    final inicioEm = DateTime(
-      _dataSelecionada!.year,
-      _dataSelecionada!.month,
-      _dataSelecionada!.day,
-      _horaSelecionada!.hour,
-      _horaSelecionada!.minute,
-    );
-
-    final fimEm = inicioEm.add(
-      Duration(minutes: _servicoSelecionado!.duracaoMin),
-    );
-
-    try {
-      setState(() => _saving = true);
-
-      await widget.onSubmit(
-        servicoId: _servicoSelecionado!.id,
-        inicioEm: inicioEm,
-        fimEm: fimEm,
-        observacoes: _observacoesController.text,
-      );
-    } catch (e) {
-      _showError(e.toString().replaceFirst('Exception: ', ''));
-    } finally {
-      if (mounted) {
-        setState(() => _saving = false);
-      }
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.redAccent),
-    );
-  }
-
-  String _twoDigits(int value) => value.toString().padLeft(2, '0');
 }

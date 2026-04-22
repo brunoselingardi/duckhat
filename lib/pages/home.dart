@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:duckhat/components/home/header.dart';
 import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
+import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/search.dart';
 import 'package:duckhat/theme.dart';
 
@@ -24,6 +25,7 @@ class _HomeState extends State<Home> {
       child: Scaffold(
         body: SafeArea(
           child: ListView(
+            key: const PageStorageKey('home-scroll'),
             cacheExtent: 500,
             children: [
               const HomeHeader(),
@@ -85,7 +87,7 @@ class _SearchShortcut extends StatelessWidget {
         onTap: () {
           Navigator.of(
             context,
-          ).push(MaterialPageRoute(builder: (_) => const SearchPage()));
+          ).push(AppRoute(builder: (_) => const SearchPage()));
         },
         borderRadius: BorderRadius.circular(18),
         child: Container(
