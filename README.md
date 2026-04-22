@@ -13,12 +13,25 @@ Aplicativo acadêmico com frontend Flutter, backend Spring Boot e banco MySQL.
 
 ```text
 duckhat/
+├── AGENTS.md              # instrucoes locais para revisao e manutencao
+├── docs/                  # documentacao complementar do projeto
 ├── lib/                  # frontend Flutter
 ├── backend/              # API Spring Boot
 ├── database/             # compose, schema, migration e seed
 ├── assets/               # imagens, fontes e ícones
 └── test/                 # testes Flutter
 ```
+
+## Leitura funcional recomendada
+
+Antes de revisar funcionalidades do projeto, ler:
+
+```text
+AGENTS.md
+docs/funcionalidades-por-arquivo.md
+```
+
+Esse material resume a responsabilidade dos arquivos principais, telas, botoes, fluxos e pontos integrados com API.
 
 ## Requisitos
 

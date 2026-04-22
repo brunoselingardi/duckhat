@@ -1,3 +1,4 @@
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,6 +35,7 @@ class _SignupPageState extends State<SignupPage> {
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
   bool _loading = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -52,21 +54,49 @@ class _SignupPageState extends State<SignupPage> {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate() || _loading) return;
 
-    setState(() => _loading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 500));
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
 
-    if (!mounted) return;
-    setState(() => _loading = false);
+    try {
+      await DuckHatApi.instance.criarUsuario(
+        nome: _accountType == SignupAccountType.cliente
+            ? _nomeController.text
+            : _empresaController.text,
+        email: _emailController.text,
+        senha: _senhaController.text,
+        telefone: _telefoneController.text,
+        tipo: _accountType == SignupAccountType.cliente
+            ? 'CLIENTE'
+            : 'PRESTADOR',
+        cnpj: _accountType == SignupAccountType.empresa
+            ? _cnpjController.text
+            : null,
+        responsavelNome: _accountType == SignupAccountType.empresa
+            ? _responsavelController.text
+            : null,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Conta ${_accountType.label.toLowerCase()} preparada para teste.',
+      if (!mounted) return;
+
+      Navigator.of(context).pop(
+        SignupSuccessResult(
+          email: _emailController.text.trim().toLowerCase(),
+          password: _senhaController.text,
+          accountType: _accountType,
         ),
-        backgroundColor: AppColors.accent,
-      ),
-    );
-    Navigator.of(context).pop();
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = error.toString().replaceFirst('Exception: ', '').trim();
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
   }
 
   @override
@@ -114,6 +144,20 @@ class _SignupPageState extends State<SignupPage> {
                                 _buildClientFields()
                               else
                                 _buildCompanyFields(),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                child: _error == null
+                                    ? const SizedBox(height: 14)
+                                    : Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: 14,
+                                          bottom: 2,
+                                        ),
+                                        child: _SignupErrorBanner(
+                                          message: _error!,
+                                        ),
+                                      ),
+                              ),
                               const SizedBox(height: 14),
                               _SignupTextField(
                                 controller: _emailController,
@@ -535,6 +579,43 @@ class _SignupTextField extends StatelessWidget {
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Colors.redAccent),
+        ),
+      ),
+    );
+  }
+}
+
+class SignupSuccessResult {
+  final String email;
+  final String password;
+  final SignupAccountType accountType;
+
+  const SignupSuccessResult({
+    required this.email,
+    required this.password,
+    required this.accountType,
+  });
+}
+
+class _SignupErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _SignupErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.redAccent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        message,
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

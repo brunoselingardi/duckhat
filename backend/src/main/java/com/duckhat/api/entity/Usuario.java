@@ -25,6 +25,12 @@ public class Usuario {
     @Column(length = 20)
     private String telefone;
 
+    @Column(length = 14, unique = true)
+    private String cnpj;
+
+    @Column(name = "responsavel_nome", length = 120)
+    private String responsavelNome;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
@@ -59,6 +65,14 @@ public class Usuario {
         return tipo;
     }
 
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public String getResponsavelNome() {
+        return responsavelNome;
+    }
+
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
@@ -81,6 +95,14 @@ public class Usuario {
 
     public void setTelefone(String telefone) {
         this.telefone = telefone;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
+
+    public void setResponsavelNome(String responsavelNome) {
+        this.responsavelNome = responsavelNome;
     }
 
     public void setTipo(TipoUsuario tipo) {

@@ -8,6 +8,7 @@ import com.duckhat.api.entity.enums.StatusAgendamento;
 public record AgendamentoResponse(
     Long id,
     Long clienteId,
+    String clienteNome,
     Long prestadorId,
     String prestadorNome,
     Long servicoId,
@@ -21,6 +22,7 @@ public record AgendamentoResponse(
     return new AgendamentoResponse(
         agendamento.getId(),
         agendamento.getCliente().getId(),
+        agendamento.getCliente().getNome(),
         agendamento.getPrestador().getId(),
         agendamento.getPrestador().getNome(),
         agendamento.getServico().getId(),

@@ -27,6 +27,8 @@ class _SchedulePageState extends State<SchedulePage> {
   List<Agendamento> _agendamentos = [];
   DateTime? _selectedDate;
 
+  bool get _isPrestador => _api.isPrestador;
+
   @override
   void initState() {
     super.initState();
@@ -40,8 +42,11 @@ class _SchedulePageState extends State<SchedulePage> {
     });
 
     try {
-      final items = await _api.listarAgendamentos()
-        ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
+      final items =
+          await (_isPrestador
+                ? _api.listarAgendamentosPrestador()
+                : _api.listarAgendamentos())
+            ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
 
       final initialDate = items.isNotEmpty
           ? _dateOnly(items.first.inicioEm)
@@ -93,6 +98,8 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   Future<void> _abrirNovoAgendamento() async {
+    if (_isPrestador) return;
+
     try {
       setState(() => _creating = true);
       final servicos = await _api.listarServicosAtivos();
@@ -182,9 +189,11 @@ class _SchedulePageState extends State<SchedulePage> {
       MaterialPageRoute(
         builder: (_) => AppointmentDetailPage(
           agendamento: agendamento,
-          onCancel: (item) async {
-            await _api.cancelarAgendamento(item.id);
-          },
+          onCancel: !_isPrestador
+              ? (item) async {
+                  await _api.cancelarAgendamento(item.id);
+                }
+              : null,
         ),
       ),
     );
@@ -192,6 +201,30 @@ class _SchedulePageState extends State<SchedulePage> {
     if (changed == true && mounted) {
       await _carregarAgendamentos();
       _showSnackBar('Agendamento atualizado.');
+    }
+  }
+
+  Future<void> _confirmarAgendamento(Agendamento agendamento) async {
+    try {
+      await _api.confirmarAgendamento(agendamento.id);
+      if (!mounted) return;
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento confirmado com sucesso.');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(_prettyError(e), isError: true);
+    }
+  }
+
+  Future<void> _concluirAgendamento(Agendamento agendamento) async {
+    try {
+      await _api.concluirAgendamento(agendamento.id);
+      if (!mounted) return;
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento concluído com sucesso.');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(_prettyError(e), isError: true);
     }
   }
 
@@ -295,24 +328,26 @@ class _SchedulePageState extends State<SchedulePage> {
             icon: const Icon(Icons.refresh, color: kPrimaryColor),
             tooltip: 'Atualizar',
           ),
-          const SizedBox(width: 4),
-          Container(
-            decoration: BoxDecoration(
-              color: kPrimaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
+          if (!_isPrestador) ...[
+            const SizedBox(width: 4),
+            Container(
+              decoration: BoxDecoration(
+                color: kPrimaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                onPressed: _creating ? null : _abrirNovoAgendamento,
+                icon: _creating
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add, color: kPrimaryColor),
+                tooltip: 'Novo agendamento',
+              ),
             ),
-            child: IconButton(
-              onPressed: _creating ? null : _abrirNovoAgendamento,
-              icon: _creating
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.add, color: kPrimaryColor),
-              tooltip: 'Novo agendamento',
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -410,9 +445,11 @@ class _SchedulePageState extends State<SchedulePage> {
             ),
           ),
           const SizedBox(height: 8),
-          const Center(
+          Center(
             child: Text(
-              'Toque no + para criar um novo agendamento.',
+              _isPrestador
+                  ? 'Nenhum atendimento nesta data.'
+                  : 'Toque no + para criar um novo agendamento.',
               style: TextStyle(fontSize: 12, color: kGrayColor),
             ),
           ),
@@ -476,10 +513,12 @@ class _SchedulePageState extends State<SchedulePage> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      item.prestadorNome ??
-                          (item.prestadorId != null
-                              ? 'Prestador #${item.prestadorId}'
-                              : 'Prestador não informado'),
+                      _isPrestador
+                          ? (item.clienteNome ?? 'Cliente #${item.clienteId}')
+                          : (item.prestadorNome ??
+                                (item.prestadorId != null
+                                    ? 'Prestador #${item.prestadorId}'
+                                    : 'Prestador não informado')),
                       style: const TextStyle(fontSize: 12, color: kGrayColor),
                     ),
                     if (item.observacoes != null &&
@@ -496,7 +535,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       runSpacing: 8,
                       children: [
                         _StatusChip(status: item.status),
-                        if (item.podeCancelar)
+                        if (!_isPrestador && item.podeCancelar)
                           OutlinedButton.icon(
                             onPressed: () => _cancelarAgendamento(item),
                             icon: const Icon(Icons.close, size: 16),
@@ -505,6 +544,18 @@ class _SchedulePageState extends State<SchedulePage> {
                               foregroundColor: Colors.redAccent,
                               side: const BorderSide(color: Colors.redAccent),
                             ),
+                          ),
+                        if (_isPrestador && item.status == 'PENDENTE')
+                          FilledButton.icon(
+                            onPressed: () => _confirmarAgendamento(item),
+                            icon: const Icon(Icons.check_circle, size: 16),
+                            label: const Text('Confirmar'),
+                          ),
+                        if (_isPrestador && item.status == 'CONFIRMADO')
+                          FilledButton.icon(
+                            onPressed: () => _concluirAgendamento(item),
+                            icon: const Icon(Icons.task_alt, size: 16),
+                            label: const Text('Concluir'),
                           ),
                         TextButton.icon(
                           onPressed: () => _abrirDetalheAgendamento(item),

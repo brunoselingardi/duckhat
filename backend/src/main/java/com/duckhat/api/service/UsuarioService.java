@@ -3,6 +3,7 @@ package com.duckhat.api.service;
 import com.duckhat.api.dto.CreateUsuarioRequest;
 import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Usuario;
+import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,15 +26,28 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponse criar(CreateUsuarioRequest request) {
-        if (usuarioRepository.existsByEmail(request.email())) {
+        String emailNormalizado = normalizarEmail(request.email());
+        String telefoneNormalizado = normalizarTelefone(request.telefone());
+        String cnpjNormalizado = normalizarCnpj(request.cnpj());
+        String responsavelNome = normalizarTexto(request.responsavelNome());
+
+        validarCamposPrestador(request.tipo(), cnpjNormalizado, responsavelNome);
+
+        if (usuarioRepository.existsByEmail(emailNormalizado)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
         }
 
+        if (cnpjNormalizado != null && usuarioRepository.existsByCnpj(cnpjNormalizado)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "CNPJ já cadastrado");
+        }
+
         Usuario usuario = new Usuario();
-        usuario.setNome(request.nome());
-        usuario.setEmail(request.email());
+        usuario.setNome(request.nome().trim());
+        usuario.setEmail(emailNormalizado);
         usuario.setSenhaHash(passwordEncoder.encode(request.senha()));
-        usuario.setTelefone(request.telefone());
+        usuario.setTelefone(telefoneNormalizado);
+        usuario.setCnpj(cnpjNormalizado);
+        usuario.setResponsavelNome(responsavelNome);
         usuario.setTipo(request.tipo());
 
         Usuario salvo = usuarioRepository.save(usuario);
@@ -54,5 +68,52 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         return UsuarioResponse.fromEntity(usuario);
+    }
+
+    private void validarCamposPrestador(
+            TipoUsuario tipo,
+            String cnpjNormalizado,
+            String responsavelNome
+    ) {
+        if (tipo != TipoUsuario.PRESTADOR) {
+            return;
+        }
+
+        if (cnpjNormalizado == null || cnpjNormalizado.length() != 14) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Prestadores precisam informar um CNPJ válido com 14 dígitos");
+        }
+
+        if (responsavelNome == null || responsavelNome.isBlank()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Prestadores precisam informar o nome do responsável");
+        }
+    }
+
+    private String normalizarEmail(String email) {
+        return email.trim().toLowerCase();
+    }
+
+    private String normalizarTelefone(String telefone) {
+        if (telefone == null || telefone.isBlank()) {
+            return null;
+        }
+        return telefone.replaceAll("\\D", "");
+    }
+
+    private String normalizarCnpj(String cnpj) {
+        if (cnpj == null || cnpj.isBlank()) {
+            return null;
+        }
+        return cnpj.replaceAll("\\D", "");
+    }
+
+    private String normalizarTexto(String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        return valor.trim();
     }
 }
