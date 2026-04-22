@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/components/user/editar_perfil.dart';
+import 'package:duckhat/components/user/metodos_pagamento.dart';
+import 'package:duckhat/components/user/notificacoes.dart';
+import 'package:duckhat/components/user/seguranca.dart';
+import 'package:duckhat/components/user/configuracoes.dart';
+import 'package:duckhat/components/user/ajuda.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 
 class PerfilPage extends StatelessWidget {
@@ -30,16 +35,30 @@ class PerfilPage extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.credit_card_outlined,
                   title: 'Métodos de Pagamento',
+                  onTap: () => Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => const MetodosPagamentoPage(),
+                    ),
+                  ),
                 ),
                 _buildDivider(),
                 _buildMenuItem(
                   icon: Icons.notifications_none_outlined,
                   title: 'Notificações',
+                  onTap: () => Navigator.push(
+                    ctx,
+                    MaterialPageRoute(builder: (_) => const NotificacoesPage()),
+                  ),
                 ),
                 _buildDivider(),
                 _buildMenuItem(
                   icon: Icons.lock_outline,
                   title: 'Segurança e Privacidade',
+                  onTap: () => Navigator.push(
+                    ctx,
+                    MaterialPageRoute(builder: (_) => const SegurancaPage()),
+                  ),
                 ),
               ]),
               const SizedBox(height: 16),
@@ -48,15 +67,29 @@ class PerfilPage extends StatelessWidget {
                 _buildMenuItem(
                   icon: Icons.settings_outlined,
                   title: 'Configurações',
+                  onTap: () => Navigator.push(
+                    ctx,
+                    MaterialPageRoute(
+                      builder: (_) => const ConfiguracoesPage(),
+                    ),
+                  ),
                 ),
                 _buildDivider(),
-                _buildMenuItem(icon: Icons.help_outline, title: 'Ajuda'),
+                _buildMenuItem(
+                  icon: Icons.help_outline,
+                  title: 'Ajuda',
+                  onTap: () => Navigator.push(
+                    ctx,
+                    MaterialPageRoute(builder: (_) => const AjudaPage()),
+                  ),
+                ),
                 _buildDivider(),
                 _buildMenuItem(
                   icon: Icons.logout,
                   title: 'Sair',
                   titleColor: Colors.red,
                   showArrow: false,
+                  onTap: () => _showLogoutDialog(ctx),
                 ),
               ]),
               const SizedBox(height: 80),
@@ -70,7 +103,7 @@ class PerfilPage extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [AppColors.accent, AppColors.accentLight],
           begin: Alignment.topLeft,
@@ -212,6 +245,28 @@ class PerfilPage extends StatelessWidget {
       indent: 66,
       endIndent: 16,
       color: AppColors.divider,
+    );
+  }
+
+  void _showLogoutDialog(BuildContext ctx) {
+    showDialog(
+      context: ctx,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sair'),
+        content: const Text('Tem certeza que deseja sair?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+            },
+            child: const Text('Sair', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }
