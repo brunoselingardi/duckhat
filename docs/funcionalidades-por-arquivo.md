@@ -106,6 +106,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - fluxo real de recuperacao em duas etapas
   - botao voltar retorna
   - CTA principal gera codigo de recuperacao via API
+  - codigo so aparece na tela quando o backend for iniciado explicitamente com retorno de codigo de demo
   - segunda etapa recebe codigo e nova senha e redefine na API
   - retorna o e-mail para a tela de login ao concluir
 - `lib/pages/signup.dart`
@@ -232,6 +233,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - gera e valida JWT
 - `backend/src/main/java/com/duckhat/api/service/RecuperacaoSenhaService.java`
   - gera codigo, persiste token de recuperacao e redefine senha
+  - aplica limite de tentativas invalidas e bloqueio temporario por token
 - `backend/src/main/resources/application.properties`
   - configuracao com fallback local e override por variaveis de ambiente
 
