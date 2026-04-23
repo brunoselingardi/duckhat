@@ -34,7 +34,6 @@ class _LoginPageState extends State<LoginPage> {
   _AccountType _accountType = _AccountType.cliente;
   bool _hidePassword = true;
   bool _loading = false;
-  bool _devOfflineLogin = true;
   String? _error;
 
   @override
@@ -54,13 +53,6 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      if (_devOfflineLogin) {
-        await Future<void>.delayed(const Duration(milliseconds: 350));
-        if (!mounted) return;
-        _openApp();
-        return;
-      }
-
       final session = await DuckHatApi.instance.login(
         email: _emailController.text,
         password: _passwordController.text,
@@ -96,13 +88,33 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showForgotPassword() {
-    Navigator.of(
-      context,
-    ).push(AppRoute(builder: (_) => const ForgotPasswordPage()));
+    Navigator.of(context)
+        .push<String>(
+          MaterialPageRoute(builder: (_) => const ForgotPasswordPage()),
+        )
+        .then((email) {
+          if (email == null || email.isEmpty || !mounted) return;
+          setState(() => _emailController.text = email);
+        });
   }
 
   void _openCreateAccount() {
-    Navigator.of(context).push(AppRoute(builder: (_) => const SignupPage()));
+    Navigator.of(context)
+        .push<SignupSuccessResult>(
+          MaterialPageRoute(builder: (_) => const SignupPage()),
+        )
+        .then((result) {
+          if (result == null || !mounted) return;
+          _emailController.text = result.email;
+          _passwordController.text = result.password;
+          setState(() {
+            _accountType = result.accountType == SignupAccountType.cliente
+                ? _AccountType.cliente
+                : _AccountType.empresa;
+            _error = null;
+          });
+          _submit();
+        });
   }
 
   @override
@@ -143,7 +155,6 @@ class _LoginPageState extends State<LoginPage> {
                               accountType: _accountType,
                               hidePassword: _hidePassword,
                               loading: _loading,
-                              devOfflineLogin: _devOfflineLogin,
                               error: _error,
                               onAccountTypeChanged: (value) {
                                 setState(() {
@@ -153,12 +164,6 @@ class _LoginPageState extends State<LoginPage> {
                               },
                               onTogglePassword: () {
                                 setState(() => _hidePassword = !_hidePassword);
-                              },
-                              onDevOfflineLoginChanged: (value) {
-                                setState(() {
-                                  _devOfflineLogin = value;
-                                  _error = null;
-                                });
                               },
                               onSubmit: _submit,
                               onForgotPassword: _showForgotPassword,
@@ -255,11 +260,9 @@ class _LoginForm extends StatelessWidget {
   final _AccountType accountType;
   final bool hidePassword;
   final bool loading;
-  final bool devOfflineLogin;
   final String? error;
   final ValueChanged<_AccountType> onAccountTypeChanged;
   final VoidCallback onTogglePassword;
-  final ValueChanged<bool> onDevOfflineLoginChanged;
   final VoidCallback onSubmit;
   final VoidCallback onForgotPassword;
   final VoidCallback onCreateAccount;
@@ -271,11 +274,9 @@ class _LoginForm extends StatelessWidget {
     required this.accountType,
     required this.hidePassword,
     required this.loading,
-    required this.devOfflineLogin,
     required this.error,
     required this.onAccountTypeChanged,
     required this.onTogglePassword,
-    required this.onDevOfflineLoginChanged,
     required this.onSubmit,
     required this.onForgotPassword,
     required this.onCreateAccount,
@@ -292,12 +293,6 @@ class _LoginForm extends StatelessWidget {
             selected: accountType,
             enabled: !loading,
             onChanged: onAccountTypeChanged,
-          ),
-          const SizedBox(height: 12),
-          _DevOfflineToggle(
-            enabled: !loading,
-            value: devOfflineLogin,
-            onChanged: onDevOfflineLoginChanged,
           ),
           const SizedBox(height: 18),
           _DuckHatTextField(
@@ -489,52 +484,6 @@ class _AccountTypeSelector extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _DevOfflineToggle extends StatelessWidget {
-  final bool enabled;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _DevOfflineToggle({
-    required this.enabled,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.82),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.code_outlined, color: AppColors.accent, size: 20),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Text(
-              'Modo teste sem backend',
-              style: TextStyle(
-                color: AppColors.textBold,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          Switch.adaptive(
-            value: value,
-            onChanged: enabled ? onChanged : null,
-            activeThumbColor: AppColors.accent,
-            activeTrackColor: AppColors.accentLight,
-          ),
-        ],
-      ),
     );
   }
 }

@@ -26,6 +26,8 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O DuckHat usa sua localizacao para mostrar servicos proximos.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

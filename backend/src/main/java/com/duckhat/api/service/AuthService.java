@@ -27,7 +27,7 @@ public class AuthService {
 
   @Transactional(readOnly = true)
   public LoginResponse login(LoginRequest request) {
-    Usuario usuario = usuarioRepository.findByEmail(request.email())
+    Usuario usuario = usuarioRepository.findByEmail(request.email().trim().toLowerCase())
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.UNAUTHORIZED,
             "Email ou senha inválidos"));

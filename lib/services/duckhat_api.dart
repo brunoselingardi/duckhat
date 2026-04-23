@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 
 import '../core/api_config.dart';
 import '../models/agendamento.dart';
+import '../models/chat_conversa.dart';
+import '../models/chat_mensagem.dart';
 import '../models/disponibilidade_catalogo.dart';
 import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
@@ -20,6 +22,11 @@ class DuckHatApi {
   );
 
   String? _token;
+  LoginSession? _session;
+
+  LoginSession? get currentSession => _session;
+
+  bool get isPrestador => _session?.tipo == 'PRESTADOR';
 
   Future<LoginSession> login({
     required String email,
@@ -27,11 +34,13 @@ class DuckHatApi {
   }) async {
     final session = await _requestSession(email: email, password: password);
     _token = session.token;
+    _session = session;
     return session;
   }
 
   void clearSession() {
     _token = null;
+    _session = null;
   }
 
   Future<void> ensureAuthenticated() async {
@@ -48,6 +57,114 @@ class DuckHatApi {
       password: ApiConfig.loginPassword,
     );
     _token = session.token;
+    _session = session;
+  }
+
+  Future<UsuarioCadastroResponse> criarUsuario({
+    required String nome,
+    required String email,
+    required String senha,
+    required String telefone,
+    required String tipo,
+    String? cnpj,
+    String? responsavelNome,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/usuarios'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'nome': nome.trim(),
+        'email': email.trim().toLowerCase(),
+        'senha': senha,
+        'telefone': telefone.trim(),
+        'cnpj': _nullableTrim(cnpj),
+        'responsavelNome': _nullableTrim(responsavelNome),
+        'tipo': tipo,
+      }),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível criar a conta.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao criar usuário.');
+    }
+
+    return UsuarioCadastroResponse(
+      id: _parseInt(body['id']),
+      nome: body['nome'] as String? ?? nome.trim(),
+      email: body['email'] as String? ?? email.trim().toLowerCase(),
+      telefone: body['telefone'] as String?,
+      cnpj: body['cnpj'] as String?,
+      responsavelNome: body['responsavelNome'] as String?,
+      tipo: body['tipo'] as String? ?? tipo,
+    );
+  }
+
+  Future<SolicitacaoRecuperacaoSenhaResponse> solicitarRecuperacaoSenha({
+    required String email,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/auth/recuperar-senha/solicitar'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({'email': email.trim().toLowerCase()}),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível iniciar a recuperação de senha.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao solicitar recuperação.');
+    }
+
+    return SolicitacaoRecuperacaoSenhaResponse(
+      mensagem: body['mensagem'] as String? ?? 'Código gerado com sucesso.',
+      codigoRecuperacao: body['codigoRecuperacao'] as String?,
+    );
+  }
+
+  Future<void> redefinirSenha({
+    required String email,
+    required String codigo,
+    required String novaSenha,
+  }) async {
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/auth/recuperar-senha/redefinir'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email.trim().toLowerCase(),
+        'codigo': codigo.trim(),
+        'novaSenha': novaSenha,
+      }),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível redefinir a senha.',
+      );
+    }
   }
 
   Future<LoginSession> _requestSession({
@@ -114,6 +231,35 @@ class DuckHatApi {
 
     if (body is! List) {
       throw Exception('Resposta inválida ao listar agendamentos.');
+    }
+
+    return body
+        .map(
+          (item) =>
+              Agendamento.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .toList();
+  }
+
+  Future<List<Agendamento>> listarAgendamentosPrestador() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/agendamentos/prestador'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar a agenda do prestador.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar agendamentos do prestador.');
     }
 
     return body
@@ -315,6 +461,157 @@ class DuckHatApi {
     );
   }
 
+  Future<Agendamento> confirmarAgendamento(int id) async {
+    await ensureAuthenticated();
+
+    final response = await _client.patch(
+      Uri.parse('${ApiConfig.baseUrl}/api/agendamentos/$id/confirmar'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível confirmar o agendamento.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao confirmar agendamento.');
+    }
+
+    return Agendamento.fromJson(body);
+  }
+
+  Future<Agendamento> concluirAgendamento(int id) async {
+    await ensureAuthenticated();
+
+    final response = await _client.patch(
+      Uri.parse('${ApiConfig.baseUrl}/api/agendamentos/$id/concluir'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível concluir o agendamento.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao concluir agendamento.');
+    }
+
+    return Agendamento.fromJson(body);
+  }
+
+  Future<List<ChatConversa>> listarConversasChat() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/chat/conversas'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as conversas.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar conversas.');
+    }
+
+    return body
+        .map((item) => ChatConversa.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<ChatConversa> criarOuBuscarConversaChat(int participanteId) async {
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/chat/conversas'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({'participanteId': participanteId}),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível abrir a conversa.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao abrir conversa.');
+    }
+
+    return ChatConversa.fromJson(body);
+  }
+
+  Future<List<ChatMensagem>> listarMensagensChat(int conversaId) async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/chat/conversas/$conversaId/mensagens',
+      ),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as mensagens.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar mensagens.');
+    }
+
+    return body
+        .map((item) => ChatMensagem.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<ChatMensagem> enviarMensagemChat({
+    required int conversaId,
+    required String conteudo,
+  }) async {
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/chat/conversas/$conversaId/mensagens',
+      ),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({'conteudo': conteudo.trim()}),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível enviar a mensagem.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao enviar mensagem.');
+    }
+
+    return ChatMensagem.fromJson(body);
+  }
+
   Map<String, String> _authorizedHeaders() {
     return {
       'Content-Type': 'application/json',
@@ -342,6 +639,12 @@ class DuckHatApi {
 
   int _parseInt(dynamic value) =>
       value is int ? value : int.parse(value.toString());
+
+  String? _nullableTrim(String? value) {
+    if (value == null) return null;
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
 }
 
 class AgendamentoSyncSignal {
@@ -366,5 +669,35 @@ class LoginSession {
     required this.email,
     required this.tipo,
     required this.token,
+  });
+}
+
+class UsuarioCadastroResponse {
+  final int id;
+  final String nome;
+  final String email;
+  final String? telefone;
+  final String? cnpj;
+  final String? responsavelNome;
+  final String tipo;
+
+  UsuarioCadastroResponse({
+    required this.id,
+    required this.nome,
+    required this.email,
+    required this.telefone,
+    required this.cnpj,
+    required this.responsavelNome,
+    required this.tipo,
+  });
+}
+
+class SolicitacaoRecuperacaoSenhaResponse {
+  final String mensagem;
+  final String? codigoRecuperacao;
+
+  SolicitacaoRecuperacaoSenhaResponse({
+    required this.mensagem,
+    required this.codigoRecuperacao,
   });
 }

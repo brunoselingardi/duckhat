@@ -4,7 +4,9 @@ import 'package:duckhat/components/service/service_info_card.dart';
 import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/components/service/service_sections.dart';
 import 'package:duckhat/components/service/service_tab_menu.dart';
+import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
+import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
@@ -208,6 +210,33 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
+  Future<void> _openChat() async {
+    try {
+      final conversa = await DuckHatApi.instance.criarOuBuscarConversaChat(
+        servicePrestadorId,
+      );
+      if (!mounted) return;
+
+      await Navigator.push(
+        context,
+        AppRoute(
+          builder: (context) => ChatDetailPage(
+            conversaId: conversa.id,
+            participanteNome: conversa.participanteNome,
+          ),
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -223,7 +252,7 @@ class _ServicePageState extends State<ServicePage> {
               transform: Matrix4.translationValues(0, -28, 0),
               child: Column(
                 children: [
-                  const ServiceInfoCard(),
+                  ServiceInfoCard(onMessageTap: _openChat),
                   const SizedBox(height: 8),
                   ServiceTabMenu(
                     tabs: serviceTabs,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/agendamento.dart';
+import '../models/servico_catalogo.dart';
 import '../core/app_route.dart';
 import '../pages/appointment_detail.dart';
 import '../services/duckhat_api.dart';
@@ -17,11 +18,14 @@ class _SchedulePageState extends State<SchedulePage> {
   final _api = DuckHatApi.instance;
 
   bool _loading = true;
+  bool _creating = false;
   String? _error;
   List<Agendamento> _agendamentos = [];
   late DateTime _currentMonth;
   DateTime? _selectedDate;
   int _lastSyncRevision = 0;
+
+  bool get _isPrestador => _api.isPrestador;
 
   @override
   void initState() {
@@ -50,8 +54,11 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     try {
-      final items = await _api.listarAgendamentos()
-        ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
+      final items =
+          await (_isPrestador
+                ? _api.listarAgendamentosPrestador()
+                : _api.listarAgendamentos())
+            ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
 
       final initialDate = _pickInitialDate(items);
 
@@ -158,15 +165,41 @@ class _SchedulePageState extends State<SchedulePage> {
       AppRoute(
         builder: (_) => AppointmentDetailPage(
           agendamento: agendamento,
-          onCancel: (item) async {
-            await _api.cancelarAgendamento(item.id);
-          },
+          onCancel: !_isPrestador
+              ? (item) async {
+                  await _api.cancelarAgendamento(item.id);
+                }
+              : null,
         ),
       ),
     );
 
     if (changed == true && mounted) {
       _showSnackBar('Agendamento atualizado.');
+    }
+  }
+
+  Future<void> _confirmarAgendamento(Agendamento agendamento) async {
+    try {
+      await _api.confirmarAgendamento(agendamento.id);
+      if (!mounted) return;
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento confirmado com sucesso.');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(_prettyError(e), isError: true);
+    }
+  }
+
+  Future<void> _concluirAgendamento(Agendamento agendamento) async {
+    try {
+      await _api.concluirAgendamento(agendamento.id);
+      if (!mounted) return;
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento concluído com sucesso.');
+    } catch (e) {
+      if (!mounted) return;
+      _showSnackBar(_prettyError(e), isError: true);
     }
   }
 
@@ -243,6 +276,26 @@ class _SchedulePageState extends State<SchedulePage> {
             icon: const Icon(Icons.refresh, color: AppColors.accent),
             tooltip: 'Atualizar',
           ),
+          if (!_isPrestador) ...[
+            const SizedBox(width: 4),
+            Container(
+              decoration: BoxDecoration(
+                color: kPrimaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                onPressed: _creating ? null : _abrirNovoAgendamento,
+                icon: _creating
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add, color: kPrimaryColor),
+                tooltip: 'Novo agendamento',
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -658,7 +711,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       runSpacing: 8,
                       children: [
                         _StatusChip(status: item.status),
-                        if (item.podeCancelar)
+                        if (!_isPrestador && item.podeCancelar)
                           OutlinedButton.icon(
                             onPressed: () => _cancelarAgendamento(item),
                             icon: const Icon(Icons.close, size: 16),
@@ -667,6 +720,18 @@ class _SchedulePageState extends State<SchedulePage> {
                               foregroundColor: Colors.redAccent,
                               side: const BorderSide(color: Colors.redAccent),
                             ),
+                          ),
+                        if (_isPrestador && item.status == 'PENDENTE')
+                          FilledButton.icon(
+                            onPressed: () => _confirmarAgendamento(item),
+                            icon: const Icon(Icons.check_circle, size: 16),
+                            label: const Text('Confirmar'),
+                          ),
+                        if (_isPrestador && item.status == 'CONFIRMADO')
+                          FilledButton.icon(
+                            onPressed: () => _concluirAgendamento(item),
+                            icon: const Icon(Icons.task_alt, size: 16),
+                            label: const Text('Concluir'),
                           ),
                         TextButton.icon(
                           onPressed: () => _abrirDetalheAgendamento(item),
