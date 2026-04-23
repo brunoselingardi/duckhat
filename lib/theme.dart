@@ -26,12 +26,13 @@ class AppColors {
   static const chatBubbleSelf = Color(0xFF217CE5);
   static const divider = Color(0xFFE5E7EB);
   static const inputFill = Color(0xFFF5F5F5);
-  static const textMuted = Color(0x99629170);
+  static const textMuted = Color(0x803A7FD5);
+  static const sectionLabel = textMuted;
   static const grayField = textMuted;
   static const textSecondary = Color(0xFF291970);
   static const textBold = Color(0xFF291970);
   static const textRegular = Color(0xB3291970);
-  static const textMutedLight = Color(0x80291970);
+  static const textMutedLight = textMuted;
   static const navUnselected = Color(0xB3291970);
   static const blackText = Color(0xFF0C0041);
   static const darkAlt = blackText;
@@ -39,7 +40,9 @@ class AppColors {
 }
 
 class AppTheme {
-  static ThemeData get theme => ThemeData(
+  static ThemeData get theme => lightTheme;
+
+  static ThemeData get lightTheme => ThemeData(
     fontFamily: 'Poppins',
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.accent,
@@ -48,6 +51,62 @@ class AppTheme {
       surface: AppColors.cardBackground,
     ),
     scaffoldBackgroundColor: AppColors.background,
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) return AppColors.accent;
+        return const Color(0xFFFFFFFF);
+      }),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.accent.withValues(alpha: 0.32);
+        }
+        return const Color(0xFFE5E7EB);
+      }),
+    ),
     useMaterial3: true,
   );
+
+  static ThemeData get darkTheme => ThemeData(
+    fontFamily: 'Poppins',
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.accent,
+      brightness: Brightness.dark,
+      primary: const Color(0xFF7DB4F5),
+      secondary: const Color(0xFFB7C8FF),
+      surface: const Color(0xFF111827),
+    ),
+    scaffoldBackgroundColor: const Color(0xFF0B1220),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: Color(0xFF111827),
+      foregroundColor: Color(0xFF7DB4F5),
+      elevation: 0,
+    ),
+    cardColor: const Color(0xFF111827),
+    dividerColor: const Color(0xFF263244),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(0xFF7DB4F5);
+        }
+        return const Color(0xFF94A3B8);
+      }),
+      trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return const Color(0xFF3A7FD5).withValues(alpha: 0.45);
+        }
+        return const Color(0xFF334155);
+      }),
+    ),
+    useMaterial3: true,
+  );
+}
+
+class AppThemeController {
+  static final ValueNotifier<ThemeMode> mode = ValueNotifier(ThemeMode.light);
+
+  static bool get isDark => mode.value == ThemeMode.dark;
+
+  static void setDark(bool value) {
+    mode.value = value ? ThemeMode.dark : ThemeMode.light;
+  }
 }

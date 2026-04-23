@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/components/user/editar_perfil.dart';
+import 'package:duckhat/components/user/notificacoes.dart';
+import 'package:duckhat/components/user/seguranca.dart';
+import 'package:duckhat/components/user/configuracoes.dart';
+import 'package:duckhat/components/user/ajuda.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 
 class PerfilPage extends StatelessWidget {
@@ -10,134 +15,171 @@ class PerfilPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Builder(
-        builder: (ctx) => SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 16),
-              _buildSectionLabel('MINHA CONTA', Icons.account_circle),
-              _buildMenuCard([
-                _buildMenuItem(
-                  icon: Icons.person_outline,
-                  title: 'Editar Perfil',
-                  onTap: () => Navigator.push(
-                    ctx,
-                    MaterialPageRoute(builder: (_) => const EditarPerfilPage()),
-                  ),
+        builder: (ctx) => CustomScrollView(
+          key: const PageStorageKey('profile-scroll'),
+          slivers: [
+            SliverToBoxAdapter(child: _buildHeader()),
+            SliverToBoxAdapter(
+              child: _buildSectionLabel('MINHA CONTA', Icons.account_circle),
+            ),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.person_outline,
+                title: 'Editar Perfil',
+                onTap: () => Navigator.push(
+                  ctx,
+                  AppRoute(builder: (_) => const EditarPerfilPage()),
                 ),
-                _buildDivider(),
-                _buildMenuItem(
-                  icon: Icons.credit_card_outlined,
-                  title: 'Métodos de Pagamento',
+              ),
+            ),
+            const SliverToBoxAdapter(child: _ProfileDivider()),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.notifications_none_outlined,
+                title: 'Notificações',
+                onTap: () => Navigator.push(
+                  ctx,
+                  AppRoute(builder: (_) => const NotificacoesPage()),
                 ),
-                _buildDivider(),
-                _buildMenuItem(
-                  icon: Icons.notifications_none_outlined,
-                  title: 'Notificações',
+              ),
+            ),
+            const SliverToBoxAdapter(child: _ProfileDivider()),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.location_on_outlined,
+                title: 'Minhas Localizações',
+                onTap: () => _showComingSoon(ctx),
+              ),
+            ),
+            const SliverToBoxAdapter(child: _ProfileDivider()),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.lock_outline,
+                title: 'Segurança e Privacidade',
+                onTap: () => Navigator.push(
+                  ctx,
+                  AppRoute(builder: (_) => const SegurancaPage()),
                 ),
-                _buildDivider(),
-                _buildMenuItem(
-                  icon: Icons.lock_outline,
-                  title: 'Segurança e Privacidade',
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
+            SliverToBoxAdapter(
+              child: _buildSectionLabel('CONFIGURAÇÕES', Icons.tune),
+            ),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.settings_outlined,
+                title: 'Configurações',
+                onTap: () => Navigator.push(
+                  ctx,
+                  AppRoute(builder: (_) => const ConfiguracoesPage()),
                 ),
-              ]),
-              const SizedBox(height: 16),
-              _buildSectionLabel('CONFIGURAÇÕES', Icons.tune),
-              _buildMenuCard([
-                _buildMenuItem(
-                  icon: Icons.settings_outlined,
-                  title: 'Configurações',
+              ),
+            ),
+            const SliverToBoxAdapter(child: _ProfileDivider()),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.help_outline,
+                title: 'Ajuda',
+                onTap: () => Navigator.push(
+                  ctx,
+                  AppRoute(builder: (_) => const AjudaPage()),
                 ),
-                _buildDivider(),
-                _buildMenuItem(icon: Icons.help_outline, title: 'Ajuda'),
-                _buildDivider(),
-                _buildMenuItem(
-                  icon: Icons.logout,
-                  title: 'Sair',
-                  titleColor: Colors.red,
-                  showArrow: false,
-                ),
-              ]),
-              const SizedBox(height: 80),
-            ],
-          ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: _ProfileDivider()),
+            SliverToBoxAdapter(
+              child: _buildMenuItem(
+                icon: Icons.logout,
+                title: 'Sair',
+                titleColor: Colors.red,
+                showArrow: false,
+                onTap: () => _showLogoutDialog(ctx),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 92)),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.accent, AppColors.accentLight],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  color: AppColors.accent,
-                ),
-                child: const Center(
-                  child: Text(
-                    'E',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
+    return SizedBox(
+      height: 350,
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.topCenter,
+        children: [
+          SizedBox(
+            height: 226,
+            width: double.infinity,
+            child: Image.asset('assets/ondas.jpg', fit: BoxFit.cover),
+          ),
+          Positioned(
+            top: 132,
+            child: Container(
+              width: 172,
+              height: 172,
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.background,
+                border: Border.all(color: AppColors.secondary, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.secondary.withValues(alpha: 0.22),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset('assets/icon.jpg', fit: BoxFit.cover),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 300,
+            left: 24,
+            right: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        'Estadosunilson',
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.textBold,
+                          fontSize: 23,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
+                    const SizedBox(width: 8),
+                    Icon(
+                      Icons.edit_outlined,
+                      color: AppColors.accent.withValues(alpha: 0.7),
+                      size: 18,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                const Text(
+                  'estadosunilson@hotmail.com.br',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Estadosunilson',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'estadosunilson@hotmail.com.br',
-                style: TextStyle(color: Colors.white70, fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionLabel(String label, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: AppColors.textRegular),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textRegular,
-              letterSpacing: 1.0,
+              ],
             ),
           ),
         ],
@@ -145,21 +187,22 @@ class PerfilPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuCard(List<Widget> children) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  Widget _buildSectionLabel(String label, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 16, 9),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: AppColors.sectionLabel,
+              letterSpacing: 0.8,
+            ),
           ),
         ],
       ),
-      child: Column(children: children),
     );
   }
 
@@ -172,46 +215,81 @@ class PerfilPage extends StatelessWidget {
   }) {
     final iconColor = titleColor ?? AppColors.accent;
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
       onTap: onTap ?? () {},
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.fromLTRB(8, 10, 14, 10),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
+              width: 34,
+              height: 34,
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: iconColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
               ),
-              child: Icon(icon, color: iconColor, size: 20),
+              child: Icon(icon, color: iconColor, size: 18),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                   color: titleColor ?? AppColors.textBold,
                 ),
               ),
             ),
             if (showArrow)
-              Icon(Icons.chevron_right, color: AppColors.textRegular, size: 22),
+              Icon(
+                Icons.chevron_right,
+                color: AppColors.textMuted.withValues(alpha: 0.8),
+                size: 22,
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDivider() {
-    return const Divider(
+  void _showComingSoon(BuildContext ctx) {
+    ScaffoldMessenger.of(
+      ctx,
+    ).showSnackBar(const SnackBar(content: Text('Em breve')));
+  }
+
+  void _showLogoutDialog(BuildContext ctx) {
+    showDialog(
+      context: ctx,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sair'),
+        content: const Text('Tem certeza que deseja sair?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+            },
+            child: const Text('Sair', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileDivider extends StatelessWidget {
+  const _ProfileDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
       height: 1,
-      indent: 66,
-      endIndent: 16,
-      color: AppColors.divider,
+      thickness: 1,
+      color: AppColors.textMuted.withValues(alpha: 0.45),
     );
   }
 }

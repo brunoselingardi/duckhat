@@ -1,6 +1,7 @@
 class Agendamento {
   final int id;
   final int clienteId;
+  final String? clienteNome;
   final int? prestadorId;
   final String? prestadorNome;
   final int servicoId;
@@ -14,6 +15,7 @@ class Agendamento {
   Agendamento({
     required this.id,
     required this.clienteId,
+    required this.clienteNome,
     required this.prestadorId,
     required this.prestadorNome,
     required this.servicoId,
@@ -32,6 +34,7 @@ class Agendamento {
     return Agendamento(
       id: parseInt(json['id']),
       clienteId: parseInt(json['clienteId']),
+      clienteNome: json['clienteNome'] as String?,
       prestadorId: json['prestadorId'] == null
           ? null
           : parseInt(json['prestadorId']),

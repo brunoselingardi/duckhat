@@ -1,70 +1,73 @@
+import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/core/app_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
-import 'package:duckhat/components/bottomnav.dart';
-import 'pages/home.dart';
-import 'pages/schedule.dart';
+import 'pages/login.dart';
 import 'pages/schedule_date.dart';
-import 'pages/chat.dart';
-import 'pages/user.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'DuckHat',
-      theme: AppTheme.theme,
-      debugShowCheckedModeBanner: false,
-      home: const MainNavigator(),
-      onGenerateRoute: (settings) {
-        if (settings.name == '/schedule-date') {
-          final args = settings.arguments as Map<String, dynamic>;
-          return MaterialPageRoute(
-            builder: (context) => ScheduleDatePage(
-              serviceId: args['serviceId'] as int,
-              prestadorId: args['prestadorId'] as int,
-              serviceName: args['serviceName'] ?? '',
-              establishmentName: args['establishmentName'] ?? '',
-              durationMin: args['durationMin'] as int,
-            ),
-          );
-        }
-        return null;
-      },
-    );
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _precacheStarted = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_precacheStarted) return;
+    _precacheStarted = true;
+
+    for (final asset in const [
+      'assets/ondas.jpg',
+      'assets/icon.jpg',
+      'assets/niceduck.jpg',
+      'assets/barbiesalon.jpg',
+      'assets/jamessalon.jpg',
+      'assets/mariano.jpg',
+      'assets/salao.jpg',
+    ]) {
+      precacheImage(AssetImage(asset), context);
+    }
   }
-}
-
-class MainNavigator extends StatefulWidget {
-  const MainNavigator({super.key});
-
-  @override
-  State<MainNavigator> createState() => _MainNavigatorState();
-}
-
-class _MainNavigatorState extends State<MainNavigator> {
-  int _currentIndex = 0;
-
-  final List<Widget> _pages = [
-    const Home(),
-    const SchedulePage(),
-    const ChatPage(),
-    const PerfilPage(),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _pages),
-      bottomNavigationBar: DuckHatBottomNav(
-        selectedIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppThemeController.mode,
+      builder: (context, themeMode, _) {
+        return MaterialApp(
+          title: 'DuckHat',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeMode,
+          debugShowCheckedModeBanner: false,
+          scrollBehavior: const AppScrollBehavior(),
+          home: const LoginPage(),
+          onGenerateRoute: (settings) {
+            if (settings.name == '/schedule-date') {
+              final args = settings.arguments as Map<String, dynamic>;
+              return AppRoute(
+                builder: (context) => ScheduleDatePage(
+                  serviceId: args['serviceId'] as int,
+                  prestadorId: args['prestadorId'] as int,
+                  serviceName: args['serviceName'] ?? '',
+                  establishmentName: args['establishmentName'] ?? '',
+                  durationMin: args['durationMin'] as int,
+                ),
+              );
+            }
+            return null;
+          },
+        );
+      },
     );
   }
 }

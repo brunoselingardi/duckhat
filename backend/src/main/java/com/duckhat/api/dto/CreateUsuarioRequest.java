@@ -24,6 +24,12 @@ public record CreateUsuarioRequest(
         @Size(max = 20)
         String telefone,
 
+        @Size(min = 14, max = 14)
+        String cnpj,
+
+        @Size(max = 120)
+        String responsavelNome,
+
         @NotNull
         TipoUsuario tipo
 ) {

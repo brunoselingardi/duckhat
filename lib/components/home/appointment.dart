@@ -57,23 +57,22 @@ class AppointmentSection extends StatelessWidget {
         if (appointments.isEmpty)
           const EmptyAppointmentState()
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: appointments.length,
-            itemBuilder: (context, index) {
-              final appointment = appointments[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: AppointmentCard(
-                  time: appointment["time"],
-                  service: appointment["service"],
-                  place: appointment["place"],
-                  image: appointment["image"],
-                ),
-              );
-            },
+            child: Column(
+              children: [
+                for (final appointment in appointments)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: AppointmentCard(
+                      time: appointment["time"],
+                      service: appointment["service"],
+                      place: appointment["place"],
+                      image: appointment["image"],
+                    ),
+                  ),
+              ],
+            ),
           ),
       ],
     );

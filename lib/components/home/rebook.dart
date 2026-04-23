@@ -57,23 +57,22 @@ class RebookSection extends StatelessWidget {
         if (rebookServices.isEmpty)
           const EmptyRebookState()
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: rebookServices.length,
-            itemBuilder: (context, index) {
-              final service = rebookServices[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: RebookCard(
-                  name: service["name"],
-                  image: service["image"],
-                  rating: (service["rating"] ?? 0).toDouble(),
-                  reviews: service["reviews"] ?? 0,
-                ),
-              );
-            },
+            child: Column(
+              children: [
+                for (final service in rebookServices)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: RebookCard(
+                      name: service["name"],
+                      image: service["image"],
+                      rating: (service["rating"] ?? 0).toDouble(),
+                      reviews: service["reviews"] ?? 0,
+                    ),
+                  ),
+              ],
+            ),
           ),
       ],
     );

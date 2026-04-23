@@ -6,20 +6,21 @@ class SegurancaPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: AppColors.backgroundAlt,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
+        backgroundColor: colorScheme.surface,
+        elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
+          icon: Icon(Icons.arrow_back, color: colorScheme.primary),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: Text(
           'Segurança e Privacidade',
           style: TextStyle(
-            color: AppColors.accent,
+            color: colorScheme.primary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -28,34 +29,27 @@ class SegurancaPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSectionTitle('SEGURANÇA'),
+          _buildSectionTitle(context, 'SEGURANÇA'),
           const SizedBox(height: 8),
           _buildItem(
+            context,
             icon: Icons.lock_outline,
             title: 'Alterar Senha',
             subtitle: 'Última alteração há 30 dias',
             onTap: () => _showEmBreve(context),
           ),
           _buildItem(
-            icon: Icons.fingerprint,
-            title: 'Biometria',
-            subtitle: 'Usar impressão digital para login',
-            trailing: Switch(
-              value: true,
-              onChanged: (v) {},
-              activeThumbColor: AppColors.accent,
-            ),
-          ),
-          _buildItem(
+            context,
             icon: Icons.phone_android,
             title: 'Verificação em Dois Fatores',
             subtitle: 'Adiciona uma camada extra de segurança',
             onTap: () => _showEmBreve(context),
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('PRIVACIDADE'),
+          _buildSectionTitle(context, 'PRIVACIDADE'),
           const SizedBox(height: 8),
           _buildItem(
+            context,
             icon: Icons.visibility_off_outlined,
             title: 'Perfil Privado',
             subtitle: 'Apenas clientes agendados podem ver seu perfil',
@@ -66,21 +60,24 @@ class SegurancaPage extends StatelessWidget {
             ),
           ),
           _buildItem(
+            context,
             icon: Icons.location_off_outlined,
             title: 'Localização',
             subtitle: 'Controlar acesso à localização',
             onTap: () => _showEmBreve(context),
           ),
           _buildItem(
+            context,
             icon: Icons.share_outlined,
             title: 'Dados Compartilhados',
             subtitle: 'Gerenciar quais dados são compartilhados',
             onTap: () => _showEmBreve(context),
           ),
           const SizedBox(height: 24),
-          _buildSectionTitle('CONTA'),
+          _buildSectionTitle(context, 'CONTA'),
           const SizedBox(height: 8),
           _buildItem(
+            context,
             icon: Icons.delete_outline,
             title: 'Excluir Conta',
             subtitle: 'Remover conta e todos os dados',
@@ -92,19 +89,21 @@ class SegurancaPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       title,
       style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,
-        color: AppColors.textMuted,
+        color: colorScheme.primary.withValues(alpha: 0.62),
         letterSpacing: 1,
       ),
     );
   }
 
-  Widget _buildItem({
+  Widget _buildItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -112,14 +111,19 @@ class SegurancaPage extends StatelessWidget {
     Color? titleColor,
     VoidCallback? onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final itemColor = titleColor ?? colorScheme.primary;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: colorScheme.surfaceContainerHighest.withValues(
+          alpha: isDark ? 0.72 : 1,
+        ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -132,26 +136,32 @@ class SegurancaPage extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: (titleColor ?? AppColors.accent).withValues(alpha: 0.1),
+            color: itemColor.withValues(alpha: isDark ? 0.18 : 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: titleColor ?? AppColors.accent, size: 20),
+          child: Icon(icon, color: itemColor, size: 20),
         ),
         title: Text(
           title,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w500,
-            color: titleColor ?? AppColors.darkAlt,
+            color: titleColor ?? colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(fontSize: 13, color: AppColors.grayField),
+          style: TextStyle(
+            fontSize: 13,
+            color: colorScheme.onSurface.withValues(alpha: 0.62),
+          ),
         ),
         trailing:
             trailing ??
-            const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            Icon(
+              Icons.chevron_right,
+              color: colorScheme.primary.withValues(alpha: 0.5),
+            ),
       ),
     );
   }

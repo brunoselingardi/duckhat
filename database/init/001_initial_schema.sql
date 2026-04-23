@@ -6,10 +6,26 @@ CREATE TABLE usuarios (
     email VARCHAR(150) NOT NULL,
     senha_hash VARCHAR(255) NOT NULL,
     telefone VARCHAR(20) NULL,
+    cnpj VARCHAR(14) NULL,
+    responsavel_nome VARCHAR(120) NULL,
     tipo ENUM('CLIENTE', 'PRESTADOR') NOT NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_usuarios PRIMARY KEY (id),
-    CONSTRAINT uq_usuarios_email UNIQUE (email)
+    CONSTRAINT uq_usuarios_email UNIQUE (email),
+    CONSTRAINT uq_usuarios_cnpj UNIQUE (cnpj)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE recuperacao_senha_tokens (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    usuario_id BIGINT NOT NULL,
+    codigo VARCHAR(12) NOT NULL,
+    expira_em DATETIME NOT NULL,
+    usado_em DATETIME NULL,
+    tentativas_falhas INT NOT NULL DEFAULT 0,
+    bloqueado_ate DATETIME NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_recuperacao_senha_tokens PRIMARY KEY (id),
+    CONSTRAINT fk_recuperacao_senha_tokens_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE servicos (
@@ -80,6 +96,31 @@ CREATE TABLE notificacao_eventos (
     CONSTRAINT fk_notificacao_eventos_agendamento FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE chat_conversas (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    cliente_id BIGINT NOT NULL,
+    prestador_id BIGINT NOT NULL,
+    ultima_mensagem_em DATETIME NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT pk_chat_conversas PRIMARY KEY (id),
+    CONSTRAINT uq_chat_conversas_cliente_prestador UNIQUE (cliente_id, prestador_id),
+    CONSTRAINT fk_chat_conversas_cliente FOREIGN KEY (cliente_id) REFERENCES usuarios(id),
+    CONSTRAINT fk_chat_conversas_prestador FOREIGN KEY (prestador_id) REFERENCES usuarios(id),
+    CONSTRAINT chk_chat_conversas_participantes CHECK (cliente_id <> prestador_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE chat_mensagens (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    conversa_id BIGINT NOT NULL,
+    remetente_id BIGINT NOT NULL,
+    conteudo TEXT NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT pk_chat_mensagens PRIMARY KEY (id),
+    CONSTRAINT fk_chat_mensagens_conversa FOREIGN KEY (conversa_id) REFERENCES chat_conversas(id) ON DELETE CASCADE,
+    CONSTRAINT fk_chat_mensagens_remetente FOREIGN KEY (remetente_id) REFERENCES usuarios(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE INDEX idx_servicos_prestador_id ON servicos (prestador_id);
 CREATE INDEX idx_servicos_ativo ON servicos (ativo);
 CREATE INDEX idx_servicos_prestador_ativo ON servicos (prestador_id, ativo);
@@ -98,3 +139,8 @@ CREATE INDEX idx_agendamentos_prestador_status_intervalo ON agendamentos (presta
 CREATE INDEX idx_notificacao_eventos_agendamento_id ON notificacao_eventos (agendamento_id);
 CREATE INDEX idx_notificacao_eventos_status ON notificacao_eventos (status);
 CREATE INDEX idx_notificacao_eventos_canal ON notificacao_eventos (canal);
+CREATE INDEX idx_recuperacao_senha_tokens_usuario_codigo ON recuperacao_senha_tokens (usuario_id, codigo);
+CREATE INDEX idx_chat_conversas_cliente_ultima ON chat_conversas (cliente_id, ultima_mensagem_em);
+CREATE INDEX idx_chat_conversas_prestador_ultima ON chat_conversas (prestador_id, ultima_mensagem_em);
+CREATE INDEX idx_chat_mensagens_conversa_criado ON chat_mensagens (conversa_id, criado_em, id);
+CREATE INDEX idx_chat_mensagens_criado ON chat_mensagens (criado_em);
