@@ -51,18 +51,19 @@ class ServiceServicesSection extends StatelessWidget {
               ),
             )
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: offers.length,
-              separatorBuilder: (_, _) =>
-                  const Divider(height: 28, color: Color(0xFFE8EDF6)),
-              itemBuilder: (context, index) => _ServiceRow(
-                offer: offers[index],
-                onBookTap: onBookTap != null
-                    ? () => onBookTap!(offers[index])
-                    : null,
-              ),
+            Column(
+              children: [
+                for (var index = 0; index < offers.length; index++) ...[
+                  _ServiceRow(
+                    offer: offers[index],
+                    onBookTap: onBookTap != null
+                        ? () => onBookTap!(offers[index])
+                        : null,
+                  ),
+                  if (index != offers.length - 1)
+                    const Divider(height: 28, color: Color(0xFFE8EDF6)),
+                ],
+              ],
             ),
         ],
       ),

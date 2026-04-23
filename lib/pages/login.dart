@@ -3,6 +3,7 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../core/app_route.dart';
 import 'app_shell.dart';
 import 'forgot_password.dart';
 import 'signup.dart';
@@ -83,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
   void _openApp() {
     Navigator.of(
       context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const MainNavigator()));
+    ).pushReplacement(AppRoute(builder: (_) => const MainNavigator()));
   }
 
   void _showForgotPassword() {

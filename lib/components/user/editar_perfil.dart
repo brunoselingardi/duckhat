@@ -38,6 +38,7 @@ class EditarPerfilPage extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
+        key: const PageStorageKey('edit-profile-scroll'),
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [

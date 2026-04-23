@@ -1,7 +1,9 @@
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
+import '../core/app_route.dart';
 import 'service.dart';
+import 'search_results.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -81,9 +83,23 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _openEstablishment() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const ServicePage()));
+    Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+  }
+
+  void _submitSearch() {
+    final selectedCategory = _selectedFilter == -1
+        ? null
+        : _filters[_selectedFilter].label;
+
+    Navigator.of(context).push(
+      AppRoute(
+        builder: (_) => SearchResultsPage(
+          query: _searchController.text.trim(),
+          location: _locationController.text.trim(),
+          category: selectedCategory,
+        ),
+      ),
+    );
   }
 
   void _handleRecentTap(_SearchSuggestion item) {
@@ -103,6 +119,7 @@ class _SearchPageState extends State<SearchPage> {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: CustomScrollView(
+          key: const PageStorageKey('search-scroll'),
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
@@ -116,6 +133,7 @@ class _SearchPageState extends State<SearchPage> {
                       searchController: _searchController,
                       locationController: _locationController,
                       onChanged: (_) => setState(() {}),
+                      onSubmit: _submitSearch,
                     ),
                     const SizedBox(height: 16),
                     _FilterRail(
@@ -224,11 +242,13 @@ class _SearchPanel extends StatelessWidget {
   final TextEditingController searchController;
   final TextEditingController locationController;
   final ValueChanged<String> onChanged;
+  final VoidCallback onSubmit;
 
   const _SearchPanel({
     required this.searchController,
     required this.locationController,
     required this.onChanged,
+    required this.onSubmit,
   });
 
   @override
@@ -253,6 +273,7 @@ class _SearchPanel extends StatelessWidget {
             icon: Icons.search,
             hint: 'Encontre especialistas ou servicos',
             onChanged: onChanged,
+            onSubmitted: (_) => onSubmit(),
           ),
           const SizedBox(height: 10),
           _SearchInput(
@@ -260,6 +281,27 @@ class _SearchPanel extends StatelessWidget {
             icon: Icons.location_on_outlined,
             hint: 'Pesquise por bairro, cidade ou CEP',
             onChanged: onChanged,
+            onSubmitted: (_) => onSubmit(),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            height: 48,
+            child: FilledButton.icon(
+              onPressed: onSubmit,
+              icon: const Icon(Icons.search, size: 20),
+              label: const Text(
+                'Pesquisar',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -272,12 +314,14 @@ class _SearchInput extends StatelessWidget {
   final IconData icon;
   final String hint;
   final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
 
   const _SearchInput({
     required this.controller,
     required this.icon,
     required this.hint,
     required this.onChanged,
+    required this.onSubmitted,
   });
 
   @override
@@ -285,6 +329,8 @@ class _SearchInput extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      textInputAction: TextInputAction.search,
       style: const TextStyle(
         color: AppColors.textBold,
         fontWeight: FontWeight.w600,

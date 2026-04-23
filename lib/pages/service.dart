@@ -213,6 +213,7 @@ class _ServicePageState extends State<ServicePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SingleChildScrollView(
+        key: const PageStorageKey('service-scroll'),
         controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

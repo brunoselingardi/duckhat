@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/theme.dart';
 import 'package:duckhat/pages/service.dart';
 
@@ -17,10 +18,7 @@ class RebookCard extends StatelessWidget {
   });
 
   void _navigateToEstabelecimento(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const ServicePage()),
-    );
+    Navigator.push(context, AppRoute(builder: (_) => const ServicePage()));
   }
 
   @override

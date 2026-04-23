@@ -40,8 +40,19 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao voltar retorna para a tela anterior
   - filtros horizontais alternam categoria localmente
   - CTA `Ver todos` e exibido na secao de sugestoes
+  - CTA `Pesquisar` abre `SearchResultsPage` com termo, localizacao e categoria selecionados
   - toque em recente ou sugestao aplica texto ou leva para `ServicePage`
   - busca ainda e local, sem integracao com catalogo real
+- `lib/pages/search_results.dart`
+  - tela de resultados locais da busca
+  - exibe barra de busca compacta, filtros rapidos, mapa e cards de estabelecimentos
+  - usa `flutter_map` com tiles do OpenStreetMap
+  - solicita localizacao via `geolocator`; se falhar, usa Goiania como fallback visual
+  - botao voltar retorna para a busca
+  - botao `Pesquisar` refiltra a lista localmente
+  - botoes do mapa permitem aproximar, afastar e recentralizar
+  - toque em estabelecimento ou CTA `Servicos disponiveis` abre `ServicePage`
+  - resultados ainda sao locais/mockados, sem integracao com catalogo real
 - `lib/pages/service.dart`
   - pagina do estabelecimento/prestador
   - carrega servicos reais do prestador pela API
@@ -88,7 +99,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - input, icones e envio apenas locais/mockados
 - `lib/pages/user.dart`
   - hub do perfil
-  - abre subpaginas de conta, seguranca, configuracoes e ajuda
+  - abre subpaginas de editar perfil, notificacoes, seguranca, configuracoes e ajuda
+  - item `Minhas Localizações` exibe `SnackBar` de placeholder
   - `Sair` abre dialogo de confirmacao
 - `lib/pages/forgot_password.dart`
   - fluxo real de recuperacao em duas etapas
@@ -163,9 +175,6 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/components/user/editar_perfil.dart`
   - formulario visual de perfil com botao voltar e botao `Salvar`
-- `lib/components/user/metodos_pagamento.dart`
-  - lista mockada de cartoes
-  - botao `Adicionar Método de Pagamento` mostra `SnackBar`
 - `lib/components/user/notificacoes.dart`
   - botao voltar
   - toggles locais de notificacoes
@@ -258,8 +267,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - Mockados ou locais
   - chat
   - busca textual e filtros da busca
+  - resultados e mapa da busca
   - reviews e FAQ do estabelecimento
   - subpaginas de perfil
+  - minhas localizacoes no perfil
   - banner promocional e boa parte da home
 
 ## Regra de manutencao

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/agendamento.dart';
 import '../models/servico_catalogo.dart';
+import '../core/app_route.dart';
 import '../pages/appointment_detail.dart';
 import '../services/duckhat_api.dart';
 
@@ -186,7 +187,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
   Future<void> _abrirDetalheAgendamento(Agendamento agendamento) async {
     final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      AppRoute(
         builder: (_) => AppointmentDetailPage(
           agendamento: agendamento,
           onCancel: !_isPrestador
@@ -360,6 +361,7 @@ class _SchedulePageState extends State<SchedulePage> {
     return SizedBox(
       height: 84,
       child: ListView.builder(
+        key: const PageStorageKey('schedule-calendar-scroll'),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: days.length,
@@ -428,6 +430,7 @@ class _SchedulePageState extends State<SchedulePage> {
 
     if (items.isEmpty) {
       return ListView(
+        key: const PageStorageKey('schedule-empty-scroll'),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24),
         children: [
@@ -458,6 +461,7 @@ class _SchedulePageState extends State<SchedulePage> {
     }
 
     return ListView.builder(
+      key: const PageStorageKey('schedule-appointments-scroll'),
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: items.length,
@@ -729,7 +733,7 @@ class _CreateAppointmentSheetState extends State<_CreateAppointmentSheet> {
               if (_servicoSelecionado != null) ...[
                 const SizedBox(height: 8),
                 Text(
-                  '${_servicoSelecionado!.duracaoMin} min • R\$ ${_servicoSelecionado!.preco.toStringAsFixed(2)}',
+                  '${_servicoSelecionado!.duracaoMin} min - R\$ ${_servicoSelecionado!.preco.toStringAsFixed(2)}',
                   style: const TextStyle(color: kGrayColor),
                 ),
               ],

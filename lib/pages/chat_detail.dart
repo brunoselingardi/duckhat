@@ -48,6 +48,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         children: [
           Expanded(
             child: ListView.builder(
+              key: const PageStorageKey('chat-detail-scroll'),
               padding: const EdgeInsets.all(16),
               reverse: true,
               itemCount: _messages.length,

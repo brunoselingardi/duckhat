@@ -146,11 +146,19 @@ flutter run \
   --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
 ```
 
-Rodar no celular físico via USB:
+Rodar no celular físico via USB.
+
+Observação: em celular físico, `localhost` dentro do app aponta para o próprio celular, não para o computador. Para usar a API local do computador em `8081`, primeiro crie o túnel USB com `adb reverse` e rode o app usando `http://127.0.0.1:8081`.
+
+Dispositivo validado nesta máquina:
+
+```text
+SM G770F (RX8N309MYQA)
+```
 
 ```bash
-adb -s RQCWA0B35KX reverse tcp:8081 tcp:8081
-flutter run -d RQCWA0B35KX \
+adb -s RX8N309MYQA reverse tcp:8081 tcp:8081
+flutter run -d RX8N309MYQA \
   --dart-define=API_BASE_URL=http://127.0.0.1:8081 \
   --dart-define=DUCKHAT_LOGIN_EMAIL=login@duckhat.com \
   --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
