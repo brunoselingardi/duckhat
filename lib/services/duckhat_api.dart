@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../core/api_config.dart';
@@ -16,6 +17,9 @@ class DuckHatApi {
   static final DuckHatApi instance = DuckHatApi._();
 
   final http.Client _client = http.Client();
+  final ValueNotifier<AgendamentoSyncSignal> agendamentoSync = ValueNotifier(
+    const AgendamentoSyncSignal.initial(),
+  );
 
   String? _token;
   LoginSession? _session;
@@ -419,7 +423,9 @@ class DuckHatApi {
       throw Exception('Resposta inválida ao criar agendamento.');
     }
 
-    return Agendamento.fromJson(body);
+    final agendamento = Agendamento.fromJson(body);
+    _emitAgendamentoSync(focusDate: agendamento.inicioEm);
+    return agendamento;
   }
 
   Future<Agendamento> cancelarAgendamento(int id) async {
@@ -442,7 +448,17 @@ class DuckHatApi {
       throw Exception('Resposta inválida ao cancelar agendamento.');
     }
 
-    return Agendamento.fromJson(body);
+    final agendamento = Agendamento.fromJson(body);
+    _emitAgendamentoSync(focusDate: agendamento.inicioEm);
+    return agendamento;
+  }
+
+  void _emitAgendamentoSync({DateTime? focusDate}) {
+    final current = agendamentoSync.value;
+    agendamentoSync.value = AgendamentoSyncSignal(
+      revision: current.revision + 1,
+      focusDate: focusDate,
+    );
   }
 
   Future<Agendamento> confirmarAgendamento(int id) async {
@@ -629,6 +645,15 @@ class DuckHatApi {
     final trimmed = value.trim();
     return trimmed.isEmpty ? null : trimmed;
   }
+}
+
+class AgendamentoSyncSignal {
+  final int revision;
+  final DateTime? focusDate;
+
+  const AgendamentoSyncSignal({required this.revision, this.focusDate});
+
+  const AgendamentoSyncSignal.initial() : this(revision: 0);
 }
 
 class LoginSession {
