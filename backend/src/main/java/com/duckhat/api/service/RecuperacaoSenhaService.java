@@ -16,12 +16,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Service
 public class RecuperacaoSenhaService {
 
   private static final SecureRandom RANDOM = new SecureRandom();
+  private static final int MAX_TENTATIVAS = 5;
+  private static final Duration DURACAO_BLOQUEIO = Duration.ofMinutes(15);
 
   private final UsuarioRepository usuarioRepository;
   private final RecuperacaoSenhaTokenRepository tokenRepository;
@@ -32,7 +35,7 @@ public class RecuperacaoSenhaService {
       UsuarioRepository usuarioRepository,
       RecuperacaoSenhaTokenRepository tokenRepository,
       PasswordEncoder passwordEncoder,
-      @Value("${app.auth.return-reset-code:true}") boolean retornarCodigoRecuperacao
+      @Value("${app.auth.return-reset-code:false}") boolean retornarCodigoRecuperacao
   ) {
     this.usuarioRepository = usuarioRepository;
     this.tokenRepository = tokenRepository;
@@ -58,6 +61,8 @@ public class RecuperacaoSenhaService {
     token.setUsuario(usuario);
     token.setCodigo(codigo);
     token.setExpiraEm(LocalDateTime.now().plusMinutes(15));
+    token.setTentativasFalhas(0);
+    token.setBloqueadoAte(null);
     tokenRepository.save(token);
 
     return new SolicitarRecuperacaoSenhaResponse(
@@ -65,7 +70,7 @@ public class RecuperacaoSenhaService {
         retornarCodigoRecuperacao ? codigo : null);
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = ResponseStatusException.class)
   public RespostaSimples redefinir(RedefinirSenhaRequest request) {
     String email = request.email().trim().toLowerCase();
     Usuario usuario = usuarioRepository.findByEmail(email)
@@ -74,23 +79,50 @@ public class RecuperacaoSenhaService {
             "Código de recuperação inválido ou expirado"));
 
     RecuperacaoSenhaToken token = tokenRepository
-        .findFirstByUsuarioIdAndCodigoAndUsadoEmIsNullOrderByCriadoEmDesc(
-            usuario.getId(),
-            request.codigo().trim())
+        .findFirstByUsuarioIdAndUsadoEmIsNullOrderByCriadoEmDesc(usuario.getId())
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.BAD_REQUEST,
             "Código de recuperação inválido ou expirado"));
 
-    if (token.getExpiraEm().isBefore(LocalDateTime.now())) {
+    LocalDateTime agora = LocalDateTime.now();
+
+    if (token.getBloqueadoAte() != null && token.getBloqueadoAte().isAfter(agora)) {
+      throw new ResponseStatusException(
+          HttpStatus.TOO_MANY_REQUESTS,
+          "Muitas tentativas inválidas. Solicite um novo código mais tarde");
+    }
+
+    if (token.getExpiraEm().isBefore(agora)) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
           "Código de recuperação expirado");
     }
 
+    if (!token.getCodigo().equals(request.codigo().trim())) {
+      registrarTentativaFalha(token, agora);
+    }
+
     usuario.setSenhaHash(passwordEncoder.encode(request.novaSenha()));
-    token.setUsadoEm(LocalDateTime.now());
+    token.setUsadoEm(agora);
 
     return new RespostaSimples("Senha redefinida com sucesso.");
+  }
+
+  private void registrarTentativaFalha(RecuperacaoSenhaToken token, LocalDateTime agora) {
+    int tentativas = token.getTentativasFalhas() == null ? 0 : token.getTentativasFalhas();
+    tentativas++;
+    token.setTentativasFalhas(tentativas);
+
+    if (tentativas >= MAX_TENTATIVAS) {
+      token.setBloqueadoAte(agora.plus(DURACAO_BLOQUEIO));
+      throw new ResponseStatusException(
+          HttpStatus.TOO_MANY_REQUESTS,
+          "Muitas tentativas inválidas. Solicite um novo código mais tarde");
+    }
+
+    throw new ResponseStatusException(
+        HttpStatus.BAD_REQUEST,
+        "Código de recuperação inválido ou expirado");
   }
 
   private String gerarCodigo() {

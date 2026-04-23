@@ -21,6 +21,8 @@ CREATE TABLE recuperacao_senha_tokens (
     codigo VARCHAR(12) NOT NULL,
     expira_em DATETIME NOT NULL,
     usado_em DATETIME NULL,
+    tentativas_falhas INT NOT NULL DEFAULT 0,
+    bloqueado_ate DATETIME NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_recuperacao_senha_tokens PRIMARY KEY (id),
     CONSTRAINT fk_recuperacao_senha_tokens_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)

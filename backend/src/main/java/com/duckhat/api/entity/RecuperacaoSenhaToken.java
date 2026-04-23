@@ -25,6 +25,12 @@ public class RecuperacaoSenhaToken {
   @Column(name = "usado_em")
   private LocalDateTime usadoEm;
 
+  @Column(name = "tentativas_falhas", nullable = false)
+  private Integer tentativasFalhas = 0;
+
+  @Column(name = "bloqueado_ate")
+  private LocalDateTime bloqueadoAte;
+
   @Column(name = "criado_em", insertable = false, updatable = false)
   private LocalDateTime criadoEm;
 
@@ -46,6 +52,14 @@ public class RecuperacaoSenhaToken {
 
   public LocalDateTime getUsadoEm() {
     return usadoEm;
+  }
+
+  public Integer getTentativasFalhas() {
+    return tentativasFalhas;
+  }
+
+  public LocalDateTime getBloqueadoAte() {
+    return bloqueadoAte;
   }
 
   public LocalDateTime getCriadoEm() {
@@ -70,6 +84,14 @@ public class RecuperacaoSenhaToken {
 
   public void setUsadoEm(LocalDateTime usadoEm) {
     this.usadoEm = usadoEm;
+  }
+
+  public void setTentativasFalhas(Integer tentativasFalhas) {
+    this.tentativasFalhas = tentativasFalhas;
+  }
+
+  public void setBloqueadoAte(LocalDateTime bloqueadoAte) {
+    this.bloqueadoAte = bloqueadoAte;
   }
 
   public void setCriadoEm(LocalDateTime criadoEm) {

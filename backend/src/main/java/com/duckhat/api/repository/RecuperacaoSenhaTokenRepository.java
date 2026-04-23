@@ -8,6 +8,10 @@ import java.util.Optional;
 public interface RecuperacaoSenhaTokenRepository extends JpaRepository<RecuperacaoSenhaToken, Long> {
   void deleteByUsuarioIdAndUsadoEmIsNull(Long usuarioId);
 
+  Optional<RecuperacaoSenhaToken> findFirstByUsuarioIdAndUsadoEmIsNullOrderByCriadoEmDesc(
+      Long usuarioId
+  );
+
   Optional<RecuperacaoSenhaToken> findFirstByUsuarioIdAndCodigoAndUsadoEmIsNullOrderByCriadoEmDesc(
       Long usuarioId,
       String codigo

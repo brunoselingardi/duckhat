@@ -380,7 +380,7 @@ class _ResetForm extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Digite o código de recuperação e a nova senha.',
+                  'Digite o código recebido e a nova senha.',
                   style: TextStyle(color: AppColors.textRegular),
                 ),
                 if (generatedCode != null) ...[
@@ -395,7 +395,7 @@ class _ResetForm extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Código gerado no ambiente atual: $generatedCode',
+                      'Código de demo: $generatedCode',
                       style: const TextStyle(
                         color: AppColors.textBold,
                         fontWeight: FontWeight.w700,
