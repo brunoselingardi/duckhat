@@ -1,11 +1,17 @@
-import 'package:flutter/material.dart';
+import 'package:duckhat/models/chat_mensagem.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors;
+import 'package:flutter/material.dart';
 
 class ChatDetailPage extends StatefulWidget {
-  final String name;
-  final String image;
+  final int conversaId;
+  final String participanteNome;
 
-  const ChatDetailPage({super.key, required this.name, required this.image});
+  const ChatDetailPage({
+    super.key,
+    required this.conversaId,
+    required this.participanteNome,
+  });
 
   @override
   State<ChatDetailPage> createState() => _ChatDetailPageState();
@@ -13,31 +19,77 @@ class ChatDetailPage extends StatefulWidget {
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _messageController = TextEditingController();
-  final List<Map<String, dynamic>> _messages = [
-    {
-      "text": "Olá! Gostaria de agendar um serviço.",
-      "isMe": true,
-      "time": "10:00",
-    },
-    {
-      "text": "Claro! Qual serviço você deseja?",
-      "isMe": false,
-      "time": "10:02",
-    },
-    {"text": "Corte de cabelo, por favor.", "isMe": true, "time": "10:05"},
-    {
-      "text": "Temos horários disponíveis amanhã às 14h ou 16h. Qual prefere?",
-      "isMe": false,
-      "time": "10:10",
-    },
-    {"text": "14h funciona!", "isMe": true, "time": "10:15"},
-    {
-      "text": "Perfeito! Agendado para amanhã às 14h.",
-      "isMe": false,
-      "time": "10:20",
-    },
-    {"text": "Pode vir amanhã às 14h?", "isMe": false, "time": "10:30"},
-  ];
+  final DuckHatApi _api = DuckHatApi.instance;
+
+  List<ChatMensagem> _messages = [];
+  bool _loading = true;
+  bool _sending = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadMessages() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final messages = await _api.listarMensagensChat(widget.conversaId);
+      if (!mounted) return;
+      setState(() {
+        _messages = messages;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = error.toString().replaceFirst('Exception: ', '');
+      });
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isEmpty || _sending) return;
+
+    setState(() => _sending = true);
+
+    try {
+      final message = await _api.enviarMensagemChat(
+        conversaId: widget.conversaId,
+        conteudo: text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _messages = [..._messages, message];
+        _messageController.clear();
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _sending = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,18 +98,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              key: const PageStorageKey('chat-detail-scroll'),
-              padding: const EdgeInsets.all(16),
-              reverse: true,
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[_messages.length - 1 - index];
-                return _buildMessageBubble(msg);
-              },
-            ),
-          ),
+          Expanded(child: _buildBody()),
           _buildInputArea(),
         ],
       ),
@@ -71,9 +112,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: AppColors.textBold),
         onPressed: () => Navigator.pop(context),
+        tooltip: 'Voltar',
       ),
       title: Text(
-        widget.name,
+        widget.participanteNome,
         style: TextStyle(
           color: AppColors.textBold,
           fontSize: 18,
@@ -82,15 +124,75 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.more_vert, color: AppColors.textBold),
-          onPressed: () {},
+          icon: Icon(Icons.refresh, color: AppColors.textBold),
+          tooltip: 'Atualizar mensagens',
+          onPressed: _loading ? null : _loadMessages,
         ),
       ],
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> msg) {
-    final isMe = msg["isMe"] as bool;
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 42,
+                color: Colors.redAccent,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textRegular),
+              ),
+              const SizedBox(height: 14),
+              FilledButton(
+                onPressed: _loadMessages,
+                child: const Text('Tentar novamente'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_messages.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Text(
+            'Envie a primeira mensagem desta conversa.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.textRegular),
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      key: const PageStorageKey('chat-detail-scroll'),
+      padding: const EdgeInsets.all(16),
+      reverse: true,
+      itemCount: _messages.length,
+      itemBuilder: (context, index) {
+        final msg = _messages[_messages.length - 1 - index];
+        return _buildMessageBubble(msg);
+      },
+    );
+  }
+
+  Widget _buildMessageBubble(ChatMensagem msg) {
+    final isMe = msg.enviadaPorMim;
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -113,7 +215,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              msg["text"],
+              msg.conteudo,
               style: TextStyle(
                 color: isMe ? Colors.white : AppColors.textBold,
                 fontSize: 14,
@@ -121,7 +223,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             ),
             const SizedBox(height: 4),
             Text(
-              msg["time"],
+              _formatTime(msg.criadoEm),
               style: TextStyle(
                 fontSize: 10,
                 color: isMe ? Colors.white70 : AppColors.textMuted,
@@ -150,10 +252,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         top: false,
         child: Row(
           children: [
-            Icon(Icons.mic, color: AppColors.textMuted),
-            const SizedBox(width: 12),
-            Icon(Icons.emoji_emotions_outlined, color: AppColors.textMuted),
-            const SizedBox(width: 12),
             Expanded(
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -163,8 +261,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 ),
                 child: TextField(
                   controller: _messageController,
+                  minLines: 1,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _sendMessage(),
                   decoration: InputDecoration(
-                    hintText: "Digite uma mensagem...",
+                    hintText: 'Digite uma mensagem...',
                     hintStyle: TextStyle(
                       color: AppColors.textMuted,
                       fontSize: 14,
@@ -175,17 +277,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               ),
             ),
             const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppColors.accent,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.send, color: Colors.white, size: 18),
+            IconButton.filled(
+              onPressed: _sending ? null : _sendMessage,
+              style: IconButton.styleFrom(backgroundColor: AppColors.accent),
+              icon: _sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.send, color: Colors.white, size: 18),
+              tooltip: 'Enviar',
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime date) {
+    final local = date.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
   }
 }

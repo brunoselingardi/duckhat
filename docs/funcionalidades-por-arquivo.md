@@ -14,7 +14,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - define `MainNavigator`
   - controla as 4 abas principais: `Home`, `Agenda`, `Chat`, `Perfil`
 - `lib/services/duckhat_api.dart`
-  - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos e cancelamento
+  - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento e chat
 - `lib/core/api_config.dart`
   - centraliza `API_BASE_URL`, `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD`
 
@@ -62,7 +62,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - toque na galeria abre fullscreen
   - cada servico possui botao `Agendar`
   - CTA global flutuante agenda o primeiro servico disponivel
-  - existem CTAs visuais locais sem acao real em componentes como experiencia/info card
+  - CTA `Enviar Mensagem` do info card cria/abre conversa real com o prestador
+  - existem CTAs visuais locais sem acao real em componentes como experiencia
 - `lib/pages/schedule.dart`
   - agenda integrada do usuario
   - lista agendamentos via API
@@ -90,13 +91,16 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - mostra avaliacao local quando o status e `CONCLUIDO`
   - estrelas de nota e botao de envio de review sao locais/mockados
 - `lib/pages/chat.dart`
-  - lista de conversas mockadas
+  - lista conversas reais do usuario autenticado pela API
+  - possui busca local por nome do participante ou ultima mensagem
+  - possui refresh manual e pull-to-refresh
   - toque em conversa abre `ChatDetailPage`
 - `lib/pages/chat_detail.dart`
-  - tela visual de conversa
+  - tela real de conversa
   - botao voltar retorna
-  - botao `more` existe sem handler real
-  - input, icones e envio apenas locais/mockados
+  - botao atualizar recarrega mensagens
+  - lista mensagens da conversa pela API
+  - input envia nova mensagem real para o backend
 - `lib/pages/user.dart`
   - hub do perfil
   - abre subpaginas de editar perfil, notificacoes, seguranca, configuracoes e ajuda
@@ -202,6 +206,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - disponibilidade publica do prestador
 - `lib/models/ocupacao_prestador.dart`
   - horarios ocupados do prestador
+- `lib/models/chat_conversa.dart`
+  - modelo de conversa cliente/prestador vinda do backend
+- `lib/models/chat_mensagem.dart`
+  - modelo de mensagem de chat vinda do backend
 
 ## Backend principal
 
@@ -226,6 +234,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - endpoints de avaliacoes
 - `backend/src/main/java/com/duckhat/api/controller/NotificacaoEventoController.java`
   - endpoints de notificacoes
+- `backend/src/main/java/com/duckhat/api/controller/ChatController.java`
+  - endpoints de conversas e mensagens do chat autenticado
 - `backend/src/main/java/com/duckhat/api/service/AgendamentoService.java`
   - regra de negocio principal do agendamento
   - valida duracao, horario passado, disponibilidade e conflito
@@ -234,6 +244,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `backend/src/main/java/com/duckhat/api/service/RecuperacaoSenhaService.java`
   - gera codigo, persiste token de recuperacao e redefine senha
   - aplica limite de tentativas invalidas e bloqueio temporario por token
+- `backend/src/main/java/com/duckhat/api/service/ChatService.java`
+  - cria/busca conversa entre cliente e prestador
+  - lista conversas e mensagens autorizadas por participante
+  - envia mensagens e atualiza `ultima_mensagem_em`
+  - limpa mensagens expiradas diariamente preservando a ultima mensagem por conversa e aplicando graca de 5 dias pela ultima atividade
 - `backend/src/main/resources/application.properties`
   - configuracao com fallback local e override por variaveis de ambiente
 
@@ -249,6 +264,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - alinhamento do schema com backend atual
 - `database/migrations/V3__auth_login_area_integration.sql`
   - adiciona campos de prestador em `usuarios` e cria tabela de `recuperacao_senha_tokens`
+- `database/migrations/V4__password_reset_attempt_limits.sql`
+  - adiciona limite persistente de tentativas na recuperacao de senha
+- `database/migrations/V5__chat_conversations_and_messages.sql`
+  - cria `chat_conversas`, `chat_mensagens` e indices do chat real
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`
@@ -266,8 +285,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - criacao de agendamento
   - cancelamento de agendamento
   - disponibilidade e ocupacao do prestador
+  - chat entre cliente e prestador
 - Mockados ou locais
-  - chat
   - busca textual e filtros da busca
   - resultados e mapa da busca
   - reviews e FAQ do estabelecimento

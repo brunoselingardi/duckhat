@@ -2,7 +2,9 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceInfoCard extends StatelessWidget {
-  const ServiceInfoCard({super.key});
+  final VoidCallback? onMessageTap;
+
+  const ServiceInfoCard({super.key, this.onMessageTap});
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +112,7 @@ class ServiceInfoCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: onMessageTap,
               icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
               label: const Text('Enviar Mensagem'),
               style: OutlinedButton.styleFrom(

@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 
 import '../core/api_config.dart';
 import '../models/agendamento.dart';
+import '../models/chat_conversa.dart';
+import '../models/chat_mensagem.dart';
 import '../models/disponibilidade_catalogo.dart';
 import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
@@ -487,6 +489,111 @@ class DuckHatApi {
     }
 
     return Agendamento.fromJson(body);
+  }
+
+  Future<List<ChatConversa>> listarConversasChat() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/chat/conversas'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as conversas.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar conversas.');
+    }
+
+    return body
+        .map((item) => ChatConversa.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<ChatConversa> criarOuBuscarConversaChat(int participanteId) async {
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/chat/conversas'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({'participanteId': participanteId}),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível abrir a conversa.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao abrir conversa.');
+    }
+
+    return ChatConversa.fromJson(body);
+  }
+
+  Future<List<ChatMensagem>> listarMensagensChat(int conversaId) async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/chat/conversas/$conversaId/mensagens',
+      ),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as mensagens.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar mensagens.');
+    }
+
+    return body
+        .map((item) => ChatMensagem.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<ChatMensagem> enviarMensagemChat({
+    required int conversaId,
+    required String conteudo,
+  }) async {
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/chat/conversas/$conversaId/mensagens',
+      ),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({'conteudo': conteudo.trim()}),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível enviar a mensagem.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao enviar mensagem.');
+    }
+
+    return ChatMensagem.fromJson(body);
   }
 
   Map<String, String> _authorizedHeaders() {
