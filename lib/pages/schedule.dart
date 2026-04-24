@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../models/agendamento.dart';
-import '../models/servico_catalogo.dart';
 import '../core/app_route.dart';
 import '../pages/appointment_detail.dart';
 import '../services/duckhat_api.dart';
@@ -18,7 +17,6 @@ class _SchedulePageState extends State<SchedulePage> {
   final _api = DuckHatApi.instance;
 
   bool _loading = true;
-  bool _creating = false;
   String? _error;
   List<Agendamento> _agendamentos = [];
   late DateTime _currentMonth;
@@ -276,26 +274,6 @@ class _SchedulePageState extends State<SchedulePage> {
             icon: const Icon(Icons.refresh, color: AppColors.accent),
             tooltip: 'Atualizar',
           ),
-          if (!_isPrestador) ...[
-            const SizedBox(width: 4),
-            Container(
-              decoration: BoxDecoration(
-                color: kPrimaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: IconButton(
-                onPressed: _creating ? null : _abrirNovoAgendamento,
-                icon: _creating
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add, color: kPrimaryColor),
-                tooltip: 'Novo agendamento',
-              ),
-            ),
-          ],
         ],
       ),
     );
