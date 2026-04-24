@@ -16,4 +16,7 @@ class ApiConfig {
 
   static const loginEmail = String.fromEnvironment('DUCKHAT_LOGIN_EMAIL');
   static const loginPassword = String.fromEnvironment('DUCKHAT_LOGIN_PASSWORD');
+  static const geoapifyApiKey = String.fromEnvironment('GEOAPIFY_API_KEY');
+
+  static bool get hasGeoapifyApiKey => geoapifyApiKey.trim().isNotEmpty;
 }

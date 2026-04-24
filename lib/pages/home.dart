@@ -5,6 +5,7 @@ import 'package:duckhat/components/home/rebook.dart';
 import 'package:duckhat/components/home/appointment.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/search.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 
 class Home extends StatefulWidget {
@@ -17,6 +18,8 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
+    final username = DuckHatApi.instance.currentSession?.nome;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -28,7 +31,7 @@ class _HomeState extends State<Home> {
             key: const PageStorageKey('home-scroll'),
             cacheExtent: 500,
             children: [
-              const HomeHeader(),
+              HomeHeader(username: username),
               const SizedBox(height: 10),
               const _SearchShortcut(),
               const SizedBox(height: 20),

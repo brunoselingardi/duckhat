@@ -17,6 +17,7 @@ class _SearchPageState extends State<SearchPage> {
   final _locationController = TextEditingController();
 
   int _selectedFilter = -1;
+  _SearchLocationMode _locationMode = _SearchLocationMode.current;
 
   final _filters = const [
     _SearchFilter(Icons.cut, 'Cabeleireiro'),
@@ -79,6 +80,7 @@ class _SearchPageState extends State<SearchPage> {
       _searchController.clear();
       _locationController.clear();
       _selectedFilter = -1;
+      _locationMode = _SearchLocationMode.current;
     });
   }
 
@@ -97,6 +99,7 @@ class _SearchPageState extends State<SearchPage> {
           query: _searchController.text.trim(),
           location: _locationController.text.trim(),
           category: selectedCategory,
+          useCurrentLocation: _locationMode == _SearchLocationMode.current,
         ),
       ),
     );
@@ -132,7 +135,16 @@ class _SearchPageState extends State<SearchPage> {
                     _SearchPanel(
                       searchController: _searchController,
                       locationController: _locationController,
+                      locationMode: _locationMode,
                       onChanged: (_) => setState(() {}),
+                      onLocationModeChanged: (value) {
+                        setState(() {
+                          _locationMode = value;
+                          if (value == _SearchLocationMode.current) {
+                            _locationController.clear();
+                          }
+                        });
+                      },
                       onSubmit: _submitSearch,
                     ),
                     const SizedBox(height: 16),
@@ -192,6 +204,15 @@ class _SearchPageState extends State<SearchPage> {
   }
 }
 
+enum _SearchLocationMode {
+  current('Minha localizacao atual'),
+  manual('Endereco ou CEP');
+
+  final String label;
+
+  const _SearchLocationMode(this.label);
+}
+
 class _SearchHeader extends StatelessWidget {
   final VoidCallback onBack;
 
@@ -241,13 +262,17 @@ class _SearchHeader extends StatelessWidget {
 class _SearchPanel extends StatelessWidget {
   final TextEditingController searchController;
   final TextEditingController locationController;
+  final _SearchLocationMode locationMode;
   final ValueChanged<String> onChanged;
+  final ValueChanged<_SearchLocationMode> onLocationModeChanged;
   final VoidCallback onSubmit;
 
   const _SearchPanel({
     required this.searchController,
     required this.locationController,
+    required this.locationMode,
     required this.onChanged,
+    required this.onLocationModeChanged,
     required this.onSubmit,
   });
 
@@ -276,13 +301,21 @@ class _SearchPanel extends StatelessWidget {
             onSubmitted: (_) => onSubmit(),
           ),
           const SizedBox(height: 10),
-          _SearchInput(
-            controller: locationController,
-            icon: Icons.location_on_outlined,
-            hint: 'Pesquise por bairro, cidade ou CEP',
-            onChanged: onChanged,
-            onSubmitted: (_) => onSubmit(),
+          _LocationModeSelector(
+            selectedMode: locationMode,
+            onChanged: onLocationModeChanged,
           ),
+          const SizedBox(height: 10),
+          if (locationMode == _SearchLocationMode.manual)
+            _SearchInput(
+              controller: locationController,
+              icon: Icons.location_on_outlined,
+              hint: 'Digite endereco, bairro, cidade ou CEP',
+              onChanged: onChanged,
+              onSubmitted: (_) => onSubmit(),
+            )
+          else
+            _CurrentLocationHint(onTap: () => onLocationModeChanged(_SearchLocationMode.current)),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -304,6 +337,99 @@ class _SearchPanel extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LocationModeSelector extends StatelessWidget {
+  final _SearchLocationMode selectedMode;
+  final ValueChanged<_SearchLocationMode> onChanged;
+
+  const _LocationModeSelector({
+    required this.selectedMode,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: _SearchLocationMode.values.map((mode) {
+        final selected = selectedMode == mode;
+        return Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(
+              right: mode == _SearchLocationMode.current ? 6 : 0,
+              left: mode == _SearchLocationMode.manual ? 6 : 0,
+            ),
+            child: InkWell(
+              onTap: () => onChanged(mode),
+              borderRadius: BorderRadius.circular(14),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: selected ? AppColors.accent : AppColors.inputFill,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: selected ? AppColors.accent : AppColors.border,
+                  ),
+                ),
+                child: Text(
+                  mode.label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: selected ? Colors.white : AppColors.textBold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _CurrentLocationHint extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _CurrentLocationHint({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.inputFill,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.my_location, color: AppColors.accent),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'A pesquisa vai usar sua localizacao atual.',
+                style: TextStyle(
+                  color: AppColors.textBold,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -2,12 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
 
 class HomeHeader extends StatelessWidget {
-  final String username;
+  final String? username;
 
-  const HomeHeader({super.key, this.username = "Ricardo"});
+  const HomeHeader({super.key, this.username});
 
   @override
   Widget build(BuildContext context) {
+    final trimmedName = username?.trim();
+    final greeting = trimmedName == null || trimmedName.isEmpty
+        ? 'Quack!'
+        : 'Quack, $trimmedName!';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
@@ -16,7 +21,7 @@ class HomeHeader extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Quack, $username!',
+              greeting,
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
