@@ -179,7 +179,10 @@ class _PromoBanner extends StatelessWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(35)),
-            child: Image.asset("assets/niceduck.jpg", fit: BoxFit.contain),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(35),
+              child: Image.asset("assets/Ducklogo.jpg", fit: BoxFit.cover),
+            ),
           ),
         ],
       ),

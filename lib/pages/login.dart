@@ -210,7 +210,7 @@ class _HeaderArtwork extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(22),
-            child: Image.asset('assets/niceduck.jpg', fit: BoxFit.cover),
+            child: Image.asset('assets/Ducklogo.jpg', fit: BoxFit.cover),
           ),
         ),
         const SizedBox(height: 18),
@@ -364,8 +364,11 @@ class _LoginForm extends StatelessWidget {
           TextButton(
             onPressed: loading ? null : onForgotPassword,
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.textMuted,
-              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+              foregroundColor: AppColors.accent,
+              textStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+              ),
             ),
             child: const Text('Esqueci minha senha'),
           ),
