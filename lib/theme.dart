@@ -37,6 +37,9 @@ class AppColors {
   static const blackText = Color(0xFF0C0041);
   static const darkAlt = blackText;
   static const greenText = Color(0xA60C0041);
+  static const success = Color(0xFF22C55E);
+  static const warning = Color(0xFFF59E0B);
+  static const error = Color(0xFFEF4444);
 }
 
 class AppTheme {

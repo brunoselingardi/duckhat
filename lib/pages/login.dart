@@ -7,6 +7,7 @@ import '../core/app_route.dart';
 import 'app_shell.dart';
 import 'forgot_password.dart';
 import 'signup.dart';
+import '../shop_main.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -117,6 +118,18 @@ class _LoginPageState extends State<LoginPage> {
         });
   }
 
+  void _bypassCliente() {
+    Navigator.of(
+      context,
+    ).pushReplacement(AppRoute(builder: (_) => const MainNavigator()));
+  }
+
+  void _bypassEmpresa() {
+    Navigator.of(
+      context,
+    ).pushReplacement(AppRoute(builder: (_) => const ShopMainNavigator()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -168,6 +181,8 @@ class _LoginPageState extends State<LoginPage> {
                               onSubmit: _submit,
                               onForgotPassword: _showForgotPassword,
                               onCreateAccount: _openCreateAccount,
+                              onBypassCliente: _bypassCliente,
+                              onBypassEmpresa: _bypassEmpresa,
                             ),
                           ],
                         ),
@@ -232,22 +247,6 @@ class _HeaderArtwork extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          'Entre para cuidar dos seus horários',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            shadows: [
-              Shadow(
-                color: Colors.black38,
-                blurRadius: 10,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -266,6 +265,8 @@ class _LoginForm extends StatelessWidget {
   final VoidCallback onSubmit;
   final VoidCallback onForgotPassword;
   final VoidCallback onCreateAccount;
+  final VoidCallback onBypassCliente;
+  final VoidCallback onBypassEmpresa;
 
   const _LoginForm({
     required this.formKey,
@@ -280,6 +281,8 @@ class _LoginForm extends StatelessWidget {
     required this.onSubmit,
     required this.onForgotPassword,
     required this.onCreateAccount,
+    required this.onBypassCliente,
+    required this.onBypassEmpresa,
   });
 
   @override
@@ -401,6 +404,23 @@ class _LoginForm extends StatelessWidget {
                 child: const Text('Criar conta'),
               ),
             ],
+          ),
+          const SizedBox(height: 24),
+          TextButton(
+            onPressed: onBypassCliente,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white70,
+              textStyle: const TextStyle(fontSize: 12),
+            ),
+            child: const Text('Entrar como Cliente (DEV)'),
+          ),
+          TextButton(
+            onPressed: onBypassEmpresa,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white70,
+              textStyle: const TextStyle(fontSize: 12),
+            ),
+            child: const Text('Entrar como Empresa (DEV)'),
           ),
         ],
       ),
