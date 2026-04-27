@@ -26,10 +26,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/pages/login.dart`
   - login inicial do app
+  - layout minimalista inspirado em referencia mobile, com e-mail e senha na mesma tela
   - botoes de tipo de conta: `Cliente` e `Empresa`
-  - campos: `E-mail` e `Senha`
+  - campos principais: `E-mail` e `Password`
+  - no login bem-sucedido, dispara uma sequencia animada: expansao azul a partir do botao, tela azul com `hello` e circulo branco central antes de abrir o app
   - botao no campo senha alterna entre `Mostrar senha` e `Ocultar senha`
-  - CTA principal: `Entrar como cliente` ou `Entrar como empresa`
   - link `Esqueci minha senha` abre `ForgotPasswordPage`
   - link `Criar conta` abre `SignupPage`
   - autentica sempre na API real

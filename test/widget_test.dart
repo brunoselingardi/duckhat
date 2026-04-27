@@ -11,7 +11,7 @@ void main() {
 
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('DuckHat'), findsOneWidget);
-    expect(find.text('Entrar como cliente'), findsOneWidget);
+    expect(find.text('Hey Rider,\nWelcome Back!'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
   });
 }
