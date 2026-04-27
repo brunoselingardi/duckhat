@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopServiceDurationPage extends StatefulWidget {
   const ShopServiceDurationPage({super.key});
@@ -29,22 +30,9 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Serviços e Preços',
-          style: TextStyle(
-            color: AppColors.accent,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      appBar: buildShopAppBar(
+        context,
+        title: 'Serviços e Preços',
         actions: [
           TextButton(
             onPressed: () => _save(context),
@@ -97,13 +85,7 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

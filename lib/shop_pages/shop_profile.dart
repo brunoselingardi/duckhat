@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/pages/login.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 import 'shop_establishment_data.dart';
 import 'shop_gallery.dart';
 import 'shop_work_days.dart';
@@ -64,7 +68,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? AppColors.accent : Colors.grey.shade300,
+            color: isSelected ? AppColors.accent : AppColors.border,
             width: isSelected ? 3 : 1,
           ),
         ),
@@ -123,16 +127,16 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected ? AppColors.accent : Colors.grey.shade300,
+            color: isSelected ? AppColors.accent : AppColors.border,
             width: isSelected ? 3 : 1,
           ),
           color: AppColors.accent,
         ),
         child: icon != null
-            ? Icon(icon, size: 40, color: Colors.white)
+            ? Icon(icon, size: 40, color: AppColors.primary)
             : image != null
             ? ClipOval(child: Image.asset(image, fit: BoxFit.cover))
-            : const Icon(Icons.storefront, size: 40, color: Colors.white),
+            : const Icon(Icons.storefront, size: 40, color: AppColors.primary),
       ),
     );
   }
@@ -182,7 +186,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             child: Container(
               height: 226,
               width: double.infinity,
-              color: Colors.transparent,
+              color: AppColors.primary.withValues(alpha: 0),
               child: Align(
                 alignment: Alignment.topRight,
                 child: Padding(
@@ -190,12 +194,12 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.black38,
+                      color: AppColors.secondary.withValues(alpha: 0.72),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(
                       Icons.wallpaper,
-                      color: Colors.white,
+                      color: AppColors.primary,
                       size: 20,
                     ),
                   ),
@@ -229,7 +233,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                     child: const Icon(
                       Icons.storefront,
                       size: 80,
-                      color: Colors.white,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -424,13 +428,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Column(children: children),
     );
@@ -502,23 +500,31 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showLogoutDialog(BuildContext context) async {
+    final shouldLogout = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sair'),
         content: const Text('Tem certeza que deseja sair?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Sair', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
+    );
+
+    if (shouldLogout != true || !context.mounted) return;
+
+    DuckHatApi.instance.clearSession();
+    Navigator.of(context).pushAndRemoveUntil(
+      AppRoute(builder: (_) => const LoginPage()),
+      (_) => false,
     );
   }
 }

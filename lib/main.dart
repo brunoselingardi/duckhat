@@ -1,3 +1,4 @@
+import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/core/app_scroll_behavior.dart';
 import 'package:flutter/material.dart';
@@ -56,11 +57,12 @@ class _MyAppState extends State<MyApp> {
               final args = settings.arguments as Map<String, dynamic>;
               return AppRoute(
                 builder: (context) => ScheduleDatePage(
-                  serviceId: args['serviceId'] as int,
                   prestadorId: args['prestadorId'] as int,
-                  serviceName: args['serviceName'] ?? '',
                   establishmentName: args['establishmentName'] ?? '',
-                  durationMin: args['durationMin'] as int,
+                  serviceOffers:
+                      (args['serviceOffers'] as List<dynamic>)
+                          .cast<ServiceOffer>(),
+                  initialServiceId: args['initialServiceId'] as int?,
                 ),
               );
             }

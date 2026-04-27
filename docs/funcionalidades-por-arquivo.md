@@ -13,6 +13,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/app_shell.dart`
   - define `MainNavigator`
   - controla as 4 abas principais: `Home`, `Agenda`, `Chat`, `Perfil`
+- `lib/shop_main.dart`
+  - define `ShopMainNavigator` da area mockada de estabelecimento
+  - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
+  - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
   - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento e chat
 - `lib/core/api_config.dart`
@@ -60,8 +64,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao voltar no hero retorna
   - tabs horizontais navegam entre secoes
   - toque na galeria abre fullscreen
-  - cada servico possui botao `Agendar`
-  - CTA global flutuante agenda o primeiro servico disponivel
+  - a lista de servicos e apenas informativa, sem botao `Agendar` por item
+  - CTA global flutuante abre a tela de agendamento com os servicos do estabelecimento
   - CTA `Enviar Mensagem` do info card cria/abre conversa real com o prestador
   - existem CTAs visuais locais sem acao real em componentes como experiencia
 - `lib/pages/schedule.dart`
@@ -70,17 +74,18 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao atualizar recarrega dados
   - botao adicionar abre bottom sheet de novo agendamento
   - estado de erro exibe CTA `Tentar novamente`
-  - cada card pode abrir detalhe ou cancelar direto
+  - cada card inteiro abre os detalhes; cancelamento fica na tela de detalhe
   - bottom sheet possui selecao de servico, data, horario, observacoes e CTA de criacao
   - em sessao `PRESTADOR`, usa a agenda do prestador e mostra acoes de confirmar/concluir
   - toque em item abre `AppointmentDetailPage`
 - `lib/pages/schedule_date.dart`
   - etapa final do fluxo de agendamento vindo da pagina de servico
   - carrega disponibilidade e ocupacao do prestador
-  - permite escolher data e horario
+  - exige escolher primeiro um servico do estabelecimento e so depois libera data e horario
   - botao voltar retorna
   - botoes de mes anterior e proximo navegam no calendario
   - CTA de erro `Tentar novamente` recarrega disponibilidades
+  - toque em servico seleciona duracao/base do agendamento
   - toque em dia/horario seleciona slot
   - CTA de confirmacao abre dialogo e cria agendamento real via API
 - `lib/pages/appointment_detail.dart`
@@ -103,9 +108,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - input envia nova mensagem real para o backend
 - `lib/pages/user.dart`
   - hub do perfil
+  - quando nao ha sessao autenticada, mostra tela visitante com CTA de cadastro/login e imagem `assets/patrick.jpg`
   - abre subpaginas de editar perfil, notificacoes, seguranca, configuracoes e ajuda
   - item `Minhas Localizações` exibe `SnackBar` de placeholder
-  - `Sair` abre dialogo de confirmacao
+  - `Sair` abre dialogo de confirmacao, limpa a sessao e retorna para `LoginPage`
 - `lib/pages/forgot_password.dart`
   - fluxo real de recuperacao em duas etapas
   - botao voltar retorna
@@ -128,6 +134,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/components/bottomnav.dart`
   - bottom navigation com 4 abas e icones SVG
+- `lib/shop_components/shop_bottomnav.dart`
+  - bottom navigation da area `shop_*`
+  - usa tokens de `AppColors` para fundo, borda, sombra, estados e labels
+- `lib/shop_components/shop_ui.dart`
+  - concentra helpers visuais reutilizados da area `shop_*`
+  - padroniza app bar secundaria, sombra de card e `InputDecoration`
 
 ### Home
 
@@ -195,6 +207,39 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao voltar
   - FAQ com `ExpansionTile` e canais de contato
   - contatos exibem `SnackBar` placeholder
+
+### Area shop mockada
+
+- `lib/shop_pages/shop_home.dart`
+  - dashboard mockado do estabelecimento
+  - cards e chips foram alinhados aos tokens de `AppColors`
+- `lib/shop_pages/shop_schedule.dart`
+  - agenda mockada do estabelecimento com calendario e lista do dia
+  - cards, estados selecionados e superficies usam o tema central
+- `lib/shop_pages/shop_clients.dart`
+  - lista de clientes e conversa mockada
+  - busca, cards e tela de chat usam o mesmo padrao visual do app
+- `lib/shop_pages/shop_profile.dart`
+  - hub de configuracoes do estabelecimento
+  - acessa dados do estabelecimento, galeria, horarios, servicos, notificacoes, privacidade, ajuda e sobre
+- `lib/shop_pages/shop_establishment_data.dart`
+  - formulario mockado de dados do estabelecimento
+- `lib/shop_pages/shop_gallery.dart`
+  - galeria mockada de fotos com estado local
+- `lib/shop_pages/shop_work_days.dart`
+  - configuracao mockada de dias de funcionamento
+- `lib/shop_pages/shop_work_hours.dart`
+  - configuracao mockada de horarios de atendimento
+- `lib/shop_pages/shop_service_duration.dart`
+  - configuracao mockada de servicos, duracao e preco
+- `lib/shop_pages/shop_notifications.dart`
+  - preferencias mockadas de notificacao
+- `lib/shop_pages/shop_privacy.dart`
+  - preferencias mockadas de privacidade e seguranca
+- `lib/shop_pages/shop_help.dart`
+  - ajuda mockada do estabelecimento
+- `lib/shop_pages/shop_about.dart`
+  - informacoes mockadas sobre a experiencia de estabelecimento
 
 ## Modelos
 

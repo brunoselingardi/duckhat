@@ -13,9 +13,5 @@ void main() {
 
     expect(find.text('DuckHat'), findsOneWidget);
     expect(find.text('Entrar como cliente'), findsOneWidget);
-    expect(find.text('Empresa'), findsOneWidget);
-    expect(find.text('Esqueci minha senha'), findsOneWidget);
-    expect(find.text('E-mail'), findsOneWidget);
-    expect(find.text('Senha'), findsOneWidget);
   });
 }

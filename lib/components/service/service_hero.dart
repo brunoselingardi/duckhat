@@ -47,13 +47,62 @@ class ServiceHero extends StatelessWidget {
                   children: [
                     _HeroAction(icon: Icons.share_outlined, iconSize: 20),
                     const SizedBox(width: 10),
-                    _HeroAction(icon: Icons.favorite_border, iconSize: 20),
+                    const _FavoriteHeroAction(),
                   ],
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FavoriteHeroAction extends StatefulWidget {
+  const _FavoriteHeroAction();
+
+  @override
+  State<_FavoriteHeroAction> createState() => _FavoriteHeroActionState();
+}
+
+class _FavoriteHeroActionState extends State<_FavoriteHeroAction> {
+  bool _isFavorite = false;
+
+  void _toggleFavorite() {
+    setState(() => _isFavorite = !_isFavorite);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.22),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: InkWell(
+        customBorder: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        onTap: _toggleFavorite,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: AnimatedScale(
+            scale: _isFavorite ? 1.25 : 1,
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutBack,
+            child: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              size: 20,
+              color: _isFavorite ? Colors.red.shade400 : Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }

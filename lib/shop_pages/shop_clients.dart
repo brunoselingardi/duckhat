@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopClientsPage extends StatefulWidget {
   const ShopClientsPage({super.key});
@@ -127,13 +128,7 @@ class _ShopClientsPageState extends State<ShopClientsPage> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: TextField(
         controller: _searchController,
@@ -204,13 +199,7 @@ class _ClientCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: ListTile(
         onTap: onTap,
@@ -226,7 +215,7 @@ class _ClientCard extends StatelessWidget {
             child: Text(
               photo,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -265,7 +254,7 @@ class _ClientCard extends StatelessWidget {
                 child: Text(
                   '$unread',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.primary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -331,12 +320,14 @@ class _ShopChatDetailPageState extends State<ShopChatDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
+        backgroundColor: AppColors.cardBackground,
+        surfaceTintColor: AppColors.primary.withValues(alpha: 0),
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textBold),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textBold),
           onPressed: () => Navigator.pop(context),
         ),
         title: Row(
@@ -396,7 +387,7 @@ class _ShopChatDetailPageState extends State<ShopChatDetailPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         boxShadow: [
           BoxShadow(
             color: AppColors.cardShadow,
@@ -435,7 +426,7 @@ class _ShopChatDetailPageState extends State<ShopChatDetailPage> {
             IconButton.filled(
               onPressed: _sendMessage,
               style: IconButton.styleFrom(backgroundColor: AppColors.accent),
-              icon: const Icon(Icons.send, color: Colors.white, size: 18),
+              icon: const Icon(Icons.send, color: AppColors.primary, size: 18),
             ),
           ],
         ),
@@ -480,7 +471,7 @@ class _MessageBubble extends StatelessWidget {
             Text(
               message,
               style: TextStyle(
-                color: isMe ? Colors.white : AppColors.textBold,
+                color: isMe ? AppColors.primary : AppColors.textBold,
                 fontSize: 14,
               ),
             ),
@@ -489,7 +480,9 @@ class _MessageBubble extends StatelessWidget {
               time,
               style: TextStyle(
                 fontSize: 10,
-                color: isMe ? Colors.white70 : AppColors.textMuted,
+                color: isMe
+                    ? AppColors.primary.withValues(alpha: 0.78)
+                    : AppColors.textMuted,
               ),
             ),
           ],

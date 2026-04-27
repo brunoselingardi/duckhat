@@ -123,41 +123,6 @@ class _SchedulePageState extends State<SchedulePage> {
     }).length;
   }
 
-  Future<void> _cancelarAgendamento(Agendamento agendamento) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Cancelar agendamento'),
-          content: Text(
-            'Deseja cancelar ${agendamento.servicoNome ?? 'este agendamento'}?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Voltar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Cancelar'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      await _api.cancelarAgendamento(agendamento.id);
-      if (!mounted) return;
-      _showSnackBar('Agendamento cancelado com sucesso.');
-    } catch (e) {
-      if (!mounted) return;
-      _showSnackBar(_prettyError(e), isError: true);
-    }
-  }
-
   Future<void> _abrirDetalheAgendamento(Agendamento agendamento) async {
     final changed = await Navigator.of(context).push<bool>(
       AppRoute(
@@ -300,7 +265,7 @@ class _SchedulePageState extends State<SchedulePage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.event_note, color: Colors.white, size: 34),
+          const Icon(Icons.event_note, color: AppColors.primary, size: 34),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -309,7 +274,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 Text(
                   '$_upcomingCount compromisso${_upcomingCount == 1 ? '' : 's'} ativo${_upcomingCount == 1 ? '' : 's'}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.primary,
                     fontWeight: FontWeight.w700,
                     fontSize: 18,
                   ),
@@ -317,7 +282,9 @@ class _SchedulePageState extends State<SchedulePage> {
                 const SizedBox(height: 4),
                 Text(
                   '$_currentMonthCount neste mes',
-                  style: const TextStyle(color: Colors.white70),
+                  style: TextStyle(
+                    color: AppColors.primary.withValues(alpha: 0.78),
+                  ),
                 ),
               ],
             ),
@@ -332,7 +299,7 @@ class _SchedulePageState extends State<SchedulePage> {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(22),
         boxShadow: const [
           BoxShadow(
@@ -427,14 +394,14 @@ class _SchedulePageState extends State<SchedulePage> {
               ? AppColors.accent
               : hasActiveItems
               ? AppColors.accent.withValues(alpha: 0.12)
-              : Colors.transparent,
+              : AppColors.primary.withValues(alpha: 0),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: selected
                 ? AppColors.accent
                 : isToday
                 ? AppColors.accentLight
-                : Colors.transparent,
+                : AppColors.primary.withValues(alpha: 0),
             width: 1.6,
           ),
         ),
@@ -445,7 +412,7 @@ class _SchedulePageState extends State<SchedulePage> {
               '${day.day}',
               style: TextStyle(
                 color: selected
-                    ? Colors.white
+                    ? AppColors.primary
                     : isCurrentMonth
                     ? AppColors.textBold
                     : AppColors.textMuted,
@@ -459,8 +426,8 @@ class _SchedulePageState extends State<SchedulePage> {
               height: 7,
               decoration: BoxDecoration(
                 color: hasItems
-                    ? (selected ? Colors.white : AppColors.accent)
-                    : Colors.transparent,
+                    ? (selected ? AppColors.primary : AppColors.accent)
+                    : AppColors.primary.withValues(alpha: 0),
                 shape: BoxShape.circle,
               ),
             ),
@@ -551,7 +518,7 @@ class _SchedulePageState extends State<SchedulePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 44),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(22),
               boxShadow: const [
                 BoxShadow(
@@ -595,133 +562,129 @@ class _SchedulePageState extends State<SchedulePage> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
+        final statusColor = _statusColor(item.status);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Material(
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.cardShadow,
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 52,
-                padding: const EdgeInsets.symmetric(vertical: 10),
+            elevation: 0,
+            shadowColor: AppColors.cardShadow.withValues(alpha: 0.45),
+            child: InkWell(
+              onTap: () => _abrirDetalheAgendamento(item),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _statusColor(item.status).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      _twoDigits(item.inicioEm.hour),
-                      style: const TextStyle(
-                        color: AppColors.textBold,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    Text(
-                      _twoDigits(item.inicioEm.minute),
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
-                        fontWeight: FontWeight.w700,
-                      ),
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: statusColor.withValues(alpha: 0.16),
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.cardShadow,
+                      blurRadius: 12,
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item.servicoNome ?? 'Servico #${item.servicoId}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textBold,
-                      ),
+                    _AppointmentVenuePhoto(
+                      assetPath: _appointmentImageAsset(item),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_formatTime(item.inicioEm)} - ${_formatTime(item.fimEm)}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.accent,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      item.prestadorNome ??
-                          (item.prestadorId != null
-                              ? 'Prestador #${item.prestadorId}'
-                              : 'Prestador nao informado'),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textMuted,
-                      ),
-                    ),
-                    if (item.observacoes != null &&
-                        item.observacoes!.trim().isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        item.observacoes!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textRegular,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _StatusChip(status: item.status),
-                        if (!_isPrestador && item.podeCancelar)
-                          OutlinedButton.icon(
-                            onPressed: () => _cancelarAgendamento(item),
-                            icon: const Icon(Icons.close, size: 16),
-                            label: const Text('Cancelar'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.redAccent,
-                              side: const BorderSide(color: Colors.redAccent),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  item.servicoNome ??
+                                      'Servico #${item.servicoId}',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.textBold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _StatusChip(status: item.status),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          _AppointmentMeta(
+                            icon: Icons.schedule,
+                            value:
+                                '${_formatTime(item.inicioEm)} - ${_formatTime(item.fimEm)}',
+                            color: AppColors.accent,
+                            strong: true,
+                          ),
+                          const SizedBox(height: 6),
+                          _AppointmentMeta(
+                            icon: Icons.storefront_outlined,
+                            value:
+                                item.prestadorNome ??
+                                (item.prestadorId != null
+                                    ? 'Prestador #${item.prestadorId}'
+                                    : 'Prestador nao informado'),
+                          ),
+                          if (item.observacoes != null &&
+                              item.observacoes!.trim().isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            _AppointmentMeta(
+                              icon: Icons.notes_outlined,
+                              value: item.observacoes!,
                             ),
+                          ],
+                          const SizedBox(height: 14),
+                          Row(
+                            children: [
+                              if (_isPrestador && item.status == 'PENDENTE')
+                                FilledButton.icon(
+                                  onPressed: () => _confirmarAgendamento(item),
+                                  icon: const Icon(
+                                    Icons.check_circle,
+                                    size: 16,
+                                  ),
+                                  label: const Text('Confirmar'),
+                                ),
+                              if (_isPrestador && item.status == 'CONFIRMADO')
+                                FilledButton.icon(
+                                  onPressed: () => _concluirAgendamento(item),
+                                  icon: const Icon(Icons.task_alt, size: 16),
+                                  label: const Text('Concluir'),
+                                ),
+                              const Spacer(),
+                              Text(
+                                'Detalhes',
+                                style: TextStyle(
+                                  color: AppColors.accent,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.chevron_right,
+                                color: AppColors.accent,
+                                size: 20,
+                              ),
+                            ],
                           ),
-                        if (_isPrestador && item.status == 'PENDENTE')
-                          FilledButton.icon(
-                            onPressed: () => _confirmarAgendamento(item),
-                            icon: const Icon(Icons.check_circle, size: 16),
-                            label: const Text('Confirmar'),
-                          ),
-                        if (_isPrestador && item.status == 'CONFIRMADO')
-                          FilledButton.icon(
-                            onPressed: () => _concluirAgendamento(item),
-                            icon: const Icon(Icons.task_alt, size: 16),
-                            label: const Text('Concluir'),
-                          ),
-                        TextButton.icon(
-                          onPressed: () => _abrirDetalheAgendamento(item),
-                          icon: const Icon(Icons.chevron_right, size: 18),
-                          label: const Text('Detalhes'),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         );
       },
@@ -732,7 +695,7 @@ class _SchedulePageState extends State<SchedulePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.redAccent : AppColors.accent,
+        backgroundColor: isError ? AppColors.error : AppColors.accent,
       ),
     );
   }
@@ -879,14 +842,34 @@ class _SchedulePageState extends State<SchedulePage> {
 
   String _twoDigits(int value) => value.toString().padLeft(2, '0');
 
+  String _appointmentImageAsset(Agendamento item) {
+    final lookup = '${item.prestadorNome ?? ''} ${item.servicoNome ?? ''}'
+        .toLowerCase();
+
+    if (lookup.contains('barbie')) {
+      return 'assets/barbiesalon.jpg';
+    }
+    if (lookup.contains('james')) {
+      return 'assets/jamessalon.jpg';
+    }
+    if (lookup.contains('mariano')) {
+      return 'assets/mariano.jpg';
+    }
+    if (lookup.contains('silva') || lookup.contains('salao')) {
+      return 'assets/salao.jpg';
+    }
+
+    return 'assets/icon.jpg';
+  }
+
   Color _statusColor(String status) {
     switch (status) {
       case 'CONFIRMADO':
-        return Colors.green;
+        return AppColors.success;
       case 'CANCELADO':
-        return Colors.redAccent;
+        return AppColors.error;
       case 'CONCLUIDO':
-        return Colors.grey;
+        return AppColors.textMuted;
       case 'PENDENTE':
       default:
         return AppColors.accent;
@@ -904,6 +887,73 @@ class _SchedulePageState extends State<SchedulePage> {
   ];
 }
 
+class _AppointmentVenuePhoto extends StatelessWidget {
+  final String assetPath;
+
+  const _AppointmentVenuePhoto({required this.assetPath});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: 84,
+        height: 84,
+        color: AppColors.inputBackground,
+        child: Image.asset(
+          assetPath,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Container(
+            color: AppColors.inputBackground,
+            alignment: Alignment.center,
+            child: const Icon(
+              Icons.storefront,
+              color: AppColors.accent,
+              size: 30,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AppointmentMeta extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final Color color;
+  final bool strong;
+
+  const _AppointmentMeta({
+    required this.icon,
+    required this.value,
+    this.color = AppColors.textMuted,
+    this.strong = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color.withValues(alpha: 0.9), size: 16),
+        const SizedBox(width: 7),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 12.5,
+              fontWeight: strong ? FontWeight.w700 : FontWeight.w500,
+              height: 1.25,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _StatusChip extends StatelessWidget {
   final String status;
 
@@ -912,10 +962,10 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      'CONFIRMADO' => Colors.green,
-      'CANCELADO' => Colors.redAccent,
-      'CONCLUIDO' => Colors.grey,
-      _ => Colors.orange,
+      'CONFIRMADO' => AppColors.success,
+      'CANCELADO' => AppColors.error,
+      'CONCLUIDO' => AppColors.textMuted,
+      _ => AppColors.warning,
     };
 
     return Container(

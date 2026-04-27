@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopHomePage extends StatelessWidget {
   const ShopHomePage({super.key});
@@ -100,7 +101,9 @@ class ShopHomePage extends StatelessWidget {
                       ][day.weekday - 1],
                       style: TextStyle(
                         fontSize: 11,
-                        color: isToday ? Colors.white : AppColors.textMuted,
+                        color: isToday
+                            ? AppColors.primary
+                            : AppColors.textMuted,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -109,7 +112,7 @@ class ShopHomePage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: isToday ? Colors.white : AppColors.darkAlt,
+                        color: isToday ? AppColors.primary : AppColors.darkAlt,
                       ),
                     ),
                   ],
@@ -221,13 +224,7 @@ class _AppointmentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Row(
         children: [

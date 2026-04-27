@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopAboutPage extends StatelessWidget {
   const ShopAboutPage({super.key});
@@ -8,23 +9,7 @@ class ShopAboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Sobre o App',
-          style: TextStyle(
-            color: AppColors.accent,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      appBar: buildShopAppBar(context, title: 'Sobre o App'),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -40,7 +25,7 @@ class ShopAboutPage extends StatelessWidget {
                   ),
                   child: const Icon(
                     Icons.storefront,
-                    color: Colors.white,
+                    color: AppColors.primary,
                     size: 40,
                   ),
                 ),
@@ -88,13 +73,7 @@ class ShopAboutPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Row(
         children: [
@@ -119,13 +98,7 @@ class ShopAboutPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: ListTile(
         onTap: onTap,
