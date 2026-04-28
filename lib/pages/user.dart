@@ -33,81 +33,95 @@ class PerfilPage extends StatelessWidget {
               ),
             ),
             SliverToBoxAdapter(
-              child: _buildSectionLabel('MINHA CONTA'),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                child: _ProfileQuickStats(nome: session.nome),
+              ),
             ),
             SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.person_outline,
-                title: 'Editar Perfil',
-                onTap: () => Navigator.push(
-                  ctx,
-                  AppRoute(builder: (_) => const EditarPerfilPage()),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _MenuCardGroup(
+                  label: 'MINHA CONTA',
+                  children: [
+                    _buildMenuItem(
+                      icon: Icons.person_outline,
+                      title: 'Editar Perfil',
+                      subtitle: 'Atualize seus dados e preferências',
+                      onTap: () => Navigator.push(
+                        ctx,
+                        AppRoute(builder: (_) => const EditarPerfilPage()),
+                      ),
+                    ),
+                    const _ProfileDivider(),
+                    _buildMenuItem(
+                      icon: Icons.notifications_none_outlined,
+                      title: 'Notificações',
+                      subtitle: 'Controle alertas e lembretes do app',
+                      onTap: () => Navigator.push(
+                        ctx,
+                        AppRoute(builder: (_) => const NotificacoesPage()),
+                      ),
+                    ),
+                    const _ProfileDivider(),
+                    _buildMenuItem(
+                      icon: Icons.lock_outline,
+                      title: 'Segurança e Privacidade',
+                      subtitle: 'Gerencie acesso, senha e proteção da conta',
+                      onTap: () => Navigator.push(
+                        ctx,
+                        AppRoute(builder: (_) => const SegurancaPage()),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: _ProfileDivider()),
             SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.notifications_none_outlined,
-                title: 'Notificações',
-                onTap: () => Navigator.push(
-                  ctx,
-                  AppRoute(builder: (_) => const NotificacoesPage()),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: _MenuCardGroup(
+                  label: 'SUPORTE E AJUSTES',
+                  children: [
+                    _buildMenuItem(
+                      icon: Icons.settings_outlined,
+                      title: 'Configurações',
+                      subtitle: 'Tema, preferências e comportamento do app',
+                      onTap: () => Navigator.push(
+                        ctx,
+                        AppRoute(builder: (_) => const ConfiguracoesPage()),
+                      ),
+                    ),
+                    const _ProfileDivider(),
+                    _buildMenuItem(
+                      icon: Icons.help_outline,
+                      title: 'Ajuda',
+                      subtitle: 'Dúvidas frequentes e suporte',
+                      onTap: () => Navigator.push(
+                        ctx,
+                        AppRoute(builder: (_) => const AjudaPage()),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SliverToBoxAdapter(child: _ProfileDivider()),
             SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.location_on_outlined,
-                title: 'Minhas Localizações',
-                onTap: () => _showComingSoon(ctx),
-              ),
-            ),
-            const SliverToBoxAdapter(child: _ProfileDivider()),
-            SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.lock_outline,
-                title: 'Segurança e Privacidade',
-                onTap: () => Navigator.push(
-                  ctx,
-                  AppRoute(builder: (_) => const SegurancaPage()),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                child: _MenuCardGroup(
+                  label: 'SESSÃO',
+                  children: [
+                    _buildMenuItem(
+                      icon: Icons.logout,
+                      title: 'Sair',
+                      subtitle: 'Encerrar a sessão neste dispositivo',
+                      titleColor: AppColors.error,
+                      showArrow: false,
+                      onTap: () => _showLogoutDialog(ctx),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 18)),
-            SliverToBoxAdapter(
-              child: _buildSectionLabel('CONFIGURAÇÕES'),
-            ),
-            SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.settings_outlined,
-                title: 'Configurações',
-                onTap: () => Navigator.push(
-                  ctx,
-                  AppRoute(builder: (_) => const ConfiguracoesPage()),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: _ProfileDivider()),
-            SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.help_outline,
-                title: 'Ajuda',
-                onTap: () => Navigator.push(
-                  ctx,
-                  AppRoute(builder: (_) => const AjudaPage()),
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: _ProfileDivider()),
-            SliverToBoxAdapter(
-              child: _buildMenuItem(
-                icon: Icons.logout,
-                title: 'Sair',
-                titleColor: AppColors.error,
-                showArrow: false,
-                onTap: () => _showLogoutDialog(ctx),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 92)),
@@ -117,24 +131,10 @@ class PerfilPage extends StatelessWidget {
     );
   }
 
-  static Widget _buildSectionLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(10, 0, 16, 9),
-      child: Text(
-        label,
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: AppColors.sectionLabel,
-          letterSpacing: 0.8,
-        ),
-      ),
-    );
-  }
-
   static Widget _buildMenuItem({
     required IconData icon,
     required String title,
+    String? subtitle,
     Color? titleColor,
     bool showArrow = true,
     VoidCallback? onTap,
@@ -143,27 +143,44 @@ class PerfilPage extends StatelessWidget {
     return InkWell(
       onTap: onTap ?? () {},
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 10, 14, 10),
+        padding: const EdgeInsets.fromLTRB(8, 12, 12, 12),
         child: Row(
           children: [
             Container(
-              width: 34,
-              height: 34,
+              width: 42,
+              height: 42,
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, color: iconColor, size: 18),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: titleColor ?? AppColors.textBold,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: titleColor ?? AppColors.textBold,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.textRegular,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
             if (showArrow)
@@ -176,12 +193,6 @@ class PerfilPage extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static void _showComingSoon(BuildContext ctx) {
-    ScaffoldMessenger.of(
-      ctx,
-    ).showSnackBar(const SnackBar(content: Text('Em breve')));
   }
 
   static Future<void> _showLogoutDialog(BuildContext ctx) async {
@@ -221,84 +232,189 @@ class _LoggedProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 350,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          SizedBox(
-            height: 226,
-            width: double.infinity,
-            child: Image.asset('assets/ondas.jpg', fit: BoxFit.cover),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.secondary, AppColors.accent],
           ),
-          Positioned(
-            top: 132,
-            child: Container(
-              width: 172,
-              height: 172,
-              padding: const EdgeInsets.all(5),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.background,
-                border: Border.all(color: AppColors.secondary, width: 4),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.secondary.withValues(alpha: 0.22),
-                    blurRadius: 18,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: Image.asset('assets/icon.jpg', fit: BoxFit.cover),
-              ),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.shadowAccent,
+              blurRadius: 22,
+              offset: Offset(0, 12),
             ),
-          ),
-          Positioned(
-            top: 300,
-            left: 24,
-            right: 24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        nome,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textBold,
-                          fontSize: 23,
-                          fontWeight: FontWeight.w800,
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sua conta',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.edit_outlined,
-                      color: AppColors.accent.withValues(alpha: 0.7),
-                      size: 18,
-                    ),
-                  ],
+                      SizedBox(height: 6),
+                      Text(
+                        'Perfil do cliente',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          height: 1.05,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  email,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textRegular,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.18),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.verified_user_outlined,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Conta ativa',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 22),
+            Center(
+              child: Container(
+                width: 116,
+                height: 116,
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset('assets/Ducklogo.jpg', fit: BoxFit.cover),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          nome,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.edit_outlined,
+                        color: Colors.white.withValues(alpha: 0.82),
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    email,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.84),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.14),
+                ),
+              ),
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Gerencie sua conta, preferências e dados de acesso em um só lugar.',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -378,7 +494,7 @@ class _GuestProfilePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Desbloqueie funcionalidades e ajuste suas preferências para uma busca de serviços mais apropriada para você',
+                    'Crie sua conta para salvar agendamentos, acompanhar horários e acessar seu perfil no DuckHat.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: AppColors.textBold.withValues(alpha: 0.9),
@@ -449,7 +565,123 @@ class _ProfileDivider extends StatelessWidget {
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.textMuted.withValues(alpha: 0.45),
+      color: AppColors.textMuted.withValues(alpha: 0.22),
+    );
+  }
+}
+
+class _MenuCardGroup extends StatelessWidget {
+  final String label;
+  final List<Widget> children;
+
+  const _MenuCardGroup({required this.label, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(2, 0, 0, 10),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppColors.sectionLabel,
+              letterSpacing: 0.9,
+            ),
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.cardShadow,
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileQuickStats extends StatelessWidget {
+  final String nome;
+
+  const _ProfileQuickStats({required this.nome});
+
+  @override
+  Widget build(BuildContext context) {
+    final firstName = nome.trim().split(' ').first;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.white,
+            AppColors.accent.withValues(alpha: 0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.secondary,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              firstName.isEmpty ? 'D' : firstName[0].toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Conta pronta para uso',
+                  style: TextStyle(
+                    color: AppColors.textBold,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 3),
+                Text(
+                  'Use este espaço para ajustar perfil, privacidade e notificações.',
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

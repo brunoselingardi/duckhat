@@ -3,7 +3,9 @@ import 'package:duckhat/components/home/rebookcard.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 
 class EmptyRebookState extends StatelessWidget {
-  const EmptyRebookState({super.key});
+  final String message;
+
+  const EmptyRebookState({super.key, this.message = 'Você ainda não possui serviços recentes'});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +24,9 @@ class EmptyRebookState extends StatelessWidget {
             Icon(Icons.history, color: AppColors.textMuted),
             const SizedBox(height: 6),
             Text(
-              "Você ainda não possui serviços recentes",
+              message,
               style: TextStyle(color: AppColors.textMuted),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -34,8 +37,15 @@ class EmptyRebookState extends StatelessWidget {
 
 class RebookSection extends StatelessWidget {
   final List rebookServices;
+  final String title;
+  final String emptyMessage;
 
-  const RebookSection({super.key, required this.rebookServices});
+  const RebookSection({
+    super.key,
+    required this.rebookServices,
+    this.title = 'Agende novamente:',
+    this.emptyMessage = 'Você ainda não possui serviços recentes',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +55,7 @@ class RebookSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            "Agende novamente:",
+            title,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -55,7 +65,7 @@ class RebookSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         if (rebookServices.isEmpty)
-          const EmptyRebookState()
+          EmptyRebookState(message: emptyMessage)
         else
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -114,7 +114,7 @@ class DemoProfilePage extends StatelessWidget {
                 ],
               ),
               child: ClipOval(
-                child: Image.asset('assets/icon.jpg', fit: BoxFit.cover),
+                child: Image.asset('assets/Ducklogo.jpg', fit: BoxFit.cover),
               ),
             ),
           ),

@@ -6,6 +6,7 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'post_login_transition_page.dart';
 import '../shop_main.dart';
 import 'app_shell.dart';
 import 'forgot_password.dart';
@@ -53,7 +54,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     super.initState();
     _waveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3200),
+      duration: const Duration(milliseconds: 760),
     );
   }
 
@@ -133,12 +134,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       _animationStage = _LoginAnimationStage.wave;
     });
 
-    await Future<void>.delayed(const Duration(milliseconds: 70));
+    await Future<void>.delayed(const Duration(milliseconds: 40));
     if (!mounted) return;
 
     _captureWaveOrigin();
     await _waveController.forward(from: 0);
-    await Future<void>.delayed(const Duration(milliseconds: 120));
+    await Future<void>.delayed(const Duration(milliseconds: 40));
   }
 
   void _captureWaveOrigin() {
@@ -163,7 +164,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         : const MainNavigator();
 
     Navigator.of(context).pushReplacement(
-      _InstantRoute(child: _PostLoginTransitionPage(destination: destination)),
+      InstantPageRoute(
+        child: PostLoginTransitionPage(destination: destination),
+      ),
     );
   }
 
@@ -267,7 +270,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           delayMs: 170,
                           child: _MinimalField(
                             controller: _passwordController,
-                            hint: 'Password',
+                            hint: 'Senha',
                             icon: Icons.lock_outline_rounded,
                             obscureText: _hidePassword,
                             enabled: !_loading && !_finishingLogin,
@@ -313,7 +316,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            child: const Text('Forget Password?'),
+                            child: const Text('Esqueci minha senha'),
                           ),
                         ),
                         const SizedBox(height: 38),
@@ -435,7 +438,6 @@ class _HeaderBlock extends StatelessWidget {
         Container(
           width: 66,
           height: 66,
-          padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: AppColors.accent,
             borderRadius: BorderRadius.circular(20),
@@ -447,15 +449,14 @@ class _HeaderBlock extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.contactless_outlined,
-            color: Colors.white,
-            size: 30,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset('assets/Ducklogo.jpg', fit: BoxFit.cover),
           ),
         ),
         const SizedBox(height: 20),
         const Text(
-          'Hey Rider,\nWelcome Back!',
+          'Quack,\nBem-vindo de volta!',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.secondary,
@@ -466,7 +467,7 @@ class _HeaderBlock extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Login with your credentials to access your account',
+          'Use suas credenciais para acessar sua conta e continuar seus agendamentos.',
           textAlign: TextAlign.center,
           style: TextStyle(
             color: AppColors.textRegular.withValues(alpha: 0.72),
@@ -748,242 +749,25 @@ class _SuccessOverlay extends StatelessWidget {
               waveController.value,
             );
             final waveSize = lerpDouble(60, diameter, waveValue) ?? 60;
+            final overlayOpacity = lerpDouble(0.0, 0.18, waveValue) ?? 0.18;
 
             return Stack(
               children: [
                 Positioned.fill(
                   child: ColoredBox(
-                    color: AppColors.accent.withValues(
-                      alpha: 0.08 + (waveValue * 0.14),
-                    ),
+                    color: AppColors.accent.withValues(alpha: overlayOpacity),
                   ),
                 ),
                 Positioned(
                   left: center.dx - (waveSize / 2),
                   top: center.dy - (waveSize / 2),
-                  child: Container(
+                  child: SizedBox(
                     width: waveSize,
                     height: waveSize,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.accent,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.accent.withValues(alpha: 0.22),
-                          blurRadius: 44 * waveValue,
-                          spreadRadius: 12 * waveValue,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _SuccessBanner extends StatelessWidget {
-  const _SuccessBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.check_circle, color: Color(0xFF27AE60), size: 18),
-          SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Login success!',
-                  style: TextStyle(
-                    color: AppColors.textBold,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'You have logged in successfully!',
-                  style: TextStyle(
-                    color: AppColors.textRegular,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 8),
-          Icon(Icons.close, color: AppColors.textMuted, size: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _PostLoginTransitionPage extends StatefulWidget {
-  final Widget destination;
-
-  const _PostLoginTransitionPage({required this.destination});
-
-  @override
-  State<_PostLoginTransitionPage> createState() =>
-      _PostLoginTransitionPageState();
-}
-
-class _PostLoginTransitionPageState extends State<_PostLoginTransitionPage>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  bool _overlayVisible = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    );
-    _startExit();
-  }
-
-  Future<void> _startExit() async {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      await precacheImage(const AssetImage('assets/duck-dance.gif'), context);
-      await Future<void>.delayed(const Duration(milliseconds: 360));
-      if (!mounted) return;
-      await _controller.forward(from: 0);
-      if (!mounted) return;
-      setState(() => _overlayVisible = false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(child: widget.destination),
-        if (_overlayVisible)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: _HomeRevealOverlay(controller: _controller),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _HomeRevealOverlay extends StatelessWidget {
-  final AnimationController controller;
-
-  const _HomeRevealOverlay({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final height = constraints.maxHeight;
-        final maxDiameter = math.sqrt(width * width + height * height) * 2;
-
-        return AnimatedBuilder(
-          animation: controller,
-          builder: (context, _) {
-            final appearProgress = Curves.easeOutBack.transform(
-              Interval(0, 0.22).transform(controller.value.clamp(0.0, 1.0)),
-            );
-            final expandProgress = Curves.easeInOutCubicEmphasized.transform(
-              Interval(0.5, 1).transform(controller.value.clamp(0.0, 1.0)),
-            );
-            final ballSize =
-                lerpDouble(0, 132, appearProgress)! +
-                lerpDouble(0, maxDiameter - 132, expandProgress)!;
-            final ballOpacity = 1 - (expandProgress * 0.96);
-            final fadeBlue = 1 - Curves.easeInCubic.transform(expandProgress);
-            final gifScale = lerpDouble(0.82, 1, appearProgress)! -
-                (expandProgress * 0.18);
-            final gifOpacity =
-                appearProgress * (1 - Curves.easeInQuad.transform(expandProgress));
-
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: ColoredBox(
-                    color: AppColors.accent.withValues(alpha: fadeBlue),
-                  ),
-                ),
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
-                    child: Column(
-                      children: [const _SuccessBanner(), const Spacer()],
-                    ),
-                  ),
-                ),
-                Center(
-                  child: Opacity(
-                    opacity: ballOpacity.clamp(0.0, 1.0),
-                    child: Container(
-                      width: ballSize,
-                      height: ballSize,
-                      decoration: BoxDecoration(
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0x14000000).withValues(
-                              alpha: appearProgress * 0.12,
-                            ),
-                            blurRadius: 28,
-                            offset: const Offset(0, 12),
-                          ),
-                        ],
-                      ),
-                      child: Center(
-                        child: Opacity(
-                          opacity: gifOpacity.clamp(0.0, 1.0),
-                          child: Transform.scale(
-                            scale: gifScale.clamp(0.0, 1.0),
-                            child: ClipOval(
-                              child: SizedBox(
-                                width: 108,
-                                height: 108,
-                                child: Image.asset(
-                                  'assets/duck-dance.gif',
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
+                        color: AppColors.accent,
                       ),
                     ),
                   ),
@@ -1021,13 +805,4 @@ class _Entrance extends StatelessWidget {
       },
     );
   }
-}
-
-class _InstantRoute<T> extends PageRouteBuilder<T> {
-  _InstantRoute({required Widget child})
-    : super(
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) => child,
-      );
 }

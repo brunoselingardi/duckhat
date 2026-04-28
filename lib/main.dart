@@ -28,12 +28,13 @@ class _MyAppState extends State<MyApp> {
 
     for (final asset in const [
       'assets/ondas.jpg',
-      'assets/icon.jpg',
+      'assets/Ducklogo.jpg',
       'assets/niceduck.jpg',
       'assets/barbiesalon.jpg',
       'assets/jamessalon.jpg',
       'assets/mariano.jpg',
       'assets/salao.jpg',
+      'assets/duck-dance.gif',
     ]) {
       precacheImage(AssetImage(asset), context);
     }
@@ -59,9 +60,8 @@ class _MyAppState extends State<MyApp> {
                 builder: (context) => ScheduleDatePage(
                   prestadorId: args['prestadorId'] as int,
                   establishmentName: args['establishmentName'] ?? '',
-                  serviceOffers:
-                      (args['serviceOffers'] as List<dynamic>)
-                          .cast<ServiceOffer>(),
+                  serviceOffers: (args['serviceOffers'] as List<dynamic>)
+                      .cast<ServiceOffer>(),
                   initialServiceId: args['initialServiceId'] as int?,
                 ),
               );

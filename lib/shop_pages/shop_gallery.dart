@@ -13,7 +13,7 @@ class _ShopGalleryPageState extends State<ShopGalleryPage> {
   final List<String> _photos = [
     'assets/ondas.jpg',
     'assets/Ducklogo.jpg',
-    'assets/icon.jpg',
+    'assets/Ducklogo.jpg',
     'assets/barbiesalon.jpg',
     'assets/jamessalon.jpg',
   ];

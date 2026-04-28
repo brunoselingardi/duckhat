@@ -15,7 +15,15 @@ class ShopMainNavigator extends StatefulWidget {
 
 class _ShopMainNavigatorState extends State<ShopMainNavigator> {
   final PageStorageBucket _bucket = PageStorageBucket();
+  final Set<int> _loadedIndexes = {0};
   int _currentIndex = 0;
+
+  static const List<Widget> _pages = [
+    ShopHomePage(),
+    ShopSchedulePage(),
+    ShopClientsPage(),
+    ShopProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +31,29 @@ class _ShopMainNavigatorState extends State<ShopMainNavigator> {
       backgroundColor: AppColors.primary.withValues(alpha: 0),
       body: PageStorage(
         bucket: _bucket,
-        child: IndexedStack(
-          index: _currentIndex,
-          children: const [
-            RepaintBoundary(child: ShopHomePage()),
-            RepaintBoundary(child: ShopSchedulePage()),
-            RepaintBoundary(child: ShopClientsPage()),
-            RepaintBoundary(child: ShopProfilePage()),
-          ],
+        child: Stack(
+          children: List.generate(_pages.length, (index) {
+            final isActive = index == _currentIndex;
+            final isLoaded = _loadedIndexes.contains(index);
+
+            return Offstage(
+              offstage: !isActive,
+              child: TickerMode(
+                enabled: isActive,
+                child: isLoaded
+                    ? RepaintBoundary(child: _pages[index])
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }),
         ),
       ),
       bottomNavigationBar: ShopBottomNav(
         selectedIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) => setState(() {
+          _currentIndex = index;
+          _loadedIndexes.add(index);
+        }),
       ),
     );
   }

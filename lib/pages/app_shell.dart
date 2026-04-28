@@ -14,13 +14,14 @@ class MainNavigator extends StatefulWidget {
 
 class _MainNavigatorState extends State<MainNavigator> {
   final PageStorageBucket _bucket = PageStorageBucket();
+  final Set<int> _loadedIndexes = {0};
   int _currentIndex = 0;
 
   static const List<Widget> _pages = [
-    RepaintBoundary(child: Home()),
-    RepaintBoundary(child: SchedulePage()),
-    RepaintBoundary(child: ChatPage()),
-    RepaintBoundary(child: PerfilPage()),
+    Home(),
+    SchedulePage(),
+    ChatPage(),
+    PerfilPage(),
   ];
 
   @override
@@ -28,13 +29,31 @@ class _MainNavigatorState extends State<MainNavigator> {
     return Scaffold(
       body: PageStorage(
         bucket: _bucket,
-        child: IndexedStack(index: _currentIndex, children: _pages),
+        child: Stack(
+          children: List.generate(_pages.length, (index) {
+            final isActive = index == _currentIndex;
+            final isLoaded = _loadedIndexes.contains(index);
+
+            return Offstage(
+              offstage: !isActive,
+              child: TickerMode(
+                enabled: isActive,
+                child: isLoaded
+                    ? RepaintBoundary(child: _pages[index])
+                    : const SizedBox.shrink(),
+              ),
+            );
+          }),
+        ),
       ),
       bottomNavigationBar: DuckHatBottomNav(
         selectedIndex: _currentIndex,
         onTap: (index) {
           if (index == _currentIndex) return;
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+            _loadedIndexes.add(index);
+          });
         },
       ),
     );
