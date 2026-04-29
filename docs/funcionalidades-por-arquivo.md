@@ -18,7 +18,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
   - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
-  - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento e chat
+  - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
 - `lib/core/api_config.dart`
   - centraliza `API_BASE_URL`, `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD`
 
@@ -195,7 +195,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - formulario visual de perfil com botao voltar e botao `Salvar`
 - `lib/components/user/notificacoes.dart`
   - botao voltar
-  - toggles locais de notificacoes
+  - lista notificacoes reais do usuario autenticado
+  - permite marcar uma notificacao como lida e marcar todas como lidas
+  - carrega e salva preferencias reais de agendamentos, mensagens, promocoes, novidades e resumo por e-mail
+  - possui estados de loading, erro, vazio e refresh integrado com API
 - `lib/components/user/seguranca.dart`
   - botao voltar
   - itens de senha, biometria, 2FA, privacidade e exclusao
@@ -256,6 +259,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - modelo de conversa cliente/prestador vinda do backend
 - `lib/models/chat_mensagem.dart`
   - modelo de mensagem de chat vinda do backend
+- `lib/models/notificacao.dart`
+  - modelo do feed de notificacoes in-app vindo do backend
+- `lib/models/notificacao_preferencias.dart`
+  - modelo das preferencias persistidas de notificacao
 
 ## Backend principal
 
@@ -279,7 +286,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `backend/src/main/java/com/duckhat/api/controller/AvaliacaoController.java`
   - endpoints de avaliacoes
 - `backend/src/main/java/com/duckhat/api/controller/NotificacaoEventoController.java`
-  - endpoints de notificacoes
+  - endpoints de notificacoes, contagem de nao lidas, leitura individual/em massa e preferencias
 - `backend/src/main/java/com/duckhat/api/controller/ChatController.java`
   - endpoints de conversas e mensagens do chat autenticado
 - `backend/src/main/java/com/duckhat/api/service/AgendamentoService.java`
@@ -294,7 +301,13 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cria/busca conversa entre cliente e prestador
   - lista conversas e mensagens autorizadas por participante
   - envia mensagens e atualiza `ultima_mensagem_em`
+  - gera notificacao real para o outro participante quando uma mensagem e enviada
   - limpa mensagens expiradas diariamente preservando a ultima mensagem por conversa e aplicando graca de 5 dias pela ultima atividade
+- `backend/src/main/java/com/duckhat/api/service/NotificacaoEventoService.java`
+  - mantem o feed de notificacoes por usuario
+  - aplica owner-check por usuario autenticado
+  - gerencia preferencias persistidas de notificacoes
+  - gera notificacoes automaticas de agenda e chat respeitando preferencias
 - `backend/src/main/resources/application.properties`
   - configuracao com fallback local e override por variaveis de ambiente
 
@@ -314,6 +327,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - adiciona limite persistente de tentativas na recuperacao de senha
 - `database/migrations/V5__chat_conversations_and_messages.sql`
   - cria `chat_conversas`, `chat_mensagens` e indices do chat real
+- `database/migrations/V6__notification_feed_and_preferences.sql`
+  - evolui `notificacao_eventos` para feed por usuario e cria `notificacao_preferencias`
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`
@@ -332,11 +347,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cancelamento de agendamento
   - disponibilidade e ocupacao do prestador
   - chat entre cliente e prestador
+  - notificacoes in-app e preferencias persistidas
 - Mockados ou locais
   - busca textual e filtros da busca
   - resultados e mapa da busca
   - reviews e FAQ do estabelecimento
-  - subpaginas de perfil
+  - parte das subpaginas de perfil
   - minhas localizacoes no perfil
   - banner promocional e boa parte da home
 

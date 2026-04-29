@@ -85,17 +85,6 @@ CREATE TABLE avaliacoes (
     CONSTRAINT chk_avaliacoes_nota CHECK (nota BETWEEN 1 AND 5)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE notificacao_eventos (
-    id BIGINT NOT NULL AUTO_INCREMENT,
-    agendamento_id BIGINT NOT NULL,
-    canal ENUM('APP', 'EMAIL', 'SMS') NOT NULL DEFAULT 'APP',
-    agendado_para DATETIME NOT NULL,
-    enviado_em DATETIME NULL,
-    status ENUM('PENDENTE', 'ENVIADO', 'FALHA') NOT NULL DEFAULT 'PENDENTE',
-    CONSTRAINT pk_notificacao_eventos PRIMARY KEY (id),
-    CONSTRAINT fk_notificacao_eventos_agendamento FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE chat_conversas (
     id BIGINT NOT NULL AUTO_INCREMENT,
     cliente_id BIGINT NOT NULL,
@@ -121,6 +110,38 @@ CREATE TABLE chat_mensagens (
     CONSTRAINT fk_chat_mensagens_remetente FOREIGN KEY (remetente_id) REFERENCES usuarios(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE notificacao_preferencias (
+    usuario_id BIGINT NOT NULL,
+    agendamentos BOOLEAN NOT NULL DEFAULT TRUE,
+    mensagens BOOLEAN NOT NULL DEFAULT TRUE,
+    promocoes BOOLEAN NOT NULL DEFAULT TRUE,
+    novidades BOOLEAN NOT NULL DEFAULT FALSE,
+    resumo_email BOOLEAN NOT NULL DEFAULT TRUE,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT pk_notificacao_preferencias PRIMARY KEY (usuario_id),
+    CONSTRAINT fk_notificacao_preferencias_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE notificacao_eventos (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    usuario_id BIGINT NOT NULL,
+    agendamento_id BIGINT NULL,
+    chat_conversa_id BIGINT NULL,
+    tipo ENUM('AGENDAMENTO', 'MENSAGEM', 'PROMOCAO', 'SISTEMA') NOT NULL DEFAULT 'SISTEMA',
+    canal ENUM('APP', 'EMAIL', 'SMS') NOT NULL DEFAULT 'APP',
+    titulo VARCHAR(120) NOT NULL,
+    mensagem VARCHAR(500) NOT NULL,
+    agendado_para DATETIME NOT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    enviado_em DATETIME NULL,
+    lido_em DATETIME NULL,
+    status ENUM('PENDENTE', 'ENVIADO', 'FALHA') NOT NULL DEFAULT 'PENDENTE',
+    CONSTRAINT pk_notificacao_eventos PRIMARY KEY (id),
+    CONSTRAINT fk_notificacao_eventos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notificacao_eventos_agendamento FOREIGN KEY (agendamento_id) REFERENCES agendamentos(id),
+    CONSTRAINT fk_notificacao_eventos_chat_conversa FOREIGN KEY (chat_conversa_id) REFERENCES chat_conversas(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE INDEX idx_servicos_prestador_id ON servicos (prestador_id);
 CREATE INDEX idx_servicos_ativo ON servicos (ativo);
 CREATE INDEX idx_servicos_prestador_ativo ON servicos (prestador_id, ativo);
@@ -137,8 +158,11 @@ CREATE INDEX idx_agendamentos_cliente_status ON agendamentos (cliente_id, status
 CREATE INDEX idx_agendamentos_prestador_status_intervalo ON agendamentos (prestador_id, status, inicio_at, fim_at);
 
 CREATE INDEX idx_notificacao_eventos_agendamento_id ON notificacao_eventos (agendamento_id);
+CREATE INDEX idx_notificacao_eventos_usuario_criado ON notificacao_eventos (usuario_id, criado_em, id);
+CREATE INDEX idx_notificacao_eventos_usuario_lido ON notificacao_eventos (usuario_id, lido_em);
 CREATE INDEX idx_notificacao_eventos_status ON notificacao_eventos (status);
 CREATE INDEX idx_notificacao_eventos_canal ON notificacao_eventos (canal);
+CREATE INDEX idx_notificacao_eventos_chat_conversa_id ON notificacao_eventos (chat_conversa_id);
 CREATE INDEX idx_recuperacao_senha_tokens_usuario_codigo ON recuperacao_senha_tokens (usuario_id, codigo);
 CREATE INDEX idx_chat_conversas_cliente_ultima ON chat_conversas (cliente_id, ultima_mensagem_em);
 CREATE INDEX idx_chat_conversas_prestador_ultima ON chat_conversas (prestador_id, ultima_mensagem_em);

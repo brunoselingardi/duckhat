@@ -28,14 +28,17 @@ public class ChatService {
   private final ChatConversaRepository conversaRepository;
   private final ChatMensagemRepository mensagemRepository;
   private final UsuarioRepository usuarioRepository;
+  private final NotificacaoEventoService notificacaoEventoService;
 
   public ChatService(
       ChatConversaRepository conversaRepository,
       ChatMensagemRepository mensagemRepository,
-      UsuarioRepository usuarioRepository) {
+      UsuarioRepository usuarioRepository,
+      NotificacaoEventoService notificacaoEventoService) {
     this.conversaRepository = conversaRepository;
     this.mensagemRepository = mensagemRepository;
     this.usuarioRepository = usuarioRepository;
+    this.notificacaoEventoService = notificacaoEventoService;
   }
 
   @Transactional
@@ -101,6 +104,7 @@ public class ChatService {
     ChatMensagem salva = mensagemRepository.save(mensagem);
     conversa.setUltimaMensagemEm(agora);
     conversaRepository.save(conversa);
+    notificacaoEventoService.registrarMensagem(conversa, usuario, salva.getConteudo());
 
     return ChatMensagemResponse.fromEntity(salva, usuario);
   }

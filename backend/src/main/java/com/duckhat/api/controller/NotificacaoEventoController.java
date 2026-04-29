@@ -1,7 +1,10 @@
 package com.duckhat.api.controller;
 
+import com.duckhat.api.dto.ContagemNotificacoesResponse;
 import com.duckhat.api.dto.CreateNotificacaoEventoRequest;
 import com.duckhat.api.dto.NotificacaoEventoResponse;
+import com.duckhat.api.dto.NotificacaoPreferenciasResponse;
+import com.duckhat.api.dto.UpdateNotificacaoPreferenciasRequest;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.CanalNotificacao;
 import com.duckhat.api.entity.enums.StatusNotificacao;
@@ -36,11 +39,42 @@ public class NotificacaoEventoController {
     return notificacaoEventoService.listarTodas(usuario);
   }
 
+  @GetMapping("/nao-lidas/contagem")
+  public ContagemNotificacoesResponse contarNaoLidas(@AuthenticationPrincipal Usuario usuario) {
+    return notificacaoEventoService.contarNaoLidas(usuario);
+  }
+
+  @PatchMapping("/lidas")
+  public List<NotificacaoEventoResponse> marcarTodasComoLidas(
+      @AuthenticationPrincipal Usuario usuario) {
+    return notificacaoEventoService.marcarTodasComoLidas(usuario);
+  }
+
+  @GetMapping("/preferencias")
+  public NotificacaoPreferenciasResponse obterPreferencias(
+      @AuthenticationPrincipal Usuario usuario) {
+    return notificacaoEventoService.obterPreferencias(usuario);
+  }
+
+  @PutMapping("/preferencias")
+  public NotificacaoPreferenciasResponse atualizarPreferencias(
+      @Valid @RequestBody UpdateNotificacaoPreferenciasRequest request,
+      @AuthenticationPrincipal Usuario usuario) {
+    return notificacaoEventoService.atualizarPreferencias(request, usuario);
+  }
+
   @GetMapping("/{id}")
   public NotificacaoEventoResponse buscarPorId(
       @PathVariable Long id,
       @AuthenticationPrincipal Usuario usuario) {
     return notificacaoEventoService.buscarPorId(id, usuario);
+  }
+
+  @PatchMapping("/{id}/lida")
+  public NotificacaoEventoResponse marcarComoLida(
+      @PathVariable Long id,
+      @AuthenticationPrincipal Usuario usuario) {
+    return notificacaoEventoService.marcarComoLida(id, usuario);
   }
 
   @GetMapping("/agendamento/{agendamentoId}")

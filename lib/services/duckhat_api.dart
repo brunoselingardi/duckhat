@@ -8,6 +8,8 @@ import '../models/agendamento.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
 import '../models/disponibilidade_catalogo.dart';
+import '../models/notificacao.dart';
+import '../models/notificacao_preferencias.dart';
 import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
 
@@ -610,6 +612,147 @@ class DuckHatApi {
     }
 
     return ChatMensagem.fromJson(body);
+  }
+
+  Future<List<Notificacao>> listarNotificacoes() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as notificações.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar notificações.');
+    }
+
+    return body
+        .map((item) => Notificacao.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<int> contarNotificacoesNaoLidas() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/nao-lidas/contagem'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar a contagem de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao contar notificações.');
+    }
+
+    return _parseInt(body['naoLidas'] ?? 0);
+  }
+
+  Future<Notificacao> marcarNotificacaoComoLida(int id) async {
+    await ensureAuthenticated();
+
+    final response = await _client.patch(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/$id/lida'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível atualizar a notificação.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao marcar notificação como lida.');
+    }
+
+    return Notificacao.fromJson(body);
+  }
+
+  Future<void> marcarTodasNotificacoesComoLidas() async {
+    await ensureAuthenticated();
+
+    final response = await _client.patch(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/lidas'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível marcar as notificações como lidas.',
+      );
+    }
+  }
+
+  Future<NotificacaoPreferencias> carregarPreferenciasNotificacoes() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar as preferências de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar preferências.');
+    }
+
+    return NotificacaoPreferencias.fromJson(body);
+  }
+
+  Future<NotificacaoPreferencias> atualizarPreferenciasNotificacoes(
+    NotificacaoPreferencias preferencias,
+  ) async {
+    await ensureAuthenticated();
+
+    final response = await _client.put(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(preferencias.toJson()),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível salvar as preferências de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao salvar preferências.');
+    }
+
+    return NotificacaoPreferencias.fromJson(body);
   }
 
   Map<String, String> _authorizedHeaders() {
