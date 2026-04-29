@@ -3,6 +3,7 @@ package com.duckhat.api.entity;
 import com.duckhat.api.entity.enums.TipoUsuario;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,6 +31,12 @@ public class Usuario {
 
     @Column(name = "responsavel_nome", length = 120)
     private String responsavelNome;
+
+    @Column(name = "data_nascimento")
+    private LocalDate dataNascimento;
+
+    @Column(length = 255)
+    private String endereco;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -73,6 +80,14 @@ public class Usuario {
         return responsavelNome;
     }
 
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
@@ -103,6 +118,14 @@ public class Usuario {
 
     public void setResponsavelNome(String responsavelNome) {
         this.responsavelNome = responsavelNome;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
+
+    public void setEndereco(String endereco) {
+        this.endereco = endereco;
     }
 
     public void setTipo(TipoUsuario tipo) {

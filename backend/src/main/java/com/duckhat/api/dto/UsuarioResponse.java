@@ -3,6 +3,7 @@ package com.duckhat.api.dto;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record UsuarioResponse(
@@ -12,6 +13,8 @@ public record UsuarioResponse(
         String telefone,
         String cnpj,
         String responsavelNome,
+        LocalDate dataNascimento,
+        String endereco,
         TipoUsuario tipo,
         LocalDateTime criadoEm
 ) {
@@ -23,6 +26,8 @@ public record UsuarioResponse(
                 usuario.getTelefone(),
                 usuario.getCnpj(),
                 usuario.getResponsavelNome(),
+                usuario.getDataNascimento(),
+                usuario.getEndereco(),
                 usuario.getTipo(),
                 usuario.getCriadoEm()
         );

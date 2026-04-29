@@ -30,7 +30,8 @@ database/
 │   ├── V3__auth_login_area_integration.sql
 │   ├── V4__password_reset_attempt_limits.sql
 │   ├── V5__chat_conversations_and_messages.sql
-│   └── V6__notification_feed_and_preferences.sql
+│   ├── V6__notification_feed_and_preferences.sql
+│   └── V7__user_profile_fields.sql
 ├── seed/
 │   └── 001_seed_dev.sql
 ├── compose.yaml
@@ -60,6 +61,9 @@ Cria `chat_conversas`, `chat_mensagens` e índices do chat real.
 
 ### `migrations/V6__notification_feed_and_preferences.sql`
 Evolui `notificacao_eventos` para feed por usuário, adiciona vínculo opcional com chat, leitura por usuário e cria `notificacao_preferencias`.
+
+### `migrations/V7__user_profile_fields.sql`
+Adiciona `data_nascimento` e `endereco` em `usuarios` para persistência real da tela de perfil.
 
 ### `seed/001_seed_dev.sql`
 Carga opcional de dados de desenvolvimento.
@@ -104,11 +108,11 @@ docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
 
 1. Garanta que fez backup ou que o ambiente é de desenvolvimento.
 
-2. Aplique as migrations pendentes em ordem. Exemplo para a atualização de notificações:
+2. Aplique as migrations pendentes em ordem. Exemplo para a atualização do perfil:
 
 ```bash
 docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
-  mysql -u duckhat_user -pduckhat_pass duckhat < database/migrations/V6__notification_feed_and_preferences.sql
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/migrations/V7__user_profile_fields.sql
 ```
 
 3. Atualize a conexão no DBeaver e valide tabelas, índices e colunas.
@@ -130,6 +134,7 @@ Confira se existem estas tabelas:
 
 Confira também estes pontos:
 - `usuarios.email` único
+- `usuarios.data_nascimento` e `usuarios.endereco` existem para o perfil real
 - `servicos.prestador_id` apontando para `usuarios.id`
 - `agendamentos` com colunas `cliente_id`, `prestador_id`, `servico_id`, `inicio_at`, `fim_at`, `status`
 - `avaliacoes.agendamento_id` único

@@ -22,8 +22,22 @@ class ShopProfilePage extends StatefulWidget {
 }
 
 class _ShopProfilePageState extends State<ShopProfilePage> {
+  final DuckHatApi _api = DuckHatApi.instance;
   String? _backgroundImage;
   String? _profileImage;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshProfile();
+  }
+
+  Future<void> _refreshProfile() async {
+    if (_api.currentSession == null) return;
+    try {
+      await _api.carregarMeuPerfil();
+    } catch (_) {}
+  }
 
   void _changeBackground() {
     showModalBottomSheet(
@@ -148,7 +162,12 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
       body: Builder(
         builder: (ctx) => CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(child: _buildHeader()),
+            SliverToBoxAdapter(
+              child: ValueListenableBuilder<LoginSession?>(
+                valueListenable: _api.sessionNotifier,
+                builder: (context, session, _) => _buildHeader(session),
+              ),
+            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -167,7 +186,10 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(LoginSession? session) {
+    final nome = session?.nome ?? 'Estabelecimento';
+    final email = session?.email ?? '';
+
     return SizedBox(
       height: 350,
       child: Stack(
@@ -251,9 +273,9 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Flexible(
+                    Flexible(
                       child: Text(
-                        'Barbearia Silva',
+                        nome,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: AppColors.textBold,
@@ -271,10 +293,10 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  'barbeariasilva@email.com',
+                Text(
+                  email,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textRegular,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -298,12 +320,17 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             icon: Icons.store,
             title: 'Dados do Estabelecimento',
             subtitle: 'Nome, telefone, endereço',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ShopEstablishmentDataPage(),
-              ),
-            ),
+            onTap: () async {
+              final updated = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ShopEstablishmentDataPage(),
+                ),
+              );
+              if (updated == true) {
+                await _refreshProfile();
+              }
+            },
           ),
           _buildDivider(),
           _buildMenuItem(

@@ -8,6 +8,8 @@ CREATE TABLE usuarios (
     telefone VARCHAR(20) NULL,
     cnpj VARCHAR(14) NULL,
     responsavel_nome VARCHAR(120) NULL,
+    data_nascimento DATE NULL,
+    endereco VARCHAR(255) NULL,
     tipo ENUM('CLIENTE', 'PRESTADOR') NOT NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_usuarios PRIMARY KEY (id),
