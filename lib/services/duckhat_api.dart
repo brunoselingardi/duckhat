@@ -7,6 +7,7 @@ import '../core/api_config.dart';
 import '../models/agendamento.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
+import '../models/avaliacao.dart';
 import '../models/disponibilidade_catalogo.dart';
 import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
@@ -610,6 +611,67 @@ class DuckHatApi {
     }
 
     return ChatMensagem.fromJson(body);
+  }
+
+  Future<List<Avaliacao>> listarAvaliacoesPorPrestador(int prestadorId) async {
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes/prestador/$prestadorId'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as avaliações.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar avaliações.');
+    }
+
+    return body
+        .map(
+          (item) => Avaliacao.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .toList();
+  }
+
+  Future<Avaliacao> criarAvaliacao({
+    required int prestadorId,
+    required int nota,
+    String? comentario,
+    int? servicoId,
+  }) async {
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({
+        'prestadorId': prestadorId,
+        'nota': nota,
+        'comentario': comentario?.trim().isEmpty == true
+            ? null
+            : comentario?.trim(),
+        'servicoId': servicoId,
+      }),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível enviar a avaliação.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao criar avaliação.');
+    }
+
+    return Avaliacao.fromJson(body);
   }
 
   Map<String, String> _authorizedHeaders() {

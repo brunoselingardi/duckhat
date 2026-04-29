@@ -60,21 +60,21 @@ const serviceOffers = [
 const serviceReviews = [
   ServiceReview(
     name: 'Marina Couto',
-    rating: '5.0',
+    rating: 5,
     comment:
         'A Barbie Dream Barber entrega um atendimento impecavel. O ambiente e lindo e o visual final ficou perfeito.',
     date: 'Mar 7, 2025',
   ),
   ServiceReview(
     name: 'Theo Martins',
-    rating: '4.9',
+    rating: 4,
     comment:
         'Gostei muito da proposta da casa. Tudo parece pensado para gerar experiencia, nao so um corte comum.',
     date: 'Fev 18, 2025',
   ),
   ServiceReview(
     name: 'Bruno Araujo',
-    rating: '5.0',
+    rating: 5,
     comment:
         'Do atendimento ate a finalizacao, tudo foi muito acima do esperado. Voltaria facil.',
     date: 'Jan 26, 2025',

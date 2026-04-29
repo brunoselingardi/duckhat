@@ -68,7 +68,7 @@ class _ReviewCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  review.rating,
+                  review.rating.toStringAsFixed(1).replaceAll('.0', ''),
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textBold,

@@ -2,8 +2,10 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/core/app_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/login.dart';
 import 'pages/schedule_date.dart';
+import 'pages/onboarding.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,6 +20,25 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool _precacheStarted = false;
+  bool _onboardingCompleted = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkOnboarding();
+  }
+
+  Future<void> _checkOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    final completed = prefs.getBool('onboarding_completed') ?? false;
+    if (mounted) {
+      setState(() {
+        _onboardingCompleted = completed;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -40,6 +61,17 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return MaterialApp(
+        title: 'DuckHat',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: AppThemeController.mode.value,
+        debugShowCheckedModeBanner: false,
+        home: const Scaffold(body: Center(child: CircularProgressIndicator())),
+      );
+    }
+
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: AppThemeController.mode,
       builder: (context, themeMode, _) {
@@ -50,7 +82,9 @@ class _MyAppState extends State<MyApp> {
           themeMode: themeMode,
           debugShowCheckedModeBanner: false,
           scrollBehavior: const AppScrollBehavior(),
-          home: const LoginPage(),
+          home: _onboardingCompleted
+              ? const LoginPage()
+              : const OnboardingPage(),
           onGenerateRoute: (settings) {
             if (settings.name == '/schedule-date') {
               final args = settings.arguments as Map<String, dynamic>;
