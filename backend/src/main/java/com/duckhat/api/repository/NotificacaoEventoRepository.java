@@ -1,22 +1,33 @@
 package com.duckhat.api.repository;
 
 import com.duckhat.api.entity.NotificacaoEvento;
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.duckhat.api.entity.enums.CanalNotificacao;
 import com.duckhat.api.entity.enums.StatusNotificacao;
 import java.util.List;
+import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface NotificacaoEventoRepository extends JpaRepository<NotificacaoEvento, Long> {
 
   List<NotificacaoEvento> findByAgendamentoId(Long agendamentoId);
 
-  List<NotificacaoEvento> findByStatus(StatusNotificacao status);
+  List<NotificacaoEvento> findByUsuarioIdOrderByCriadoEmDescIdDesc(Long usuarioId);
 
-  List<NotificacaoEvento> findByCanal(CanalNotificacao canal);
+  Optional<NotificacaoEvento> findByIdAndUsuarioId(Long id, Long usuarioId);
 
-  List<NotificacaoEvento> findByAgendamentoClienteId(Long clienteId);
+  List<NotificacaoEvento> findByUsuarioIdAndAgendamentoIdOrderByCriadoEmDescIdDesc(
+      Long usuarioId,
+      Long agendamentoId);
 
-  List<NotificacaoEvento> findByAgendamentoClienteIdAndStatus(Long clienteId, StatusNotificacao status);
+  List<NotificacaoEvento> findByUsuarioIdAndStatusOrderByCriadoEmDescIdDesc(
+      Long usuarioId,
+      StatusNotificacao status);
 
-  List<NotificacaoEvento> findByAgendamentoClienteIdAndCanal(Long clienteId, CanalNotificacao canal);
+  List<NotificacaoEvento> findByUsuarioIdAndCanalOrderByCriadoEmDescIdDesc(
+      Long usuarioId,
+      CanalNotificacao canal);
+
+  List<NotificacaoEvento> findByUsuarioIdAndLidoEmIsNull(Long usuarioId);
+
+  long countByUsuarioIdAndLidoEmIsNull(Long usuarioId);
 }
