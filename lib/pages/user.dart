@@ -10,124 +10,159 @@ import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
 
-class PerfilPage extends StatelessWidget {
+class PerfilPage extends StatefulWidget {
   const PerfilPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final session = DuckHatApi.instance.currentSession;
-    if (session == null) {
-      return const _GuestProfilePage();
-    }
+  State<PerfilPage> createState() => _PerfilPageState();
+}
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Builder(
-        builder: (ctx) => CustomScrollView(
-          key: const PageStorageKey('profile-scroll'),
-          slivers: [
-            SliverToBoxAdapter(
-              child: _LoggedProfileHeader(
-                nome: session.nome,
-                email: session.email,
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                child: _ProfileQuickStats(nome: session.nome),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: _MenuCardGroup(
-                  label: 'MINHA CONTA',
-                  children: [
-                    _buildMenuItem(
-                      icon: Icons.person_outline,
-                      title: 'Editar Perfil',
-                      subtitle: 'Atualize seus dados e preferências',
-                      onTap: () => Navigator.push(
-                        ctx,
-                        AppRoute(builder: (_) => const EditarPerfilPage()),
-                      ),
-                    ),
-                    const _ProfileDivider(),
-                    _buildMenuItem(
-                      icon: Icons.notifications_none_outlined,
-                      title: 'Notificações',
-                      subtitle: 'Controle alertas e lembretes do app',
-                      onTap: () => Navigator.push(
-                        ctx,
-                        AppRoute(builder: (_) => const NotificacoesPage()),
-                      ),
-                    ),
-                    const _ProfileDivider(),
-                    _buildMenuItem(
-                      icon: Icons.lock_outline,
-                      title: 'Segurança e Privacidade',
-                      subtitle: 'Gerencie acesso, senha e proteção da conta',
-                      onTap: () => Navigator.push(
-                        ctx,
-                        AppRoute(builder: (_) => const SegurancaPage()),
-                      ),
-                    ),
-                  ],
+class _PerfilPageState extends State<PerfilPage> {
+  final DuckHatApi _api = DuckHatApi.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshProfile();
+  }
+
+  Future<void> _refreshProfile() async {
+    if (_api.currentSession == null) return;
+    try {
+      await _api.carregarMeuPerfil();
+    } catch (_) {
+      // A tela de edicao exibe o erro detalhado quando o usuario tenta salvar.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<LoginSession?>(
+      valueListenable: _api.sessionNotifier,
+      builder: (context, session, _) {
+        if (session == null) {
+          return const _GuestProfilePage();
+        }
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: Builder(
+            builder: (ctx) => CustomScrollView(
+              key: const PageStorageKey('profile-scroll'),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: _LoggedProfileHeader(
+                    nome: session.nome,
+                    email: session.email,
+                    tipo: session.tipo,
+                  ),
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                child: _MenuCardGroup(
-                  label: 'SUPORTE E AJUSTES',
-                  children: [
-                    _buildMenuItem(
-                      icon: Icons.settings_outlined,
-                      title: 'Configurações',
-                      subtitle: 'Tema, preferências e comportamento do app',
-                      onTap: () => Navigator.push(
-                        ctx,
-                        AppRoute(builder: (_) => const ConfiguracoesPage()),
-                      ),
-                    ),
-                    const _ProfileDivider(),
-                    _buildMenuItem(
-                      icon: Icons.help_outline,
-                      title: 'Ajuda',
-                      subtitle: 'Dúvidas frequentes e suporte',
-                      onTap: () => Navigator.push(
-                        ctx,
-                        AppRoute(builder: (_) => const AjudaPage()),
-                      ),
-                    ),
-                  ],
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    child: _ProfileQuickStats(nome: session.nome),
+                  ),
                 ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: _MenuCardGroup(
-                  label: 'SESSÃO',
-                  children: [
-                    _buildMenuItem(
-                      icon: Icons.logout,
-                      title: 'Sair',
-                      subtitle: 'Encerrar a sessão neste dispositivo',
-                      titleColor: AppColors.error,
-                      showArrow: false,
-                      onTap: () => _showLogoutDialog(ctx),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _MenuCardGroup(
+                      label: 'MINHA CONTA',
+                      children: [
+                        _buildMenuItem(
+                          icon: Icons.person_outline,
+                          title: 'Editar Perfil',
+                          subtitle: 'Atualize seus dados e preferências',
+                          onTap: () async {
+                            final updated = await Navigator.push<bool>(
+                              ctx,
+                              AppRoute(
+                                builder: (_) => const EditarPerfilPage(),
+                              ),
+                            );
+                            if (updated == true) {
+                              await _refreshProfile();
+                            }
+                          },
+                        ),
+                        const _ProfileDivider(),
+                        _buildMenuItem(
+                          icon: Icons.notifications_none_outlined,
+                          title: 'Notificações',
+                          subtitle: 'Controle alertas e lembretes do app',
+                          onTap: () => Navigator.push(
+                            ctx,
+                            AppRoute(builder: (_) => const NotificacoesPage()),
+                          ),
+                        ),
+                        const _ProfileDivider(),
+                        _buildMenuItem(
+                          icon: Icons.lock_outline,
+                          title: 'Segurança e Privacidade',
+                          subtitle:
+                              'Gerencie acesso, senha e proteção da conta',
+                          onTap: () => Navigator.push(
+                            ctx,
+                            AppRoute(builder: (_) => const SegurancaPage()),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _MenuCardGroup(
+                      label: 'SUPORTE E AJUSTES',
+                      children: [
+                        _buildMenuItem(
+                          icon: Icons.settings_outlined,
+                          title: 'Configurações',
+                          subtitle: 'Tema, preferências e comportamento do app',
+                          onTap: () => Navigator.push(
+                            ctx,
+                            AppRoute(builder: (_) => const ConfiguracoesPage()),
+                          ),
+                        ),
+                        const _ProfileDivider(),
+                        _buildMenuItem(
+                          icon: Icons.help_outline,
+                          title: 'Ajuda',
+                          subtitle: 'Dúvidas frequentes e suporte',
+                          onTap: () => Navigator.push(
+                            ctx,
+                            AppRoute(builder: (_) => const AjudaPage()),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                    child: _MenuCardGroup(
+                      label: 'SESSÃO',
+                      children: [
+                        _buildMenuItem(
+                          icon: Icons.logout,
+                          title: 'Sair',
+                          subtitle: 'Encerrar a sessão neste dispositivo',
+                          titleColor: AppColors.error,
+                          showArrow: false,
+                          onTap: () => _showLogoutDialog(ctx),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 92)),
+              ],
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 92)),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -227,11 +262,20 @@ class PerfilPage extends StatelessWidget {
 class _LoggedProfileHeader extends StatelessWidget {
   final String nome;
   final String email;
+  final String tipo;
 
-  const _LoggedProfileHeader({required this.nome, required this.email});
+  const _LoggedProfileHeader({
+    required this.nome,
+    required this.email,
+    required this.tipo,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final profileTitle = tipo == 'PRESTADOR'
+        ? 'Perfil do prestador'
+        : 'Perfil do cliente';
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       child: Container(
@@ -257,11 +301,11 @@ class _LoggedProfileHeader extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Sua conta',
                         style: TextStyle(
                           color: Colors.white70,
@@ -271,7 +315,7 @@ class _LoggedProfileHeader extends StatelessWidget {
                       ),
                       SizedBox(height: 6),
                       Text(
-                        'Perfil do cliente',
+                        profileTitle,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 28,
@@ -387,9 +431,7 @@ class _LoggedProfileHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.14),
-                ),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
               ),
               child: const Row(
                 children: [
@@ -428,9 +470,7 @@ class _GuestProfilePage extends StatelessWidget {
   }
 
   void _openSignup(BuildContext context) {
-    Navigator.of(context).push(
-      AppRoute(builder: (_) => const SignupPage()),
-    );
+    Navigator.of(context).push(AppRoute(builder: (_) => const SignupPage()));
   }
 
   @override
@@ -625,10 +665,7 @@ class _ProfileQuickStats extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Colors.white,
-            AppColors.accent.withValues(alpha: 0.1),
-          ],
+          colors: [Colors.white, AppColors.accent.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

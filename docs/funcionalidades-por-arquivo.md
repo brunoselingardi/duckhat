@@ -18,7 +18,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
   - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
-  - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
+  - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
 - `lib/core/api_config.dart`
   - centraliza `API_BASE_URL`, `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD`
 
@@ -110,6 +110,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/user.dart`
   - hub do perfil
   - quando nao ha sessao autenticada, mostra tela visitante com CTA de cadastro/login e imagem `assets/patrick.jpg`
+  - quando ha sessao, atualiza a sessao local com `GET /api/me` e mostra nome/e-mail reais
   - abre subpaginas de editar perfil, notificacoes, seguranca, configuracoes e ajuda
   - item `Minhas Localizações` exibe `SnackBar` de placeholder
   - `Sair` abre dialogo de confirmacao, limpa a sessao e retorna para `LoginPage`
@@ -192,7 +193,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 ### Perfil
 
 - `lib/components/user/editar_perfil.dart`
-  - formulario visual de perfil com botao voltar e botao `Salvar`
+  - formulario real de perfil com botao voltar e botao `Salvar`
+  - carrega dados do usuario autenticado via `GET /api/me`
+  - salva alteracoes no banco via `PUT /api/me`
+  - para cliente, edita nome, e-mail, telefone, data de nascimento e endereco
+  - para prestador, tambem edita CNPJ e responsavel
 - `lib/components/user/notificacoes.dart`
   - botao voltar
   - lista notificacoes reais do usuario autenticado
@@ -225,9 +230,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - busca, cards e tela de chat usam o mesmo padrao visual do app
 - `lib/shop_pages/shop_profile.dart`
   - hub de configuracoes do estabelecimento
+  - header usa nome/e-mail reais da sessao/API
   - acessa dados do estabelecimento, galeria, horarios, servicos, notificacoes, privacidade, ajuda e sobre
 - `lib/shop_pages/shop_establishment_data.dart`
-  - formulario mockado de dados do estabelecimento
+  - formulario real de dados do estabelecimento
+  - carrega dados via `GET /api/me`
+  - salva nome, telefone, e-mail, CNPJ, responsavel e endereco via `PUT /api/me`
 - `lib/shop_pages/shop_gallery.dart`
   - galeria mockada de fotos com estado local
 - `lib/shop_pages/shop_work_days.dart`
@@ -263,6 +271,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - modelo do feed de notificacoes in-app vindo do backend
 - `lib/models/notificacao_preferencias.dart`
   - modelo das preferencias persistidas de notificacao
+- `lib/models/usuario_perfil.dart`
+  - modelo de perfil autenticado usado por `GET/PUT /api/me`
 
 ## Backend principal
 
@@ -282,7 +292,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `backend/src/main/java/com/duckhat/api/controller/UsuarioController.java`
   - criacao e leitura de usuarios
 - `backend/src/main/java/com/duckhat/api/controller/MeController.java`
-  - retorno do usuario autenticado
+  - retorno completo do usuario autenticado
+  - atualizacao real do proprio perfil autenticado via `PUT /api/me`
 - `backend/src/main/java/com/duckhat/api/controller/AvaliacaoController.java`
   - endpoints de avaliacoes
 - `backend/src/main/java/com/duckhat/api/controller/NotificacaoEventoController.java`

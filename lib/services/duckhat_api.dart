@@ -12,6 +12,7 @@ import '../models/notificacao.dart';
 import '../models/notificacao_preferencias.dart';
 import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
+import '../models/usuario_perfil.dart';
 
 class DuckHatApi {
   DuckHatApi._();
@@ -25,6 +26,7 @@ class DuckHatApi {
 
   String? _token;
   LoginSession? _session;
+  final ValueNotifier<LoginSession?> sessionNotifier = ValueNotifier(null);
 
   LoginSession? get currentSession => _session;
 
@@ -36,13 +38,13 @@ class DuckHatApi {
   }) async {
     final session = await _requestSession(email: email, password: password);
     _token = session.token;
-    _session = session;
+    _setSession(session);
     return session;
   }
 
   void clearSession() {
     _token = null;
-    _session = null;
+    _setSession(null);
   }
 
   Future<void> ensureAuthenticated() async {
@@ -59,7 +61,58 @@ class DuckHatApi {
       password: ApiConfig.loginPassword,
     );
     _token = session.token;
-    _session = session;
+    _setSession(session);
+  }
+
+  Future<UsuarioPerfil> carregarMeuPerfil() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/me'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar o perfil.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar perfil.');
+    }
+
+    final perfil = UsuarioPerfil.fromJson(body);
+    _mergePerfilIntoSession(perfil);
+    return perfil;
+  }
+
+  Future<UsuarioPerfil> atualizarMeuPerfil(UsuarioPerfil perfil) async {
+    await ensureAuthenticated();
+
+    final response = await _client.put(
+      Uri.parse('${ApiConfig.baseUrl}/api/me'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(perfil.toUpdateJson()),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível salvar o perfil.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao salvar perfil.');
+    }
+
+    final atualizado = UsuarioPerfil.fromJson(body);
+    _mergePerfilIntoSession(atualizado);
+    return atualizado;
   }
 
   Future<UsuarioCadastroResponse> criarUsuario({
@@ -210,6 +263,11 @@ class DuckHatApi {
       id: _parseInt(body['id']),
       nome: body['nome'] as String? ?? '',
       email: body['email'] as String? ?? email.trim(),
+      telefone: body['telefone'] as String?,
+      cnpj: body['cnpj'] as String?,
+      responsavelNome: body['responsavelNome'] as String?,
+      dataNascimento: _parseDate(body['dataNascimento']),
+      endereco: body['endereco'] as String?,
       tipo: body['tipo'] as String? ?? '',
       token: token,
     );
@@ -755,6 +813,30 @@ class DuckHatApi {
     return NotificacaoPreferencias.fromJson(body);
   }
 
+  void _setSession(LoginSession? session) {
+    _session = session;
+    sessionNotifier.value = session;
+  }
+
+  void _mergePerfilIntoSession(UsuarioPerfil perfil) {
+    final session = _session;
+    if (session == null) return;
+
+    _setSession(
+      session.copyWith(
+        id: perfil.id,
+        nome: perfil.nome,
+        email: perfil.email,
+        telefone: perfil.telefone,
+        cnpj: perfil.cnpj,
+        responsavelNome: perfil.responsavelNome,
+        dataNascimento: perfil.dataNascimento,
+        endereco: perfil.endereco,
+        tipo: perfil.tipo,
+      ),
+    );
+  }
+
   Map<String, String> _authorizedHeaders() {
     return {
       'Content-Type': 'application/json',
@@ -783,6 +865,13 @@ class DuckHatApi {
   int _parseInt(dynamic value) =>
       value is int ? value : int.parse(value.toString());
 
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString();
+    if (text.isEmpty) return null;
+    return DateTime.tryParse(text);
+  }
+
   String? _nullableTrim(String? value) {
     if (value == null) return null;
     final trimmed = value.trim();
@@ -803,6 +892,11 @@ class LoginSession {
   final int id;
   final String nome;
   final String email;
+  final String? telefone;
+  final String? cnpj;
+  final String? responsavelNome;
+  final DateTime? dataNascimento;
+  final String? endereco;
   final String tipo;
   final String token;
 
@@ -810,9 +904,40 @@ class LoginSession {
     required this.id,
     required this.nome,
     required this.email,
+    required this.telefone,
+    required this.cnpj,
+    required this.responsavelNome,
+    required this.dataNascimento,
+    required this.endereco,
     required this.tipo,
     required this.token,
   });
+
+  LoginSession copyWith({
+    int? id,
+    String? nome,
+    String? email,
+    String? telefone,
+    String? cnpj,
+    String? responsavelNome,
+    DateTime? dataNascimento,
+    String? endereco,
+    String? tipo,
+    String? token,
+  }) {
+    return LoginSession(
+      id: id ?? this.id,
+      nome: nome ?? this.nome,
+      email: email ?? this.email,
+      telefone: telefone,
+      cnpj: cnpj,
+      responsavelNome: responsavelNome,
+      dataNascimento: dataNascimento,
+      endereco: endereco,
+      tipo: tipo ?? this.tipo,
+      token: token ?? this.token,
+    );
+  }
 }
 
 class UsuarioCadastroResponse {
