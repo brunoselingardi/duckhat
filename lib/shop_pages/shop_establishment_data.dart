@@ -1,5 +1,6 @@
 import 'package:duckhat/models/usuario_perfil.dart';
 import 'package:duckhat/services/duckhat_api.dart';
+import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:duckhat/theme.dart';
@@ -141,7 +142,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                         'Nome do Estabelecimento',
                         _nameController,
                         Icons.store,
-                        validator: _validateRequired,
+                        validator: ProfileValidators.requiredText,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -149,7 +150,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                         _phoneController,
                         Icons.phone,
                         keyboardType: TextInputType.phone,
-                        validator: _validatePhone,
+                        validator: ProfileValidators.phone,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -157,7 +158,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                         _emailController,
                         Icons.email,
                         keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
+                        validator: ProfileValidators.email,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -168,21 +169,21 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
-                        validator: _validateCnpj,
+                        validator: ProfileValidators.cnpj,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         'Responsavel',
                         _responsavelController,
                         Icons.person_pin,
-                        validator: _validateRequired,
+                        validator: ProfileValidators.requiredText,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         'Endereço',
                         _addressController,
                         Icons.location_on,
-                        validator: _validateOptionalLongText,
+                        validator: ProfileValidators.address,
                       ),
                     ],
                   ),
@@ -246,7 +247,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           nome: _nameController.text,
           email: _emailController.text,
           telefone: _phoneController.text,
-          cnpj: _digitsOnly(_cnpjController.text),
+          cnpj: ProfileValidators.digitsOnly(_cnpjController.text),
           responsavelNome: _responsavelController.text,
           dataNascimento: current.dataNascimento,
           endereco: _addressController.text,
@@ -270,41 +271,6 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
       }
     }
   }
-
-  String? _validateRequired(String? value) {
-    if ((value ?? '').trim().isEmpty) return 'Preencha este campo.';
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
-    if (email.isEmpty) return 'Informe o e-mail.';
-    if (!email.contains('@') || !email.contains('.')) {
-      return 'Digite um e-mail valido.';
-    }
-    return null;
-  }
-
-  String? _validatePhone(String? value) {
-    final digits = _digitsOnly(value ?? '');
-    if (digits.isEmpty) return null;
-    if (digits.length < 10) return 'Informe um telefone valido.';
-    return null;
-  }
-
-  String? _validateCnpj(String? value) {
-    final digits = _digitsOnly(value ?? '');
-    if (digits.length != 14) return 'Informe um CNPJ com 14 digitos.';
-    return null;
-  }
-
-  String? _validateOptionalLongText(String? value) {
-    final text = value?.trim() ?? '';
-    if (text.length > 255) return 'Use ate 255 caracteres.';
-    return null;
-  }
-
-  String _digitsOnly(String value) => value.replaceAll(RegExp(r'\D'), '');
 }
 
 class _ErrorBanner extends StatelessWidget {
