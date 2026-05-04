@@ -1,3 +1,5 @@
 {
-    "cmake.sourceDirectory": "/home/bruno/projects/duckhat/duckhat/linux"
+    "cmake.sourceDirectory": "/home/bruno/projects/duckhat/duckhat/linux",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
