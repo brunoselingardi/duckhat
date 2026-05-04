@@ -1,6 +1,7 @@
 package com.duckhat.api.service;
 
 import com.duckhat.api.dto.CreateUsuarioRequest;
+import com.duckhat.api.dto.UpdatePerfilRequest;
 import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
@@ -68,6 +69,44 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         return UsuarioResponse.fromEntity(usuario);
+    }
+
+    @Transactional
+    public UsuarioResponse atualizarPerfil(Usuario autenticado, UpdatePerfilRequest request) {
+        Usuario usuario = usuarioRepository.findById(autenticado.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        String emailNormalizado = normalizarEmail(request.email());
+        String telefoneNormalizado = normalizarTelefone(request.telefone());
+        String cnpjNormalizado = normalizarCnpj(request.cnpj());
+        String responsavelNome = normalizarTexto(request.responsavelNome());
+        String endereco = normalizarTexto(request.endereco());
+
+        if (!emailNormalizado.equals(usuario.getEmail()) && usuarioRepository.existsByEmail(emailNormalizado)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email já cadastrado");
+        }
+
+        if (usuario.getTipo() == TipoUsuario.PRESTADOR) {
+            validarCamposPrestador(usuario.getTipo(), cnpjNormalizado, responsavelNome);
+            if (cnpjNormalizado != null
+                    && !cnpjNormalizado.equals(usuario.getCnpj())
+                    && usuarioRepository.existsByCnpj(cnpjNormalizado)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "CNPJ já cadastrado");
+            }
+        } else {
+            cnpjNormalizado = null;
+            responsavelNome = null;
+        }
+
+        usuario.setNome(request.nome().trim());
+        usuario.setEmail(emailNormalizado);
+        usuario.setTelefone(telefoneNormalizado);
+        usuario.setCnpj(cnpjNormalizado);
+        usuario.setResponsavelNome(responsavelNome);
+        usuario.setDataNascimento(request.dataNascimento());
+        usuario.setEndereco(endereco);
+
+        return UsuarioResponse.fromEntity(usuarioRepository.save(usuario));
     }
 
     private void validarCamposPrestador(

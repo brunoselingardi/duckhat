@@ -46,6 +46,11 @@ public class AuthService {
         usuario.getId(),
         usuario.getNome(),
         usuario.getEmail(),
+        usuario.getTelefone(),
+        usuario.getCnpj(),
+        usuario.getResponsavelNome(),
+        usuario.getDataNascimento(),
+        usuario.getEndereco(),
         usuario.getTipo(),
         token,
         "Login realizado com sucesso");

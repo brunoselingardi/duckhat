@@ -20,7 +20,6 @@ class ServiceSections extends StatelessWidget {
   final ValueChanged<int> onGalleryChanged;
   final ValueChanged<int> onGallerySelected;
   final VoidCallback onOpenGallery;
-  final void Function(ServiceOffer offer)? onBookTap;
 
   const ServiceSections({
     super.key,
@@ -37,7 +36,6 @@ class ServiceSections extends StatelessWidget {
     required this.onGalleryChanged,
     required this.onGallerySelected,
     required this.onOpenGallery,
-    this.onBookTap,
   });
 
   @override
@@ -58,7 +56,6 @@ class ServiceSections extends StatelessWidget {
             isLoading: isServicesLoading,
             error: servicesError,
             onRetry: onServicesRetry,
-            onBookTap: onBookTap,
           ),
           const Divider(height: 1, color: Color(0xFFE8EDF6)),
           ServiceGallerySection(

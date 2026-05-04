@@ -7,7 +7,6 @@ class ServiceServicesSection extends StatelessWidget {
   final bool isLoading;
   final String? error;
   final VoidCallback? onRetry;
-  final void Function(ServiceOffer offer)? onBookTap;
 
   const ServiceServicesSection({
     super.key,
@@ -15,7 +14,6 @@ class ServiceServicesSection extends StatelessWidget {
     this.isLoading = false,
     this.error,
     this.onRetry,
-    this.onBookTap,
   });
 
   @override
@@ -54,12 +52,7 @@ class ServiceServicesSection extends StatelessWidget {
             Column(
               children: [
                 for (var index = 0; index < offers.length; index++) ...[
-                  _ServiceRow(
-                    offer: offers[index],
-                    onBookTap: onBookTap != null
-                        ? () => onBookTap!(offers[index])
-                        : null,
-                  ),
+                  _ServiceRow(offer: offers[index]),
                   if (index != offers.length - 1)
                     const Divider(height: 28, color: Color(0xFFE8EDF6)),
                 ],
@@ -101,77 +94,49 @@ class _ServiceError extends StatelessWidget {
 
 class _ServiceRow extends StatelessWidget {
   final ServiceOffer offer;
-  final VoidCallback? onBookTap;
 
-  const _ServiceRow({required this.offer, this.onBookTap});
+  const _ServiceRow({required this.offer});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  offer.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textBold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  offer.price,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textBold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  offer.description,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    height: 1.5,
-                    color: AppColors.textRegular,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  offer.duration,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.accent,
-                  ),
-                ),
-              ],
+          Text(
+            offer.title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBold,
             ),
           ),
-          const SizedBox(width: 16),
-          SizedBox(
-            width: 136,
-            child: FilledButton(
-              onPressed: onBookTap,
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFF3EFE8),
-                foregroundColor: AppColors.textBold,
-                padding: const EdgeInsets.symmetric(vertical: 18),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Agendar',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            offer.price,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            offer.description,
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: AppColors.textRegular,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            offer.duration,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppColors.accent,
             ),
           ),
         ],

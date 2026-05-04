@@ -34,8 +34,13 @@ class EmptyAppointmentState extends StatelessWidget {
 
 class AppointmentSection extends StatelessWidget {
   final List appointments;
+  final void Function(Map appointment)? onAppointmentTap;
 
-  const AppointmentSection({super.key, required this.appointments});
+  const AppointmentSection({
+    super.key,
+    required this.appointments,
+    this.onAppointmentTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +74,9 @@ class AppointmentSection extends StatelessWidget {
                       service: appointment["service"],
                       place: appointment["place"],
                       image: appointment["image"],
+                      onTap: onAppointmentTap == null
+                          ? null
+                          : () => onAppointmentTap!(appointment),
                     ),
                   ),
               ],

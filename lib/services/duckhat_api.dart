@@ -8,8 +8,11 @@ import '../models/agendamento.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
 import '../models/disponibilidade_catalogo.dart';
+import '../models/notificacao.dart';
+import '../models/notificacao_preferencias.dart';
 import '../models/ocupacao_prestador.dart';
 import '../models/servico_catalogo.dart';
+import '../models/usuario_perfil.dart';
 
 class DuckHatApi {
   DuckHatApi._();
@@ -23,24 +26,51 @@ class DuckHatApi {
 
   String? _token;
   LoginSession? _session;
+  bool _devMode = false;
+  final ValueNotifier<LoginSession?> sessionNotifier = ValueNotifier(null);
 
   LoginSession? get currentSession => _session;
 
   bool get isPrestador => _session?.tipo == 'PRESTADOR';
+
+  bool get isDevMode => _devMode;
 
   Future<LoginSession> login({
     required String email,
     required String password,
   }) async {
     final session = await _requestSession(email: email, password: password);
+    _devMode = false;
     _token = session.token;
-    _session = session;
+    _setSession(session);
     return session;
   }
 
+  void startDevSession({required String tipo}) {
+    _devMode = true;
+    _token = 'dev-token';
+    _setSession(
+      LoginSession(
+        id: tipo == 'PRESTADOR' ? 9002 : 9001,
+        nome: tipo == 'PRESTADOR' ? 'Estabelecimento Dev' : 'Cliente Dev',
+        email: tipo == 'PRESTADOR'
+            ? 'estabelecimento.dev@duckhat.local'
+            : 'cliente.dev@duckhat.local',
+        telefone: null,
+        cnpj: tipo == 'PRESTADOR' ? '00.000.000/0001-00' : null,
+        responsavelNome: tipo == 'PRESTADOR' ? 'Responsável Dev' : null,
+        dataNascimento: null,
+        endereco: null,
+        tipo: tipo,
+        token: _token!,
+      ),
+    );
+  }
+
   void clearSession() {
+    _devMode = false;
     _token = null;
-    _session = null;
+    _setSession(null);
   }
 
   Future<void> ensureAuthenticated() async {
@@ -57,7 +87,58 @@ class DuckHatApi {
       password: ApiConfig.loginPassword,
     );
     _token = session.token;
-    _session = session;
+    _setSession(session);
+  }
+
+  Future<UsuarioPerfil> carregarMeuPerfil() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/me'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar o perfil.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar perfil.');
+    }
+
+    final perfil = UsuarioPerfil.fromJson(body);
+    _mergePerfilIntoSession(perfil);
+    return perfil;
+  }
+
+  Future<UsuarioPerfil> atualizarMeuPerfil(UsuarioPerfil perfil) async {
+    await ensureAuthenticated();
+
+    final response = await _client.put(
+      Uri.parse('${ApiConfig.baseUrl}/api/me'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(perfil.toUpdateJson()),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível salvar o perfil.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao salvar perfil.');
+    }
+
+    final atualizado = UsuarioPerfil.fromJson(body);
+    _mergePerfilIntoSession(atualizado);
+    return atualizado;
   }
 
   Future<UsuarioCadastroResponse> criarUsuario({
@@ -208,12 +289,19 @@ class DuckHatApi {
       id: _parseInt(body['id']),
       nome: body['nome'] as String? ?? '',
       email: body['email'] as String? ?? email.trim(),
+      telefone: body['telefone'] as String?,
+      cnpj: body['cnpj'] as String?,
+      responsavelNome: body['responsavelNome'] as String?,
+      dataNascimento: _parseDate(body['dataNascimento']),
+      endereco: body['endereco'] as String?,
       tipo: body['tipo'] as String? ?? '',
       token: token,
     );
   }
 
   Future<List<Agendamento>> listarAgendamentos() async {
+    if (_devMode) return [];
+
     await ensureAuthenticated();
 
     final response = await _client.get(
@@ -242,6 +330,8 @@ class DuckHatApi {
   }
 
   Future<List<Agendamento>> listarAgendamentosPrestador() async {
+    if (_devMode) return [];
+
     await ensureAuthenticated();
 
     final response = await _client.get(
@@ -612,6 +702,171 @@ class DuckHatApi {
     return ChatMensagem.fromJson(body);
   }
 
+  Future<List<Notificacao>> listarNotificacoes() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as notificações.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar notificações.');
+    }
+
+    return body
+        .map((item) => Notificacao.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
+  Future<int> contarNotificacoesNaoLidas() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/nao-lidas/contagem'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar a contagem de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao contar notificações.');
+    }
+
+    return _parseInt(body['naoLidas'] ?? 0);
+  }
+
+  Future<Notificacao> marcarNotificacaoComoLida(int id) async {
+    await ensureAuthenticated();
+
+    final response = await _client.patch(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/$id/lida'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível atualizar a notificação.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao marcar notificação como lida.');
+    }
+
+    return Notificacao.fromJson(body);
+  }
+
+  Future<void> marcarTodasNotificacoesComoLidas() async {
+    await ensureAuthenticated();
+
+    final response = await _client.patch(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/lidas'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível marcar as notificações como lidas.',
+      );
+    }
+  }
+
+  Future<NotificacaoPreferencias> carregarPreferenciasNotificacoes() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar as preferências de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar preferências.');
+    }
+
+    return NotificacaoPreferencias.fromJson(body);
+  }
+
+  Future<NotificacaoPreferencias> atualizarPreferenciasNotificacoes(
+    NotificacaoPreferencias preferencias,
+  ) async {
+    await ensureAuthenticated();
+
+    final response = await _client.put(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(preferencias.toJson()),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível salvar as preferências de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao salvar preferências.');
+    }
+
+    return NotificacaoPreferencias.fromJson(body);
+  }
+
+  void _setSession(LoginSession? session) {
+    _session = session;
+    sessionNotifier.value = session;
+  }
+
+  void _mergePerfilIntoSession(UsuarioPerfil perfil) {
+    final session = _session;
+    if (session == null) return;
+
+    _setSession(
+      session.copyWith(
+        id: perfil.id,
+        nome: perfil.nome,
+        email: perfil.email,
+        telefone: perfil.telefone,
+        cnpj: perfil.cnpj,
+        responsavelNome: perfil.responsavelNome,
+        dataNascimento: perfil.dataNascimento,
+        endereco: perfil.endereco,
+        tipo: perfil.tipo,
+      ),
+    );
+  }
+
   Map<String, String> _authorizedHeaders() {
     return {
       'Content-Type': 'application/json',
@@ -640,6 +895,13 @@ class DuckHatApi {
   int _parseInt(dynamic value) =>
       value is int ? value : int.parse(value.toString());
 
+  DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString();
+    if (text.isEmpty) return null;
+    return DateTime.tryParse(text);
+  }
+
   String? _nullableTrim(String? value) {
     if (value == null) return null;
     final trimmed = value.trim();
@@ -660,6 +922,11 @@ class LoginSession {
   final int id;
   final String nome;
   final String email;
+  final String? telefone;
+  final String? cnpj;
+  final String? responsavelNome;
+  final DateTime? dataNascimento;
+  final String? endereco;
   final String tipo;
   final String token;
 
@@ -667,9 +934,40 @@ class LoginSession {
     required this.id,
     required this.nome,
     required this.email,
+    required this.telefone,
+    required this.cnpj,
+    required this.responsavelNome,
+    required this.dataNascimento,
+    required this.endereco,
     required this.tipo,
     required this.token,
   });
+
+  LoginSession copyWith({
+    int? id,
+    String? nome,
+    String? email,
+    String? telefone,
+    String? cnpj,
+    String? responsavelNome,
+    DateTime? dataNascimento,
+    String? endereco,
+    String? tipo,
+    String? token,
+  }) {
+    return LoginSession(
+      id: id ?? this.id,
+      nome: nome ?? this.nome,
+      email: email ?? this.email,
+      telefone: telefone,
+      cnpj: cnpj,
+      responsavelNome: responsavelNome,
+      dataNascimento: dataNascimento,
+      endereco: endereco,
+      tipo: tipo ?? this.tipo,
+      token: token ?? this.token,
+    );
+  }
 }
 
 class UsuarioCadastroResponse {
