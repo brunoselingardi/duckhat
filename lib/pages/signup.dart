@@ -691,7 +691,7 @@ class _SignupScaffold extends StatelessWidget {
         statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFFBF8),
+        backgroundColor: const Color(0xFFFBF5F7),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
