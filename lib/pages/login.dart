@@ -201,7 +201,77 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void _openCreateAccount() {
     Navigator.of(context)
         .push<SignupSuccessResult>(
-          MaterialPageRoute(builder: (_) => const SignupPage()),
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 620),
+            reverseTransitionDuration: const Duration(milliseconds: 260),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const SignupPage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  final curved = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  );
+                  final duckAnimation = CurvedAnimation(
+                    parent: animation,
+                    curve: const Interval(0, 0.72, curve: Curves.easeOutBack),
+                  );
+                  final duckFade = CurvedAnimation(
+                    parent: animation,
+                    curve: const Interval(0.38, 1, curve: Curves.easeOutCubic),
+                  );
+                  return Stack(
+                    children: [
+                      FadeTransition(
+                        opacity: curved,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.08),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: child,
+                        ),
+                      ),
+                      IgnorePointer(
+                        child: FadeTransition(
+                          opacity: ReverseAnimation(duckFade),
+                          child: Center(
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.64,
+                                end: 1.08,
+                              ).animate(duckAnimation),
+                              child: Container(
+                                width: 112,
+                                height: 112,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0x1A000000),
+                                      blurRadius: 20,
+                                      offset: Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/duck-dance.gif',
+                                    fit: BoxFit.cover,
+                                    gaplessPlayback: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+          ),
         )
         .then((result) {
           if (result == null || !mounted) return;
