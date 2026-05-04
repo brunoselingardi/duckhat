@@ -26,23 +26,49 @@ class DuckHatApi {
 
   String? _token;
   LoginSession? _session;
+  bool _devMode = false;
   final ValueNotifier<LoginSession?> sessionNotifier = ValueNotifier(null);
 
   LoginSession? get currentSession => _session;
 
   bool get isPrestador => _session?.tipo == 'PRESTADOR';
 
+  bool get isDevMode => _devMode;
+
   Future<LoginSession> login({
     required String email,
     required String password,
   }) async {
     final session = await _requestSession(email: email, password: password);
+    _devMode = false;
     _token = session.token;
     _setSession(session);
     return session;
   }
 
+  void startDevSession({required String tipo}) {
+    _devMode = true;
+    _token = 'dev-token';
+    _setSession(
+      LoginSession(
+        id: tipo == 'PRESTADOR' ? 9002 : 9001,
+        nome: tipo == 'PRESTADOR' ? 'Estabelecimento Dev' : 'Cliente Dev',
+        email: tipo == 'PRESTADOR'
+            ? 'estabelecimento.dev@duckhat.local'
+            : 'cliente.dev@duckhat.local',
+        telefone: null,
+        cnpj: tipo == 'PRESTADOR' ? '00.000.000/0001-00' : null,
+        responsavelNome: tipo == 'PRESTADOR' ? 'Responsável Dev' : null,
+        dataNascimento: null,
+        endereco: null,
+        tipo: tipo,
+        token: _token!,
+      ),
+    );
+  }
+
   void clearSession() {
+    _devMode = false;
     _token = null;
     _setSession(null);
   }
@@ -274,6 +300,8 @@ class DuckHatApi {
   }
 
   Future<List<Agendamento>> listarAgendamentos() async {
+    if (_devMode) return [];
+
     await ensureAuthenticated();
 
     final response = await _client.get(
@@ -302,6 +330,8 @@ class DuckHatApi {
   }
 
   Future<List<Agendamento>> listarAgendamentosPrestador() async {
+    if (_devMode) return [];
+
     await ensureAuthenticated();
 
     final response = await _client.get(
