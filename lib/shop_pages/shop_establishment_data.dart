@@ -746,3 +746,18 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 }
+
+String? _validateRequired(String? value) =>
+    ProfileValidators.requiredText(value);
+
+String? _validateEmail(String? value) => ProfileValidators.email(value);
+
+String? _validatePhone(String? value) => ProfileValidators.phone(value);
+
+String? _validateCnpj(String? value) => ProfileValidators.cnpj(value);
+
+String? _validateOptionalLongText(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.length > 255) return 'Use ate 255 caracteres.';
+  return null;
+}

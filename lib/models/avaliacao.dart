@@ -1,8 +1,9 @@
 class Avaliacao {
   final int id;
-  final int prestadorId;
+  final int agendamentoId;
+  final int? prestadorId;
   final int? servicoId;
-  final int clienteId;
+  final int? clienteId;
   final String? clienteNome;
   final int nota;
   final String? comentario;
@@ -10,8 +11,9 @@ class Avaliacao {
 
   Avaliacao({
     required this.id,
-    required this.prestadorId,
+    required this.agendamentoId,
     required this.servicoId,
+    required this.prestadorId,
     required this.clienteId,
     required this.clienteNome,
     required this.nota,
@@ -25,9 +27,12 @@ class Avaliacao {
 
     return Avaliacao(
       id: parseInt(json['id']),
-      prestadorId: parseInt(json['prestadorId']),
+      agendamentoId: parseInt(json['agendamentoId']),
+      prestadorId: json['prestadorId'] == null
+          ? null
+          : parseInt(json['prestadorId']),
       servicoId: json['servicoId'] == null ? null : parseInt(json['servicoId']),
-      clienteId: parseInt(json['clienteId']),
+      clienteId: json['clienteId'] == null ? null : parseInt(json['clienteId']),
       clienteNome: json['clienteNome'] as String?,
       nota: parseInt(json['nota']),
       comentario: json['comentario'] as String?,

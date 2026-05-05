@@ -785,6 +785,90 @@ class DuckHatApi {
 
     final body = _decodeBody(response);
 
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível marcar as notificações como lidas.',
+      );
+    }
+  }
+
+  Future<NotificacaoPreferencias> carregarPreferenciasNotificacoes() async {
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar as preferências de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar preferências.');
+    }
+
+    return NotificacaoPreferencias.fromJson(body);
+  }
+
+  Future<NotificacaoPreferencias> atualizarPreferenciasNotificacoes(
+    NotificacaoPreferencias preferencias,
+  ) async {
+    await ensureAuthenticated();
+
+    final response = await _client.put(
+      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(preferencias.toJson()),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível salvar as preferências de notificações.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao salvar preferências.');
+    }
+
+    return NotificacaoPreferencias.fromJson(body);
+  }
+
+  Future<Avaliacao> criarAvaliacao({
+    required int prestadorId,
+    required int nota,
+    required String comentario,
+    int? servicoId,
+    int? agendamentoId,
+  }) async {
+    await ensureAuthenticated();
+
+    if (agendamentoId == null) {
+      throw Exception('Para avaliar, abra um agendamento concluído.');
+    }
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({
+        'agendamentoId': agendamentoId,
+        'nota': nota,
+        'comentario': comentario.trim().isEmpty ? null : comentario.trim(),
+      }),
+    );
+
+    final body = _decodeBody(response);
+
     if (response.statusCode != 201) {
       throw Exception(
         _extractMessage(body) ?? 'Não foi possível enviar a avaliação.',
@@ -796,6 +880,30 @@ class DuckHatApi {
     }
 
     return Avaliacao.fromJson(body);
+  }
+
+  void _setSession(LoginSession? session) {
+    _session = session;
+    sessionNotifier.value = session;
+  }
+
+  void _mergePerfilIntoSession(UsuarioPerfil perfil) {
+    final session = _session;
+    if (session == null) return;
+
+    _setSession(
+      session.copyWith(
+        id: perfil.id,
+        nome: perfil.nome,
+        email: perfil.email,
+        telefone: perfil.telefone,
+        cnpj: perfil.cnpj,
+        responsavelNome: perfil.responsavelNome,
+        dataNascimento: perfil.dataNascimento,
+        endereco: perfil.endereco,
+        tipo: perfil.tipo,
+      ),
+    );
   }
 
   Map<String, String> _authorizedHeaders() {

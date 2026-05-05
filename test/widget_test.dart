@@ -6,6 +6,18 @@ import 'package:duckhat/shop_main.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+Future<void> _pumpApp(WidgetTester tester) async {
+  await tester.pumpWidget(const MyApp());
+  await tester.pump();
+}
+
+Future<void> _pumpLoginSuccessSequence(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 60));
+  await tester.pump(const Duration(milliseconds: 780));
+  await tester.pump(const Duration(milliseconds: 80));
+  await tester.pump();
+}
+
 void main() {
   tearDown(() {
     DuckHatApi.instance.clearSession();
@@ -17,7 +29,7 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MyApp());
+    await _pumpApp(tester);
     expect(find.byType(LaunchIntroPage), findsOneWidget);
     expect(
       find.byKey(const ValueKey('launchIntroDetectiveLogo')),
@@ -43,12 +55,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MyApp());
+    await _pumpApp(tester);
     await tester.pump(const Duration(milliseconds: 4300));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Entrar como cliente'));
     await tester.pump();
-    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+    await _pumpLoginSuccessSequence(tester);
 
     expect(DuckHatApi.instance.isDevMode, isTrue);
     expect(DuckHatApi.instance.currentSession?.tipo, 'CLIENTE');
@@ -63,12 +75,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const MyApp());
+    await _pumpApp(tester);
     await tester.pump(const Duration(milliseconds: 4300));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Entrar como estabelecimento'));
     await tester.pump();
-    await tester.pumpAndSettle(const Duration(milliseconds: 100));
+    await _pumpLoginSuccessSequence(tester);
 
     expect(DuckHatApi.instance.isDevMode, isTrue);
     expect(DuckHatApi.instance.currentSession?.tipo, 'PRESTADOR');
