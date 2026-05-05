@@ -1,4 +1,5 @@
 import 'package:duckhat/pages/app_shell.dart';
+import 'package:duckhat/pages/launch_intro.dart';
 import 'package:duckhat/main.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/shop_main.dart';
@@ -17,6 +18,17 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MyApp());
+    expect(find.byType(LaunchIntroPage), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('launchIntroDetectiveLogo')),
+      findsOneWidget,
+    );
+    expect(find.text('Carregando DuckHat'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 2400));
+    expect(find.byType(LaunchIntroPage), findsOneWidget);
+    expect(find.text('Quack,\nBem-vindo de volta!'), findsNothing);
+    await tester.pump(const Duration(milliseconds: 1900));
+    await tester.pumpAndSettle();
 
     expect(find.text('Quack,\nBem-vindo de volta!'), findsOneWidget);
     expect(find.text('Login'), findsOneWidget);
@@ -32,6 +44,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MyApp());
+    await tester.pump(const Duration(milliseconds: 4300));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Entrar como cliente'));
     await tester.pump();
     await tester.pumpAndSettle(const Duration(milliseconds: 100));
@@ -50,6 +64,8 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const MyApp());
+    await tester.pump(const Duration(milliseconds: 4300));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Entrar como estabelecimento'));
     await tester.pump();
     await tester.pumpAndSettle(const Duration(milliseconds: 100));
