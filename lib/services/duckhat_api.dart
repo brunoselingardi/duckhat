@@ -7,6 +7,7 @@ import '../core/api_config.dart';
 import '../models/agendamento.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
+import '../models/avaliacao.dart';
 import '../models/disponibilidade_catalogo.dart';
 import '../models/notificacao.dart';
 import '../models/notificacao_preferencias.dart';
@@ -784,87 +785,17 @@ class DuckHatApi {
 
     final body = _decodeBody(response);
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 201) {
       throw Exception(
-        _extractMessage(body) ??
-            'Não foi possível marcar as notificações como lidas.',
-      );
-    }
-  }
-
-  Future<NotificacaoPreferencias> carregarPreferenciasNotificacoes() async {
-    await ensureAuthenticated();
-
-    final response = await _client.get(
-      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
-      headers: _authorizedHeaders(),
-    );
-
-    final body = _decodeBody(response);
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        _extractMessage(body) ??
-            'Não foi possível carregar as preferências de notificações.',
+        _extractMessage(body) ?? 'Não foi possível enviar a avaliação.',
       );
     }
 
     if (body is! Map<String, dynamic>) {
-      throw Exception('Resposta inválida ao carregar preferências.');
+      throw Exception('Resposta inválida ao criar avaliação.');
     }
 
-    return NotificacaoPreferencias.fromJson(body);
-  }
-
-  Future<NotificacaoPreferencias> atualizarPreferenciasNotificacoes(
-    NotificacaoPreferencias preferencias,
-  ) async {
-    await ensureAuthenticated();
-
-    final response = await _client.put(
-      Uri.parse('${ApiConfig.baseUrl}/api/notificacoes/preferencias'),
-      headers: _authorizedHeaders(),
-      body: jsonEncode(preferencias.toJson()),
-    );
-
-    final body = _decodeBody(response);
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        _extractMessage(body) ??
-            'Não foi possível salvar as preferências de notificações.',
-      );
-    }
-
-    if (body is! Map<String, dynamic>) {
-      throw Exception('Resposta inválida ao salvar preferências.');
-    }
-
-    return NotificacaoPreferencias.fromJson(body);
-  }
-
-  void _setSession(LoginSession? session) {
-    _session = session;
-    sessionNotifier.value = session;
-  }
-
-  void _mergePerfilIntoSession(UsuarioPerfil perfil) {
-    final session = _session;
-    if (session == null) return;
-
-    _setSession(
-      session.copyWith(
-        id: perfil.id,
-        nome: perfil.nome,
-        email: perfil.email,
-        telefone: perfil.telefone,
-        cnpj: perfil.cnpj,
-        responsavelNome: perfil.responsavelNome,
-        dataNascimento: perfil.dataNascimento,
-        endereco: perfil.endereco,
-        tipo: perfil.tipo,
-      ),
-    );
+    return Avaliacao.fromJson(body);
   }
 
   Map<String, String> _authorizedHeaders() {

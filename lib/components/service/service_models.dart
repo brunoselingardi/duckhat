@@ -38,7 +38,7 @@ class ServiceOffer {
 
 class ServiceReview {
   final String name;
-  final String rating;
+  final int rating;
   final String comment;
   final String date;
 

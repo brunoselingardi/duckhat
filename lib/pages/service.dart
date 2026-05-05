@@ -6,6 +6,7 @@ import 'package:duckhat/components/service/service_sections.dart';
 import 'package:duckhat/components/service/service_tab_menu.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
+import 'package:duckhat/pages/avaliar.dart';
 import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
@@ -235,6 +236,18 @@ class _ServicePageState extends State<ServicePage> {
     }
   }
 
+  Future<void> _avaliar() async {
+    await Navigator.push(
+      context,
+      AppRoute(
+        builder: (context) => AvaliarPage(
+          prestadorId: servicePrestadorId,
+          prestadorNome: serviceEstablishmentName,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -250,7 +263,10 @@ class _ServicePageState extends State<ServicePage> {
               transform: Matrix4.translationValues(0, -28, 0),
               child: Column(
                 children: [
-                  ServiceInfoCard(onMessageTap: _openChat),
+                  ServiceInfoCard(
+                    onMessageTap: _openChat,
+                    onAvaliarTap: _avaliar,
+                  ),
                   const SizedBox(height: 8),
                   ServiceTabMenu(
                     tabs: serviceTabs,
