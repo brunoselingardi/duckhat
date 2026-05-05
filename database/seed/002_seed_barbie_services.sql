@@ -1,13 +1,23 @@
 USE duckhat;
 
-INSERT INTO usuarios (id, nome, email, senha_hash, telefone, tipo, criado_em) VALUES
-    (2, 'Barbie Dream Barber', 'prestador@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999999', 'PRESTADOR', '2026-04-04 12:43:06')
+INSERT INTO usuarios (id, nome, email, senha_hash, telefone, cnpj, responsavel_nome, tipo, criado_em) VALUES
+    (2, 'Barbie Dream Barber', 'prestador@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999999', '11222333000144', 'Barbie Responsavel', 'PRESTADOR', '2026-04-04 12:43:06')
 ON DUPLICATE KEY UPDATE
     nome = VALUES(nome),
     email = VALUES(email),
     senha_hash = VALUES(senha_hash),
     telefone = VALUES(telefone),
+    cnpj = VALUES(cnpj),
+    responsavel_nome = VALUES(responsavel_nome),
     tipo = VALUES(tipo);
+
+INSERT INTO estabelecimentos (usuario_id, nome, telefone, cnpj, responsavel_nome) VALUES
+    (2, 'Barbie Dream Barber', '19999999999', '11222333000144', 'Barbie Responsavel')
+ON DUPLICATE KEY UPDATE
+    nome = VALUES(nome),
+    telefone = VALUES(telefone),
+    cnpj = VALUES(cnpj),
+    responsavel_nome = VALUES(responsavel_nome);
 
 INSERT INTO servicos (id, prestador_id, nome, descricao, duracao_min, preco, ativo, criado_em) VALUES
     (1, 2, 'Glow Cut Barbie', 'Corte com acabamento leve, volume alinhado e finalizacao com assinatura fashionista.', 50, 55.00, TRUE, '2026-04-04 13:26:33'),

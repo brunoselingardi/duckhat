@@ -109,6 +109,68 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     super.dispose();
   }
 
+  String? _validateRequired(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Campo obrigatório';
+    }
+
+    return null;
+  }
+
+  String? _validateOptionalLongText(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    if (value.trim().length > 500) {
+      return 'O texto deve ter no máximo 500 caracteres';
+    }
+
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Telefone obrigatório';
+    }
+
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+
+    if (digits.length < 10 || digits.length > 11) {
+      return 'Telefone inválido';
+    }
+
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'E-mail obrigatório';
+    }
+
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'E-mail inválido';
+    }
+
+    return null;
+  }
+
+  String? _validateCnpj(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'CNPJ obrigatório';
+    }
+
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+
+    if (digits.length != 14) {
+      return 'CNPJ inválido';
+    }
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
