@@ -905,6 +905,7 @@ class _LoginButton extends StatelessWidget {
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               elevation: 0,
+              padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),

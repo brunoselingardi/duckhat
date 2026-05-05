@@ -1,9 +1,9 @@
-import 'dart:async';
+import 'dart:math' as math;
 
-import 'package:duckhat/core/app_route.dart';
-import 'package:duckhat/pages/app_shell.dart';
+import 'package:duckhat/pages/login.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class LaunchIntroPage extends StatefulWidget {
   const LaunchIntroPage({super.key});
@@ -15,248 +15,339 @@ class LaunchIntroPage extends StatefulWidget {
 class _LaunchIntroPageState extends State<LaunchIntroPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _cardSlide;
-  late final Animation<double> _cardFade;
-  late final Animation<double> _sheetSlide;
-  Timer? _timer;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _logoFade;
+  late final Animation<double> _wordFade;
+  late final Animation<Offset> _wordSlide;
+  late final Animation<double> _badgeFade;
+  late final Animation<double> _loadingFade;
+  late final Animation<double> _loadingProgress;
+  late final Animation<double> _exitWave;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1300),
+      duration: const Duration(milliseconds: 4300),
     );
-    _cardSlide = CurvedAnimation(
+    _logoScale = Tween<double>(begin: 0.72, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.22, curve: Curves.easeOutBack),
+      ),
+    );
+    _logoFade = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.05, 0.58, curve: Curves.easeOutCubic),
+      curve: const Interval(0, 0.14, curve: Curves.easeOut),
     );
-    _cardFade = CurvedAnimation(
+    _wordFade = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.42, curve: Curves.easeOut),
+      curve: const Interval(0.14, 0.32, curve: Curves.easeOut),
     );
-    _sheetSlide = CurvedAnimation(
+    _wordSlide = Tween<Offset>(begin: const Offset(0, 0.28), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.14, 0.34, curve: Curves.easeOutCubic),
+          ),
+        );
+    _badgeFade = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.35, 0.95, curve: Curves.easeOutCubic),
+      curve: const Interval(0.28, 0.48, curve: Curves.easeOut),
     );
+    _loadingFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.42, 0.62, curve: Curves.easeOut),
+    );
+    _loadingProgress = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.42, 0.82, curve: Curves.easeInOutCubic),
+      ),
+    );
+    _exitWave = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.82, 1, curve: Curves.easeInOutCubic),
+    );
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _openLogin();
+      }
+    });
     _controller.forward();
-    _timer = Timer(const Duration(milliseconds: 2300), _openHome);
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
-  void _openHome() {
+  void _openLogin() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      AppRoute(builder: (_) => const MainNavigator()),
+      PageRouteBuilder<void>(
+        pageBuilder: (_, animation, _) =>
+            FadeTransition(opacity: animation, child: const LoginPage()),
+        transitionDuration: const Duration(milliseconds: 420),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFAED0FB),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      const Color(0xFFAED0FB),
-                      AppColors.accent.withValues(alpha: 0.82),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            FadeTransition(
-              opacity: _cardFade,
-              child: SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 0.12),
-                  end: Offset.zero,
-                ).animate(_cardSlide),
-                child: const Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(28, 70, 28, 0),
-                    child: GuestProfilePreviewCard(),
-                  ),
-                ),
-              ),
-            ),
-            SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, 1),
-                end: Offset.zero,
-              ).animate(_sheetSlide),
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 34),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Customize seu perfil',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Text(
-                        'Desbloqueie funcionalidades e ajuste suas preferências para uma busca de serviços mais apropriada para você',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: AppColors.textBold.withValues(alpha: 0.9),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          height: 1.25,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Color(0xFF020916),
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
-    );
-  }
-}
-
-class GuestProfilePreviewCard extends StatelessWidget {
-  const GuestProfilePreviewCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 24,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 84,
-              height: 84,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.cardShadow,
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: Image.asset('assets/patrick.jpg', fit: BoxFit.cover),
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text(
-              "Dr. Patrick O'Quack",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textBold,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 18),
-            Container(
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
-              ),
-              child: const Column(
-                children: [
-                  _GuestProfileRow(icon: Icons.person),
-                  Divider(height: 1, color: Color(0xFFE8EDF6)),
-                  _GuestProfileRow(icon: Icons.shield_outlined),
-                  Divider(height: 1, color: Color(0xFFE8EDF6)),
-                  _GuestProfileRow(icon: Icons.medication_outlined),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GuestProfileRow extends StatelessWidget {
-  final IconData icon;
-
-  const _GuestProfileRow({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-      child: Row(
-        children: [
-          Icon(icon, color: AppColors.accent, size: 22),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: Scaffold(
+        backgroundColor: const Color(0xFF020916),
+        body: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return Stack(
               children: [
-                Container(
-                  width: 108,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: AppColors.textBold.withValues(alpha: 0.45),
-                    borderRadius: BorderRadius.circular(999),
+                const Positioned.fill(child: _IntroBackground()),
+                SafeArea(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FadeTransition(
+                            opacity: _logoFade,
+                            child: ScaleTransition(
+                              scale: _logoScale,
+                              child: const _LogoMark(),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          FadeTransition(
+                            opacity: _wordFade,
+                            child: SlideTransition(
+                              position: _wordSlide,
+                              child: const _Wordmark(),
+                            ),
+                          ),
+                          const SizedBox(height: 38),
+                          FadeTransition(
+                            opacity: _badgeFade,
+                            child: const _IntentBadge(),
+                          ),
+                          const SizedBox(height: 26),
+                          FadeTransition(
+                            opacity: _loadingFade,
+                            child: _LoadingStatus(
+                              progress: _loadingProgress.value,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 8),
-                Container(
-                  width: 54,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: AppColors.textMuted.withValues(alpha: 0.35),
-                    borderRadius: BorderRadius.circular(999),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _ExitWavePainter(progress: _exitWave.value),
+                    ),
                   ),
                 ),
               ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _IntroBackground extends StatelessWidget {
+  const _IntroBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment(-0.22, -0.46),
+          radius: 1.12,
+          colors: [Color(0xFF103E91), Color(0xFF06142D), Color(0xFF020916)],
+          stops: [0, 0.42, 1],
+        ),
+      ),
+    );
+  }
+}
+
+class _LogoMark extends StatelessWidget {
+  const _LogoMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 138,
+      height: 138,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(34),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF247CFF), Color(0xFF063486)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withValues(alpha: 0.4),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(27),
+        child: Image.asset(
+          'assets/duckhat_detective.png',
+          key: const ValueKey('launchIntroDetectiveLogo'),
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        ),
+      ),
+    );
+  }
+}
+
+class _Wordmark extends StatelessWidget {
+  const _Wordmark();
+
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: RichText(
+        text: const TextSpan(
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 46,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0,
+            color: Colors.white,
+          ),
+          children: [
+            TextSpan(text: 'Duck'),
+            TextSpan(
+              text: 'Hat',
+              style: TextStyle(color: Color(0xFF2C83FF)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IntentBadge extends StatelessWidget {
+  const _IntentBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.search_rounded,
+            color: Colors.white.withValues(alpha: 0.92),
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Descubra seu próximo serviço',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.92),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 12),
-          const Icon(Icons.arrow_forward_ios, color: AppColors.textMuted, size: 18),
         ],
       ),
     );
+  }
+}
+
+class _LoadingStatus extends StatelessWidget {
+  final double progress;
+
+  const _LoadingStatus({required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 214,
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: Colors.white.withValues(alpha: 0.12),
+              valueColor: const AlwaysStoppedAnimation(Color(0xFF2C83FF)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Carregando DuckHat',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExitWavePainter extends CustomPainter {
+  final double progress;
+
+  const _ExitWavePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+
+    final center = Offset(size.width / 2, size.height * 0.58);
+    final maxRadius = math.sqrt(
+      size.width * size.width + size.height * size.height,
+    );
+    final radius = maxRadius * progress;
+    final bluePaint = Paint()
+      ..color = AppColors.accent.withValues(alpha: 0.92 * progress);
+    final whitePaint = Paint()
+      ..color = Colors.white.withValues(
+        alpha: math.max(0, progress - 0.42) * 1.75,
+      );
+
+    canvas.drawCircle(center, radius, bluePaint);
+    canvas.drawCircle(center, math.max(0, radius - 92), whitePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ExitWavePainter oldDelegate) {
+    return oldDelegate.progress != progress;
   }
 }
