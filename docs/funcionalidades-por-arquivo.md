@@ -196,6 +196,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - salva alteracoes no banco via `PUT /api/me`
   - para cliente, edita nome, e-mail, telefone, data de nascimento e endereco
   - para prestador, tambem edita CNPJ e responsavel
+  - campo de data de nascimento usa mascara automatica `DD/MM/AAAA` e valida data plausivel antes de enviar
+  - valida e padroniza e-mail, telefone com DDD, data de nascimento plausivel e endereco com rua/numero antes de enviar
 - `lib/components/user/notificacoes.dart`
   - botao voltar
   - lista notificacoes reais do usuario autenticado
@@ -234,6 +236,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - formulario real de dados do estabelecimento
   - carrega dados via `GET /api/me`
   - salva nome, telefone, e-mail, CNPJ, responsavel e endereco via `PUT /api/me`
+  - usa a mesma validacao de perfil para e-mail, telefone com DDD e endereco com rua/numero
 - `lib/shop_pages/shop_gallery.dart`
   - galeria mockada de fotos com estado local
 - `lib/shop_pages/shop_work_days.dart`

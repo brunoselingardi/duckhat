@@ -94,6 +94,121 @@ class UsuarioServiceTest {
     assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
   }
 
+  @Test
+  void atualizarPerfilRecusaDataNascimentoMenorDeTrezeAnos() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+    when(usuarioRepository.save(usuario)).thenReturn(usuario);
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.atualizarPerfil(
+            usuario,
+            new UpdatePerfilRequest(
+                "Maria Duck",
+                "maria@duckhat.com",
+                "62999998888",
+                null,
+                null,
+                LocalDate.now().minusYears(12),
+                "Rua das Palmas, 42")));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("Informe uma data de nascimento válida para maiores de 13 anos", error.getReason());
+  }
+
+  @Test
+  void atualizarPerfilRecusaDataNascimentoAntigaDemais() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+    when(usuarioRepository.save(usuario)).thenReturn(usuario);
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.atualizarPerfil(
+            usuario,
+            new UpdatePerfilRequest(
+                "Maria Duck",
+                "maria@duckhat.com",
+                "62999998888",
+                null,
+                null,
+                LocalDate.now().minusYears(121),
+                "Rua das Palmas, 42")));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("Informe uma data de nascimento válida para maiores de 13 anos", error.getReason());
+  }
+
+  @Test
+  void atualizarPerfilRecusaTelefoneComQuantidadeInvalidaDeDigitos() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+    when(usuarioRepository.save(usuario)).thenReturn(usuario);
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.atualizarPerfil(
+            usuario,
+            new UpdatePerfilRequest(
+                "Maria Duck",
+                "maria@duckhat.com",
+                "12345",
+                null,
+                null,
+                LocalDate.of(1998, 5, 12),
+                "Rua das Palmas, 42")));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("Informe um telefone válido com DDD", error.getReason());
+  }
+
+  @Test
+  void atualizarPerfilRecusaEmailComDominioInvalido() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+    when(usuarioRepository.save(usuario)).thenReturn(usuario);
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.atualizarPerfil(
+            usuario,
+            new UpdatePerfilRequest(
+                "Maria Duck",
+                "maria@duckhat",
+                "62999998888",
+                null,
+                null,
+                LocalDate.of(1998, 5, 12),
+                "Rua das Palmas, 42")));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("Informe um e-mail válido", error.getReason());
+  }
+
+  @Test
+  void atualizarPerfilRecusaEnderecoSemNumero() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+    when(usuarioRepository.save(usuario)).thenReturn(usuario);
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.atualizarPerfil(
+            usuario,
+            new UpdatePerfilRequest(
+                "Maria Duck",
+                "maria@duckhat.com",
+                "62999998888",
+                null,
+                null,
+                LocalDate.of(1998, 5, 12),
+                "Rua das Palmas")));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("Informe um endereço válido com rua e número", error.getReason());
+  }
+
   private Usuario usuario(Long id, TipoUsuario tipo) {
     Usuario usuario = new Usuario();
     usuario.setId(id);
