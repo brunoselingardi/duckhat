@@ -1,6 +1,7 @@
 import 'package:duckhat/models/usuario_perfil.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -95,7 +96,9 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     _telefoneController.text = perfil.telefone ?? '';
     _cnpjController.text = perfil.cnpj ?? '';
     _responsavelController.text = perfil.responsavelNome ?? '';
-    _dataNascimentoController.text = _formatDate(perfil.dataNascimento);
+    _dataNascimentoController.text = ProfileValidators.formatDate(
+      perfil.dataNascimento,
+    );
     _enderecoController.text = perfil.endereco ?? '';
   }
 
@@ -118,9 +121,13 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           nome: _nomeController.text,
           email: _emailController.text,
           telefone: _telefoneController.text,
-          cnpj: _isPrestador ? _digitsOnly(_cnpjController.text) : null,
+          cnpj: _isPrestador
+              ? ProfileValidators.digitsOnly(_cnpjController.text)
+              : null,
           responsavelNome: _isPrestador ? _responsavelController.text : null,
-          dataNascimento: _parseDate(_dataNascimentoController.text),
+          dataNascimento: ProfileValidators.parseBirthDate(
+            _dataNascimentoController.text,
+          ),
           endereco: _enderecoController.text,
           tipo: current.tipo,
         ),
@@ -206,7 +213,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         'Nome',
                         _nomeController,
                         Icons.person_outline,
-                        validator: _validateRequired,
+                        validator: ProfileValidators.requiredText,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -214,7 +221,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         _emailController,
                         Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
+                        validator: ProfileValidators.email,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
@@ -222,7 +229,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         _telefoneController,
                         Icons.phone_outlined,
                         keyboardType: TextInputType.phone,
-                        validator: _validatePhone,
+                        validator: ProfileValidators.phone,
                       ),
                       if (_isPrestador) ...[
                         const SizedBox(height: 16),
@@ -234,14 +241,14 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                           ],
-                          validator: _validateCnpj,
+                          validator: ProfileValidators.cnpj,
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
                           'Responsavel',
                           _responsavelController,
                           Icons.person_pin_outlined,
-                          validator: _validateRequired,
+                          validator: ProfileValidators.requiredText,
                         ),
                       ],
                       const SizedBox(height: 16),
@@ -249,16 +256,17 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                         'Data de Nascimento',
                         _dataNascimentoController,
                         Icons.cake_outlined,
-                        hint: 'AAAA-MM-DD',
+                        hint: 'DD/MM/AAAA',
                         keyboardType: TextInputType.datetime,
-                        validator: _validateDate,
+                        inputFormatters: [_BirthDateInputFormatter()],
+                        validator: ProfileValidators.birthDate,
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
                         'Endereco',
                         _enderecoController,
                         Icons.location_on_outlined,
-                        validator: _validateOptionalLongText,
+                        validator: ProfileValidators.address,
                       ),
                     ],
                   ),
@@ -362,76 +370,20 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
       ),
     );
   }
+}
 
-  String? _validateRequired(String? value) {
-    if ((value ?? '').trim().isEmpty) return 'Preencha este campo.';
-    return null;
+class _BirthDateInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final formatted = ProfileValidators.formatBirthDateInput(newValue.text);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
   }
-
-  String? _validateEmail(String? value) {
-    final email = value?.trim() ?? '';
-    if (email.isEmpty) return 'Informe seu e-mail.';
-    if (!email.contains('@') || !email.contains('.')) {
-      return 'Digite um e-mail valido.';
-    }
-    return null;
-  }
-
-  String? _validatePhone(String? value) {
-    final digits = _digitsOnly(value ?? '');
-    if (digits.isEmpty) return null;
-    if (digits.length < 10) return 'Informe um telefone valido.';
-    return null;
-  }
-
-  String? _validateCnpj(String? value) {
-    final digits = _digitsOnly(value ?? '');
-    if (digits.length != 14) return 'Informe um CNPJ com 14 digitos.';
-    return null;
-  }
-
-  String? _validateDate(String? value) {
-    final text = value?.trim() ?? '';
-    if (text.isEmpty) return null;
-    if (_parseDate(text) == null) return 'Use uma data valida em AAAA-MM-DD.';
-    return null;
-  }
-
-  String? _validateOptionalLongText(String? value) {
-    final text = value?.trim() ?? '';
-    if (text.length > 255) return 'Use ate 255 caracteres.';
-    return null;
-  }
-
-  DateTime? _parseDate(String value) {
-    final trimmed = value.trim();
-    if (trimmed.isEmpty) return null;
-
-    final iso = DateTime.tryParse(trimmed);
-    if (iso != null) return DateTime(iso.year, iso.month, iso.day);
-
-    final match = RegExp(r'^(\d{2})/(\d{2})/(\d{4})$').firstMatch(trimmed);
-    if (match == null) return null;
-
-    final day = int.parse(match.group(1)!);
-    final month = int.parse(match.group(2)!);
-    final year = int.parse(match.group(3)!);
-    final parsed = DateTime(year, month, day);
-    if (parsed.day != day || parsed.month != month || parsed.year != year) {
-      return null;
-    }
-    return parsed;
-  }
-
-  String _formatDate(DateTime? value) {
-    if (value == null) return '';
-    final year = value.year.toString().padLeft(4, '0');
-    final month = value.month.toString().padLeft(2, '0');
-    final day = value.day.toString().padLeft(2, '0');
-    return '$year-$month-$day';
-  }
-
-  String _digitsOnly(String value) => value.replaceAll(RegExp(r'\D'), '');
 }
 
 class _ErrorBanner extends StatelessWidget {
