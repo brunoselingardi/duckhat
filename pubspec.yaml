@@ -22,9 +22,9 @@ version: 1.0.0+1
 flutter_launcher_icons:
   android: true
   ios: false
-  image_path: "assets/icon.png"
+  image_path: "assets/Ducklogo.jpg"
   adaptive_icon_background: "#d1d5db"
-  adaptive_icon_foreground: "assets/icon.png"
+  adaptive_icon_foreground: "assets/Ducklogo.jpg"
 
 environment:
   sdk: ^3.11.3

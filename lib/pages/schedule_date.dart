@@ -1,3 +1,4 @@
+import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/models/disponibilidade_catalogo.dart';
 import 'package:duckhat/models/ocupacao_prestador.dart';
 import 'package:duckhat/services/duckhat_api.dart';
@@ -5,19 +6,17 @@ import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
 
 class ScheduleDatePage extends StatefulWidget {
-  final int serviceId;
   final int prestadorId;
-  final String serviceName;
   final String establishmentName;
-  final int durationMin;
+  final List<ServiceOffer> serviceOffers;
+  final int? initialServiceId;
 
   const ScheduleDatePage({
     super.key,
-    required this.serviceId,
     required this.prestadorId,
-    required this.serviceName,
     required this.establishmentName,
-    required this.durationMin,
+    required this.serviceOffers,
+    this.initialServiceId,
   });
 
   @override
@@ -28,6 +27,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   late DateTime _currentMonth;
   DateTime? _selectedDate;
   TimeSlot? _selectedTime;
+  ServiceOffer? _selectedOffer;
 
   bool _loadingSlots = true;
   bool _saving = false;
@@ -40,7 +40,19 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     super.initState();
     final now = DateTime.now();
     _currentMonth = DateTime(now.year, now.month);
+    _selectedOffer = _pickInitialOffer();
     _loadDisponibilidades();
+  }
+
+  ServiceOffer? _pickInitialOffer() {
+    if (widget.serviceOffers.isEmpty || widget.initialServiceId == null) {
+      return null;
+    }
+
+    for (final offer in widget.serviceOffers) {
+      if (offer.serviceId == widget.initialServiceId) return offer;
+    }
+    return null;
   }
 
   Future<void> _loadDisponibilidades() async {
@@ -89,6 +101,14 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     });
   }
 
+  void _selectOffer(ServiceOffer offer) {
+    setState(() {
+      _selectedOffer = offer;
+      _selectedDate = null;
+      _selectedTime = null;
+    });
+  }
+
   void _selectDate(DateTime date) {
     setState(() {
       _selectedDate = date;
@@ -103,7 +123,12 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   }
 
   Future<void> _confirmAppointment() async {
-    if (_selectedDate == null || _selectedTime == null || _saving) return;
+    if (_selectedOffer == null ||
+        _selectedDate == null ||
+        _selectedTime == null ||
+        _saving) {
+      return;
+    }
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -119,7 +144,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(widget.serviceName),
+            Text(_selectedOffer!.title),
             const SizedBox(height: 8),
             Text(
               '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year} às ${_selectedTime!.time}',
@@ -142,7 +167,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -156,12 +181,12 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     if (confirmed != true) return;
 
     final start = _selectedTime!.dateTimeFor(_selectedDate!);
-    final end = start.add(Duration(minutes: widget.durationMin));
+    final end = start.add(Duration(minutes: _selectedOffer!.durationMin));
 
     setState(() => _saving = true);
     try {
       await DuckHatApi.instance.criarAgendamento(
-        servicoId: widget.serviceId,
+        servicoId: _selectedOffer!.serviceId,
         inicioEm: start,
         fimEm: end,
         observacoes: 'Agendado pelo app DuckHat',
@@ -175,7 +200,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -202,16 +227,83 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
         ),
         centerTitle: true,
       ),
-      body: Column(
-        children: [
-          _buildServiceInfo(),
-          const SizedBox(height: 16),
-          _buildCalendar(),
-          const SizedBox(height: 16),
-          Expanded(child: _buildTimeSlots()),
-        ],
+      body: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Column(
+            children: [
+              _buildServicePicker(),
+              const SizedBox(height: 16),
+              _buildServiceInfo(),
+              const SizedBox(height: 16),
+              _buildCalendar(),
+              const SizedBox(height: 16),
+              _buildTimeSlots(),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: _buildConfirmButton(),
+    );
+  }
+
+  Widget _buildServicePicker() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Escolha o serviço',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textBold,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Selecione primeiro o serviço desejado para liberar os horários disponíveis.',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (widget.serviceOffers.isEmpty)
+            const Text(
+              'Nenhum serviço disponível para agendamento.',
+              style: TextStyle(color: AppColors.textRegular),
+            )
+          else
+            for (var index = 0; index < widget.serviceOffers.length; index++) ...[
+              _ServiceOptionTile(
+                offer: widget.serviceOffers[index],
+                selected:
+                    _selectedOffer?.serviceId ==
+                    widget.serviceOffers[index].serviceId,
+                onTap: _saving
+                    ? null
+                    : () => _selectOffer(widget.serviceOffers[index]),
+              ),
+              if (index != widget.serviceOffers.length - 1)
+                const Divider(height: 18, color: Color(0xFFE8EDF6)),
+            ],
+        ],
+      ),
     );
   }
 
@@ -220,7 +312,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
@@ -247,7 +339,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.serviceName,
+                  _selectedOffer?.title ?? 'Escolha um serviço',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppColors.textBold,
@@ -269,11 +361,44 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   }
 
   Widget _buildCalendar() {
+    if (_selectedOffer == null) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.cardShadow,
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.touch_app, color: AppColors.accent),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Escolha um serviço acima para continuar com a data e o horário.',
+                style: TextStyle(
+                  color: AppColors.textRegular,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -322,7 +447,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     const months = [
       'Janeiro',
       'Fevereiro',
-      'Março',
+      'Marco',
       'Abril',
       'Maio',
       'Junho',
@@ -376,13 +501,13 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     final today = DateTime.now();
     final todayMidnight = DateTime(today.year, today.month, today.day);
 
-    final List<Widget> dayWidgets = [];
+    final dayWidgets = <Widget>[];
 
-    for (int i = 0; i < startingWeekday; i++) {
+    for (var i = 0; i < startingWeekday; i++) {
       dayWidgets.add(const SizedBox(width: 36, height: 36));
     }
 
-    for (int day = 1; day <= daysInMonth; day++) {
+    for (var day = 1; day <= daysInMonth; day++) {
       final date = DateTime(_currentMonth.year, _currentMonth.month, day);
       final isSelected =
           _selectedDate != null &&
@@ -420,7 +545,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
                 day.toString(),
                 style: TextStyle(
                   color: isSelected
-                      ? Colors.white
+                      ? AppColors.primary
                       : (isPast || !hasAvailability
                             ? AppColors.textMutedLight
                             : AppColors.textBold),
@@ -441,43 +566,63 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
 
   Widget _buildTimeSlots() {
     if (_loadingSlots) {
-      return const Center(child: CircularProgressIndicator());
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_selectedOffer == null) {
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Row(
+          children: [
+            Icon(Icons.content_cut, size: 20, color: AppColors.textMuted),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Escolha um serviço para ver os horários.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+      );
     }
 
     if (_slotsError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _slotsError!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.redAccent),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _loadDisponibilidades,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Tentar novamente'),
-              ),
-            ],
-          ),
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _slotsError!,
+              style: const TextStyle(color: AppColors.error),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _loadDisponibilidades,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar novamente'),
+            ),
+          ],
         ),
       );
     }
 
     if (_selectedDate == null) {
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+        child: Row(
           children: [
-            Icon(Icons.calendar_today, size: 48, color: AppColors.textMuted),
-            SizedBox(height: 12),
-            Text(
-              'Selecione uma data',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 16),
+            Icon(Icons.calendar_today, size: 20, color: AppColors.textMuted),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Selecione uma data para ver os horários.',
+                style: TextStyle(color: AppColors.textMuted, fontSize: 14),
+              ),
             ),
           ],
         ),
@@ -486,10 +631,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
 
     final slots = _slotsForDate(_selectedDate!);
     if (slots.isEmpty) {
-      return const Center(
+      return const Padding(
+        padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
         child: Text(
           'Nenhum horário disponível',
-          style: TextStyle(color: AppColors.textMuted),
+          style: TextStyle(color: AppColors.textMuted, fontSize: 14),
         ),
       );
     }
@@ -497,6 +643,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
@@ -508,51 +655,51 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
             ),
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                childAspectRatio: 2,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: slots.length,
-              itemBuilder: (context, index) {
-                final slot = slots[index];
-                final isSelected = _selectedTime?.time == slot.time;
-                final isAvailable = slot.available;
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 2,
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: slots.length,
+            itemBuilder: (context, index) {
+              final slot = slots[index];
+              final isSelected = _selectedTime?.time == slot.time;
+              final isAvailable = slot.available;
 
-                return GestureDetector(
-                  onTap: isAvailable && !_saving
-                      ? () => _selectTime(slot)
-                      : null,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.accent
-                          : (isAvailable ? Colors.white : AppColors.inputFill),
-                      borderRadius: BorderRadius.circular(8),
-                      border: isAvailable && !isSelected
-                          ? Border.all(color: AppColors.border)
-                          : null,
-                    ),
-                    child: Center(
-                      child: Text(
-                        slot.time,
-                        style: TextStyle(
-                          color: isSelected
-                              ? Colors.white
-                              : (isAvailable
-                                    ? AppColors.textBold
-                                    : AppColors.textMuted),
-                          fontWeight: FontWeight.w500,
-                        ),
+              return GestureDetector(
+                onTap: isAvailable && !_saving
+                    ? () => _selectTime(slot)
+                    : null,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.accent
+                        : (isAvailable ? AppColors.primary : AppColors.inputFill),
+                    borderRadius: BorderRadius.circular(8),
+                    border: isAvailable && !isSelected
+                        ? Border.all(color: AppColors.border)
+                        : null,
+                  ),
+                  child: Center(
+                    child: Text(
+                      slot.time,
+                      style: TextStyle(
+                        color: isSelected
+                            ? AppColors.primary
+                            : (isAvailable
+                                  ? AppColors.textBold
+                                  : AppColors.textMuted),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -560,7 +707,8 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   }
 
   Widget _buildConfirmButton() {
-    final canConfirm = _selectedDate != null && _selectedTime != null;
+    final canConfirm =
+        _selectedOffer != null && _selectedDate != null && _selectedTime != null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -572,7 +720,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.accent,
             disabledBackgroundColor: AppColors.textMutedLight,
-            foregroundColor: Colors.white,
+            foregroundColor: AppColors.primary,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -583,13 +731,13 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.primary,
                   ),
                 )
               : Text(
                   canConfirm
                       ? 'Confirmar Agendamento'
-                      : 'Selecione data e horário',
+                      : 'Selecione serviço, data e horário',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -601,12 +749,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   }
 
   List<TimeSlot> _slotsForDate(DateTime date) {
-    final daySlots =
-        _disponibilidades
-            .where((item) => item.ativo && item.diaSemana == date.weekday)
-            .expand((item) => _slotsFromDisponibilidade(date, item))
-            .toList()
-          ..sort((a, b) => a.start.compareTo(b.start));
+    final daySlots = _disponibilidades
+        .where((item) => item.ativo && item.diaSemana == date.weekday)
+        .expand((item) => _slotsFromDisponibilidade(date, item))
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
 
     return daySlots;
   }
@@ -615,9 +762,12 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     DateTime date,
     DisponibilidadeCatalogo disponibilidade,
   ) {
+    final selectedOffer = _selectedOffer;
+    if (selectedOffer == null) return [];
+
     final start = _dateTimeWithTime(date, disponibilidade.horaInicio);
     final end = _dateTimeWithTime(date, disponibilidade.horaFim);
-    final lastStart = end.subtract(Duration(minutes: widget.durationMin));
+    final lastStart = end.subtract(Duration(minutes: selectedOffer.durationMin));
     final today = DateTime.now();
 
     if (lastStart.isBefore(start)) return [];
@@ -625,7 +775,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
     final slots = <TimeSlot>[];
     var cursor = start;
     while (!cursor.isAfter(lastStart)) {
-      final slotEnd = cursor.add(Duration(minutes: widget.durationMin));
+      final slotEnd = cursor.add(Duration(minutes: selectedOffer.durationMin));
       final hasConflict = _ocupacoes.any(
         (ocupacao) => ocupacao.overlaps(cursor, slotEnd),
       );
@@ -657,5 +807,85 @@ class TimeSlot {
 
   DateTime dateTimeFor(DateTime date) {
     return DateTime(date.year, date.month, date.day, start.hour, start.minute);
+  }
+}
+
+class _ServiceOptionTile extends StatelessWidget {
+  final ServiceOffer offer;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _ServiceOptionTile({
+    required this.offer,
+    required this.selected,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected
+          ? AppColors.accent.withValues(alpha: 0.08)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? AppColors.accent : AppColors.border,
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.content_cut,
+                  color: selected ? AppColors.accent : AppColors.textBold,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      offer.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textBold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${offer.duration} • ${offer.price}',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected ? AppColors.accent : AppColors.textMuted,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

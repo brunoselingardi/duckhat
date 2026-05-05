@@ -188,16 +188,14 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
-  Future<void> _bookOffer(ServiceOffer offer) async {
+  Future<void> _openBookingFlow() async {
     final created = await Navigator.pushNamed(
       context,
       '/schedule-date',
       arguments: {
-        'serviceId': offer.serviceId,
-        'prestadorId': offer.prestadorId,
-        'serviceName': offer.title,
+        'prestadorId': servicePrestadorId,
         'establishmentName': serviceEstablishmentName,
-        'durationMin': offer.durationMin,
+        'serviceOffers': _offers,
       },
     );
 
@@ -205,7 +203,7 @@ class _ServicePageState extends State<ServicePage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Agendamento de ${offer.title} criado com sucesso.'),
+        content: const Text('Agendamento criado com sucesso.'),
         backgroundColor: AppColors.accent,
       ),
     );
@@ -289,7 +287,6 @@ class _ServicePageState extends State<ServicePage> {
                     onGalleryChanged: _onGalleryPageChanged,
                     onGallerySelected: _selectGalleryImage,
                     onOpenGallery: _openGalleryFullscreen,
-                    onBookTap: _bookOffer,
                   ),
                 ],
               ),
@@ -298,9 +295,9 @@ class _ServicePageState extends State<ServicePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _offers.isEmpty ? null : () => _bookOffer(_offers.first),
+        onPressed: _offers.isEmpty ? null : _openBookingFlow,
         backgroundColor: AppColors.accent,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.primary,
         icon: const Icon(Icons.calendar_today),
         label: const Text('Agendar'),
       ),

@@ -1,9 +1,9 @@
+import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/core/app_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'pages/login.dart';
+import 'pages/launch_intro.dart';
 import 'pages/schedule_date.dart';
 import 'pages/onboarding.dart';
 
@@ -48,12 +48,13 @@ class _MyAppState extends State<MyApp> {
 
     for (final asset in const [
       'assets/ondas.jpg',
-      'assets/icon.jpg',
+      'assets/Ducklogo.jpg',
       'assets/niceduck.jpg',
       'assets/barbiesalon.jpg',
       'assets/jamessalon.jpg',
       'assets/mariano.jpg',
       'assets/salao.jpg',
+      'assets/duck-dance.gif',
     ]) {
       precacheImage(AssetImage(asset), context);
     }
@@ -90,11 +91,11 @@ class _MyAppState extends State<MyApp> {
               final args = settings.arguments as Map<String, dynamic>;
               return AppRoute(
                 builder: (context) => ScheduleDatePage(
-                  serviceId: args['serviceId'] as int,
                   prestadorId: args['prestadorId'] as int,
-                  serviceName: args['serviceName'] ?? '',
                   establishmentName: args['establishmentName'] ?? '',
-                  durationMin: args['durationMin'] as int,
+                  serviceOffers: (args['serviceOffers'] as List<dynamic>)
+                      .cast<ServiceOffer>(),
+                  initialServiceId: args['initialServiceId'] as int?,
                 ),
               );
             }

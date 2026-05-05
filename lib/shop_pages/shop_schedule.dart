@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopSchedulePage extends StatefulWidget {
   const ShopSchedulePage({super.key});
@@ -140,7 +141,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(22),
         boxShadow: const [
           BoxShadow(
@@ -233,14 +234,14 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
               ? AppColors.accent
               : hasItems
               ? AppColors.accent.withValues(alpha: 0.12)
-              : Colors.transparent,
+              : AppColors.primary.withValues(alpha: 0),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected
                 ? AppColors.accent
                 : isToday
                 ? AppColors.accentLight
-                : Colors.transparent,
+                : AppColors.primary.withValues(alpha: 0),
             width: 1.6,
           ),
         ),
@@ -252,7 +253,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
               style: TextStyle(
                 fontSize: 12,
                 color: selected
-                    ? Colors.white
+                    ? AppColors.primary
                     : isCurrentMonth
                     ? AppColors.textBold
                     : AppColors.textMuted,
@@ -266,8 +267,8 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
               height: 5,
               decoration: BoxDecoration(
                 color: hasItems
-                    ? (selected ? Colors.white : AppColors.accent)
-                    : Colors.transparent,
+                    ? (selected ? AppColors.primary : AppColors.accent)
+                    : AppColors.primary.withValues(alpha: 0),
                 shape: BoxShape.circle,
               ),
             ),
@@ -697,13 +698,7 @@ class _TimeSlotCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Row(
         children: [

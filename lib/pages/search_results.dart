@@ -1,4 +1,5 @@
 import 'package:duckhat/services/geo_search_service.dart';
+import 'package:duckhat/services/search_intent.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -6,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../core/app_route.dart';
+import '../services/external_contact_launcher.dart';
 import 'service.dart';
 
 class SearchResultsPage extends StatefulWidget {
@@ -30,6 +32,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   static const _fallbackPoint = LatLng(-16.6869, -49.2648);
 
   final _search = GeoSearchService.instance;
+  final _contactLauncher = ExternalContactLauncher.instance;
   final _mapController = MapController();
   final _distance = const Distance();
 
@@ -48,8 +51,11 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     super.initState();
     _queryController = TextEditingController(text: _displayQuery);
     _locationController = TextEditingController(text: _displayLocation);
-    _usingCurrentLocation = widget.useCurrentLocation || widget.location.isEmpty;
-    _runSearch();
+    _usingCurrentLocation =
+        widget.useCurrentLocation || widget.location.isEmpty;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _runSearch();
+    });
   }
 
   @override
@@ -100,6 +106,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       });
       _moveMap(origin.point, 13.8);
 
+      final intent = SearchIntent.fromQuery(_queryController.text);
       final places = await _search.searchText(
         center: origin.point,
         query: _queryController.text,
@@ -107,13 +114,32 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
 
       if (!mounted) return;
 
-      final items = places
-          .map((item) => _PlaceCardModel.fromGoogle(item, origin.point, _distance))
-          .toList()
+      final items = [
+        ...intent
+            .demoPlaces(
+              SearchPoint(
+                latitude: origin.point.latitude,
+                longitude: origin.point.longitude,
+              ),
+            )
+            .map(
+              (item) => _PlaceCardModel.fromDemo(item, origin.point, _distance),
+            ),
+        ...places.map(
+          (item) => _PlaceCardModel.fromGoogle(item, origin.point, _distance),
+        ),
+      ];
+
+      final uniqueItems = <String, _PlaceCardModel>{};
+      for (final item in items) {
+        uniqueItems.putIfAbsent(item.dedupeKey, () => item);
+      }
+
+      final sortedItems = uniqueItems.values.toList()
         ..sort((a, b) => a.distanceMeters.compareTo(b.distanceMeters));
 
       setState(() {
-        _results = items;
+        _results = sortedItems;
         _loading = false;
       });
     } catch (error) {
@@ -143,9 +169,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     }
 
     final position = await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-      ),
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
 
     return GeocodedLocation(
@@ -173,6 +197,20 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   void _openProvider(_PlaceCardModel result) {
     if (!result.hasInternalPage) return;
     Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+  }
+
+  Future<void> _openWhatsApp(_PlaceCardModel result) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await _contactLauncher.openWhatsApp(result.whatsappUrl);
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -206,10 +244,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                     loading: _loading,
                     message: _error ?? _locationMessage,
                   ),
-                  _ResultsSummary(
-                    count: _results.length,
-                    loading: _loading,
-                  ),
+                  _ResultsSummary(count: _results.length, loading: _loading),
                 ],
               ),
             ),
@@ -223,10 +258,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
             else if (_error != null)
               SliverFillRemaining(
                 hasScrollBody: false,
-                child: _SearchErrorState(
-                  message: _error!,
-                  onRetry: _runSearch,
-                ),
+                child: _SearchErrorState(message: _error!, onRetry: _runSearch),
               )
             else if (_results.isEmpty)
               const SliverFillRemaining(
@@ -246,6 +278,9 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
                       onOpenPage: result.hasInternalPage
                           ? () => _openProvider(result)
                           : null,
+                      onContact: result.hasInternalPage
+                          ? null
+                          : () => _openWhatsApp(result),
                     );
                   },
                 ),
@@ -279,73 +314,97 @@ class _ResultsSearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.cardBackground,
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back),
-            color: AppColors.textMuted,
-            tooltip: 'Voltar',
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                _CompactSearchField(
-                  controller: queryController,
-                  icon: Icons.search,
-                  hint: 'O que voce procura?',
-                  onSubmitted: onSubmit,
-                ),
-                const SizedBox(height: 8),
-                _CompactSearchField(
-                  controller: locationController,
-                  icon: Icons.location_on_outlined,
-                  hint: usingCurrentLocation
-                      ? 'Minha localizacao atual'
-                      : 'Digite endereco ou CEP',
-                  readOnly: usingCurrentLocation,
-                  onTap: usingCurrentLocation ? onUseManualLocation : null,
-                  onSubmitted: onSubmit,
-                ),
-                const SizedBox(height: 8),
-                Row(
+      color: AppColors.background,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.border.withValues(alpha: 0.42)),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14217CE5),
+              blurRadius: 18,
+              offset: Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 10, 10, 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              IconButton(
+                onPressed: onBack,
+                icon: const Icon(Icons.arrow_back_rounded),
+                color: AppColors.textBold,
+                tooltip: 'Voltar',
+              ),
+              Expanded(
+                child: Column(
                   children: [
-                    Expanded(
-                      child: _LocationChip(
-                        selected: usingCurrentLocation,
-                        icon: Icons.my_location,
-                        label: 'Atual',
-                        onTap: onUseCurrentLocation,
-                      ),
+                    _CompactSearchField(
+                      controller: queryController,
+                      icon: Icons.search_rounded,
+                      hint: 'O que você procura?',
+                      onSubmitted: onSubmit,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _LocationChip(
-                        selected: !usingCurrentLocation,
-                        icon: Icons.pin_drop_outlined,
-                        label: 'Endereco/CEP',
-                        onTap: onUseManualLocation,
-                      ),
+                    const SizedBox(height: 8),
+                    _CompactSearchField(
+                      controller: locationController,
+                      icon: Icons.location_on_outlined,
+                      hint: usingCurrentLocation
+                          ? 'Minha localização atual'
+                          : 'Digite endereço ou CEP',
+                      readOnly: usingCurrentLocation,
+                      onTap: usingCurrentLocation ? onUseManualLocation : null,
+                      onSubmitted: onSubmit,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _LocationChip(
+                            selected: usingCurrentLocation,
+                            icon: Icons.my_location_rounded,
+                            label: 'Atual',
+                            onTap: onUseCurrentLocation,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _LocationChip(
+                            selected: !usingCurrentLocation,
+                            icon: Icons.edit_location_alt_outlined,
+                            label: 'Endereço',
+                            onTap: onUseManualLocation,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: IconButton.filled(
+                  onPressed: onSubmit,
+                  icon: const Icon(Icons.search_rounded),
+                  tooltip: 'Pesquisar',
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          IconButton.filled(
-            onPressed: onSubmit,
-            icon: const Icon(Icons.search),
-            tooltip: 'Pesquisar',
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -385,20 +444,29 @@ class _CompactSearchField extends StatelessWidget {
         ),
         decoration: InputDecoration(
           hintText: hint,
-          prefixIcon: Icon(icon, color: AppColors.textMuted, size: 18),
+          hintStyle: const TextStyle(
+            color: AppColors.textMutedLight,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+          prefixIcon: Icon(icon, color: AppColors.accent, size: 18),
           filled: true,
-          fillColor: AppColors.inputFill,
+          fillColor: const Color(0xFFF8FAFF),
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.5),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: AppColors.border),
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide(
+              color: AppColors.border.withValues(alpha: 0.5),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(14),
             borderSide: const BorderSide(color: AppColors.accent, width: 1.4),
           ),
         ),
@@ -429,7 +497,9 @@ class _LocationChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.accent : AppColors.inputFill,
+          color: selected
+              ? AppColors.accent.withValues(alpha: 0.1)
+              : AppColors.inputFill,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: selected ? AppColors.accent : AppColors.border,
@@ -441,15 +511,19 @@ class _LocationChip extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: selected ? Colors.white : AppColors.accent,
+              color: selected ? AppColors.accent : AppColors.textRegular,
             ),
             const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? Colors.white : AppColors.textBold,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected ? AppColors.accent : AppColors.textBold,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
@@ -610,14 +684,13 @@ class _ResultsSummary extends StatelessWidget {
   final int count;
   final bool loading;
 
-  const _ResultsSummary({
-    required this.count,
-    required this.loading,
-  });
+  const _ResultsSummary({required this.count, required this.loading});
 
   @override
   Widget build(BuildContext context) {
-    final text = loading ? 'Pesquisando estabelecimentos...' : '$count resultados encontrados';
+    final text = loading
+        ? 'Pesquisando estabelecimentos...'
+        : '$count resultados encontrados';
     return Container(
       color: AppColors.background,
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 2),
@@ -643,151 +716,141 @@ class _ResultsSummary extends StatelessWidget {
 class _ResultCard extends StatelessWidget {
   final _PlaceCardModel result;
   final VoidCallback? onOpenPage;
+  final VoidCallback? onContact;
 
-  const _ResultCard({
-    required this.result,
-    this.onOpenPage,
-  });
+  const _ResultCard({required this.result, this.onOpenPage, this.onContact});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white,
-                  result.hasInternalPage
-                      ? AppColors.accent.withValues(alpha: 0.10)
-                      : AppColors.secondary.withValues(alpha: 0.12),
-                ],
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: result.hasInternalPage
-                        ? AppColors.accent.withValues(alpha: 0.14)
-                        : AppColors.secondary.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    result.hasInternalPage
-                        ? Icons.storefront
-                        : Icons.location_city_outlined,
-                    color: AppColors.textBold,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        result.name,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textBold,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        result.categoryLabel,
-                        style: const TextStyle(
-                          color: AppColors.textRegular,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
-                        children: [
-                          _Badge(text: result.distanceLabel, icon: Icons.near_me),
-                          _Badge(
-                            text: result.hasInternalPage
-                                ? 'Pagina no app'
-                                : 'Sem pagina no app',
-                            icon: result.hasInternalPage
-                                ? Icons.check_circle
-                                : Icons.info_outline,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+    final card = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white,
+                result.hasInternalPage
+                    ? AppColors.accent.withValues(alpha: 0.10)
+                    : AppColors.secondary.withValues(alpha: 0.12),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _DetailLine(
-                  icon: Icons.map_outlined,
-                  text: result.address,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: result.hasInternalPage
+                      ? AppColors.accent.withValues(alpha: 0.14)
+                      : AppColors.secondary.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                if (!result.hasInternalPage) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.inputFill,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      'Este estabelecimento foi encontrado na busca externa, mas ainda nao tem pagina cadastrada no app.',
-                      style: TextStyle(
+                child: Icon(
+                  result.hasInternalPage
+                      ? Icons.storefront
+                      : Icons.location_city_outlined,
+                  color: AppColors.textBold,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      result.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         color: AppColors.textBold,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      result.categoryLabel,
+                      style: const TextStyle(
+                        color: AppColors.textRegular,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                ],
-                const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (onOpenPage != null)
-                      FilledButton.icon(
-                        onPressed: onOpenPage,
-                        icon: const Icon(Icons.open_in_new, size: 18),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          foregroundColor: Colors.white,
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        _Badge(text: result.distanceLabel, icon: Icons.near_me),
+                        _Badge(
+                          text: result.hasInternalPage
+                              ? 'Pagina no app'
+                              : 'Contato externo',
+                          icon: result.hasInternalPage
+                              ? Icons.check_circle
+                              : Icons.chat_bubble_outline,
                         ),
-                        label: const Text('Abrir pagina no app'),
-                      ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _DetailLine(icon: Icons.map_outlined, text: result.address),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (onOpenPage != null)
+                    FilledButton.icon(
+                      onPressed: onOpenPage,
+                      icon: const Icon(Icons.storefront, size: 18),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                      ),
+                      label: const Text('Abrir estabelecimento'),
+                    )
+                  else
+                    FilledButton.icon(
+                      onPressed: onContact,
+                      icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                      ),
+                      label: const Text('Contato no WhatsApp'),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: onOpenPage == null
+          ? card
+          : InkWell(onTap: onOpenPage, child: card),
     );
   }
 }
@@ -830,10 +893,7 @@ class _DetailLine extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _DetailLine({
-    required this.icon,
-    required this.text,
-  });
+  const _DetailLine({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -861,10 +921,7 @@ class _SearchErrorState extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
 
-  const _SearchErrorState({
-    required this.message,
-    required this.onRetry,
-  });
+  const _SearchErrorState({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -874,7 +931,11 @@ class _SearchErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppColors.accent, size: 52),
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: AppColors.accent,
+              size: 52,
+            ),
             const SizedBox(height: 12),
             const Text(
               'Nao foi possivel concluir a busca',
@@ -953,6 +1014,9 @@ class _PlaceCardModel {
   final double distanceMeters;
   final String distanceLabel;
   final bool hasInternalPage;
+  final String phone;
+  final Uri whatsappUrl;
+  final String dedupeKey;
 
   const _PlaceCardModel({
     required this.name,
@@ -962,6 +1026,9 @@ class _PlaceCardModel {
     required this.distanceMeters,
     required this.distanceLabel,
     required this.hasInternalPage,
+    required this.phone,
+    required this.whatsappUrl,
+    required this.dedupeKey,
   });
 
   factory _PlaceCardModel.fromGoogle(
@@ -980,17 +1047,70 @@ class _PlaceCardModel {
       distanceMeters: meters,
       distanceLabel: _formatDistance(meters),
       hasInternalPage: hasInternalPage,
+      phone: item.phone ?? '5562999990100',
+      whatsappUrl: SearchContact.whatsappUri(
+        phone: item.phone ?? '5562999990100',
+        message:
+            'Ola, encontrei ${item.name.trim()} pelo DuckHat e gostaria de atendimento.',
+      ),
+      dedupeKey: _dedupeKey(item.name),
+    );
+  }
+
+  factory _PlaceCardModel.fromDemo(
+    SearchDemoPlace item,
+    LatLng origin,
+    Distance distance,
+  ) {
+    final location = LatLng(item.latitude, item.longitude);
+    final meters = distance.as(LengthUnit.Meter, origin, location);
+
+    return _PlaceCardModel(
+      name: item.name,
+      categoryLabel: item.categoryLabel,
+      address: item.address,
+      location: location,
+      distanceMeters: meters,
+      distanceLabel: _formatDistance(meters),
+      hasInternalPage: item.hasInternalPage,
+      phone: item.phone,
+      whatsappUrl: item.whatsappUrl,
+      dedupeKey: _dedupeKey(item.name),
     );
   }
 
   static bool _hasInternalPage(String name) {
-    final normalized = name
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
-        .trim();
+    final normalized = _dedupeKey(name);
     return normalized.contains('barbie dream barber') ||
         normalized.contains('barbie salon') ||
         normalized.contains('barbies salon');
+  }
+
+  static String _dedupeKey(String value) {
+    const replacements = {
+      'á': 'a',
+      'à': 'a',
+      'â': 'a',
+      'ã': 'a',
+      'é': 'e',
+      'ê': 'e',
+      'í': 'i',
+      'ó': 'o',
+      'ô': 'o',
+      'õ': 'o',
+      'ú': 'u',
+      'ü': 'u',
+      'ç': 'c',
+    };
+
+    var normalized = value.toLowerCase();
+    replacements.forEach((from, to) {
+      normalized = normalized.replaceAll(from, to);
+    });
+    return normalized
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
   }
 
   static String _formatDistance(double meters) {

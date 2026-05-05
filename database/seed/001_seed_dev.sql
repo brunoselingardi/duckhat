@@ -2,6 +2,7 @@ USE duckhat;
 
 SET FOREIGN_KEY_CHECKS = 0;
 TRUNCATE TABLE notificacao_eventos;
+TRUNCATE TABLE notificacao_preferencias;
 TRUNCATE TABLE avaliacoes;
 TRUNCATE TABLE agendamentos;
 TRUNCATE TABLE disponibilidades;
@@ -19,6 +20,17 @@ INSERT INTO usuarios (id, nome, email, senha_hash, telefone, tipo, criado_em) VA
     (7, 'Cliente Fluxo API', 'cliente.fluxo.1775477863@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999993', 'CLIENTE', '2026-04-06 12:17:44'),
     (8, 'Cliente Fluxo API', 'cliente.fluxo.1775477879@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999993', 'CLIENTE', '2026-04-06 12:17:59'),
     (9, 'Cliente API B', 'cliente.api.b@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999994', 'CLIENTE', '2026-04-06 12:48:29');
+
+INSERT INTO notificacao_preferencias (usuario_id, agendamentos, mensagens, promocoes, novidades, resumo_email) VALUES
+    (1, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (2, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (3, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (4, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (5, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (6, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (7, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (8, TRUE, TRUE, TRUE, FALSE, TRUE),
+    (9, TRUE, TRUE, TRUE, FALSE, TRUE);
 
 INSERT INTO servicos (id, prestador_id, nome, descricao, duracao_min, preco, ativo, criado_em) VALUES
     (1, 2, 'Glow Cut Barbie', 'Corte com acabamento leve, volume alinhado e finalizacao com assinatura fashionista.', 50, 55.00, TRUE, '2026-04-04 13:26:33'),
@@ -45,10 +57,24 @@ INSERT INTO avaliacoes (id, agendamento_id, nota, comentario, criado_em) VALUES
     (1, 2, 5, 'Atendimento excelente', '2026-04-05 00:52:25'),
     (2, 4, 5, 'Teste de avaliação após conclusão', '2026-04-06 12:42:02');
 
-INSERT INTO notificacao_eventos (id, agendamento_id, canal, agendado_para, enviado_em, status) VALUES
-    (1, 2, 'APP', '2026-04-06 09:30:00', '2026-04-06 09:30:05', 'ENVIADO'),
-    (2, 2, 'APP', '2026-04-06 10:30:00', '2026-04-06 10:30:08', 'ENVIADO'),
-    (3, 4, 'APP', '2026-04-13 09:30:00', NULL, 'PENDENTE');
+INSERT INTO notificacao_eventos (
+    id,
+    usuario_id,
+    agendamento_id,
+    chat_conversa_id,
+    tipo,
+    canal,
+    titulo,
+    mensagem,
+    agendado_para,
+    criado_em,
+    enviado_em,
+    lido_em,
+    status
+) VALUES
+    (1, 1, 2, NULL, 'AGENDAMENTO', 'APP', 'Agendamento confirmado', 'Seu horario com Barbie Dream Barber foi confirmado.', '2026-04-06 09:30:00', '2026-04-06 09:25:00', '2026-04-06 09:30:05', '2026-04-06 09:35:00', 'ENVIADO'),
+    (2, 1, 2, NULL, 'AGENDAMENTO', 'APP', 'Lembrete de horario', 'Seu atendimento comeca em breve.', '2026-04-06 10:30:00', '2026-04-06 10:20:00', '2026-04-06 10:30:08', NULL, 'ENVIADO'),
+    (3, 8, 4, NULL, 'AGENDAMENTO', 'APP', 'Lembrete de agendamento', 'Voce tem um agendamento em 13/04 as 09:30.', '2026-04-13 09:30:00', '2026-04-12 18:00:00', NULL, NULL, 'PENDENTE');
 
 ALTER TABLE usuarios AUTO_INCREMENT = 10;
 ALTER TABLE servicos AUTO_INCREMENT = 5;

@@ -26,7 +26,12 @@ database/
 │   ├── 000_create_database_and_user.sql
 │   └── 001_initial_schema.sql
 ├── migrations/
-│   └── V2__align_current_schema_with_backend.sql
+│   ├── V2__align_current_schema_with_backend.sql
+│   ├── V3__auth_login_area_integration.sql
+│   ├── V4__password_reset_attempt_limits.sql
+│   ├── V5__chat_conversations_and_messages.sql
+│   ├── V6__notification_feed_and_preferences.sql
+│   └── V7__user_profile_fields.sql
 ├── seed/
 │   └── 001_seed_dev.sql
 ├── compose.yaml
@@ -44,6 +49,21 @@ Schema inicial completo para ambientes novos.
 
 ### `migrations/V2__align_current_schema_with_backend.sql`
 Migration para quem já possui um banco antigo local e precisa alinhar a estrutura ao backend atual.
+
+### `migrations/V3__auth_login_area_integration.sql`
+Adiciona campos de prestador em `usuarios` e cria `recuperacao_senha_tokens`.
+
+### `migrations/V4__password_reset_attempt_limits.sql`
+Adiciona limite persistente de tentativas inválidas na recuperação de senha.
+
+### `migrations/V5__chat_conversations_and_messages.sql`
+Cria `chat_conversas`, `chat_mensagens` e índices do chat real.
+
+### `migrations/V6__notification_feed_and_preferences.sql`
+Evolui `notificacao_eventos` para feed por usuário, adiciona vínculo opcional com chat, leitura por usuário e cria `notificacao_preferencias`.
+
+### `migrations/V7__user_profile_fields.sql`
+Adiciona `data_nascimento` e `endereco` em `usuarios` para persistência real da tela de perfil.
 
 ### `seed/001_seed_dev.sql`
 Carga opcional de dados de desenvolvimento.
@@ -88,11 +108,11 @@ docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
 
 1. Garanta que fez backup ou que o ambiente é de desenvolvimento.
 
-2. Aplique a migration:
+2. Aplique as migrations pendentes em ordem. Exemplo para a atualização do perfil:
 
 ```bash
 docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
-  mysql -u duckhat_user -pduckhat_pass duckhat < database/migrations/V2__align_current_schema_with_backend.sql
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/migrations/V7__user_profile_fields.sql
 ```
 
 3. Atualize a conexão no DBeaver e valide tabelas, índices e colunas.
@@ -107,11 +127,17 @@ Confira se existem estas tabelas:
 - `disponibilidades`
 - `agendamentos`
 - `avaliacoes`
+- `chat_conversas`
+- `chat_mensagens`
 - `notificacao_eventos`
+- `notificacao_preferencias`
 
 Confira também estes pontos:
 - `usuarios.email` único
+- `usuarios.data_nascimento` e `usuarios.endereco` existem para o perfil real
 - `servicos.prestador_id` apontando para `usuarios.id`
 - `agendamentos` com colunas `cliente_id`, `prestador_id`, `servico_id`, `inicio_at`, `fim_at`, `status`
 - `avaliacoes.agendamento_id` único
+- `notificacao_eventos.usuario_id` obrigatório e apontando para `usuarios.id`
 - `notificacao_eventos.status` com valores `PENDENTE`, `ENVIADO`, `FALHA`
+- `notificacao_preferencias.usuario_id` como chave primária

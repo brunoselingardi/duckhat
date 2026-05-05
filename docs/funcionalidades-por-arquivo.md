@@ -13,8 +13,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/app_shell.dart`
   - define `MainNavigator`
   - controla as 4 abas principais: `Home`, `Agenda`, `Chat`, `Perfil`
+- `lib/shop_main.dart`
+  - define `ShopMainNavigator` da area mockada de estabelecimento
+  - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
+  - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
-  - encapsula login, autenticacao automatica por `dart-define`, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento e chat
+  - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
 - `lib/core/api_config.dart`
   - centraliza `API_BASE_URL`, `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD`
 
@@ -22,10 +26,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/pages/login.dart`
   - login inicial do app
+  - layout minimalista inspirado em referencia mobile, com e-mail e senha na mesma tela
   - botoes de tipo de conta: `Cliente` e `Empresa`
-  - campos: `E-mail` e `Senha`
+  - campos principais: `E-mail` e `Password`
+  - no login bem-sucedido, dispara uma sequencia animada: expansao azul a partir do botao, tela azul com `hello` e circulo branco central antes de abrir o app
   - botao no campo senha alterna entre `Mostrar senha` e `Ocultar senha`
-  - CTA principal: `Entrar como cliente` ou `Entrar como empresa`
   - link `Esqueci minha senha` abre `ForgotPasswordPage`
   - link `Criar conta` abre `SignupPage`
   - autentica sempre na API real
@@ -60,8 +65,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao voltar no hero retorna
   - tabs horizontais navegam entre secoes
   - toque na galeria abre fullscreen
-  - cada servico possui botao `Agendar`
-  - CTA global flutuante agenda o primeiro servico disponivel
+  - a lista de servicos e apenas informativa, sem botao `Agendar` por item
+  - CTA global flutuante abre a tela de agendamento com os servicos do estabelecimento
   - CTA `Enviar Mensagem` do info card cria/abre conversa real com o prestador
   - existem CTAs visuais locais sem acao real em componentes como experiencia
 - `lib/pages/schedule.dart`
@@ -75,10 +80,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/schedule_date.dart`
   - etapa final do fluxo de agendamento vindo da pagina de servico
   - carrega disponibilidade e ocupacao do prestador
-  - permite escolher data e horario
+  - exige escolher primeiro um servico do estabelecimento e so depois libera data e horario
   - botao voltar retorna
   - botoes de mes anterior e proximo navegam no calendario
   - CTA de erro `Tentar novamente` recarrega disponibilidades
+  - toque em servico seleciona duracao/base do agendamento
   - toque em dia/horario seleciona slot
   - CTA de confirmacao abre dialogo e cria agendamento real via API
 - `lib/pages/appointment_detail.dart`
@@ -101,9 +107,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - input envia nova mensagem real para o backend
 - `lib/pages/user.dart`
   - hub do perfil
+  - quando nao ha sessao autenticada, mostra tela visitante com CTA de cadastro/login e imagem `assets/patrick.jpg`
+  - quando ha sessao, atualiza a sessao local com `GET /api/me` e mostra nome/e-mail reais
   - abre subpaginas de editar perfil, notificacoes, seguranca, configuracoes e ajuda
   - item `Minhas Localizações` exibe `SnackBar` de placeholder
-  - `Sair` abre dialogo de confirmacao
+  - `Sair` abre dialogo de confirmacao, limpa a sessao e retorna para `LoginPage`
 - `lib/pages/forgot_password.dart`
   - fluxo real de recuperacao em duas etapas
   - botao voltar retorna
@@ -126,6 +134,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/components/bottomnav.dart`
   - bottom navigation com 4 abas e icones SVG
+- `lib/shop_components/shop_bottomnav.dart`
+  - bottom navigation da area `shop_*`
+  - usa tokens de `AppColors` para fundo, borda, sombra, estados e labels
+- `lib/shop_components/shop_ui.dart`
+  - concentra helpers visuais reutilizados da area `shop_*`
+  - padroniza app bar secundaria, sombra de card e `InputDecoration`
 
 ### Home
 
@@ -177,10 +191,19 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 ### Perfil
 
 - `lib/components/user/editar_perfil.dart`
-  - formulario visual de perfil com botao voltar e botao `Salvar`
+  - formulario real de perfil com botao voltar e botao `Salvar`
+  - carrega dados do usuario autenticado via `GET /api/me`
+  - salva alteracoes no banco via `PUT /api/me`
+  - para cliente, edita nome, e-mail, telefone, data de nascimento e endereco
+  - para prestador, tambem edita CNPJ e responsavel
+  - campo de data de nascimento usa mascara automatica `DD/MM/AAAA` e valida data plausivel antes de enviar
+  - valida e padroniza e-mail, telefone com DDD, data de nascimento plausivel e endereco com rua/numero antes de enviar
 - `lib/components/user/notificacoes.dart`
   - botao voltar
-  - toggles locais de notificacoes
+  - lista notificacoes reais do usuario autenticado
+  - permite marcar uma notificacao como lida e marcar todas como lidas
+  - carrega e salva preferencias reais de agendamentos, mensagens, promocoes, novidades e resumo por e-mail
+  - possui estados de loading, erro, vazio e refresh integrado com API
 - `lib/components/user/seguranca.dart`
   - botao voltar
   - itens de senha, biometria, 2FA, privacidade e exclusao
@@ -193,6 +216,43 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao voltar
   - FAQ com `ExpansionTile` e canais de contato
   - contatos exibem `SnackBar` placeholder
+
+### Area shop mockada
+
+- `lib/shop_pages/shop_home.dart`
+  - dashboard mockado do estabelecimento
+  - cards e chips foram alinhados aos tokens de `AppColors`
+- `lib/shop_pages/shop_schedule.dart`
+  - agenda mockada do estabelecimento com calendario e lista do dia
+  - cards, estados selecionados e superficies usam o tema central
+- `lib/shop_pages/shop_clients.dart`
+  - lista de clientes e conversa mockada
+  - busca, cards e tela de chat usam o mesmo padrao visual do app
+- `lib/shop_pages/shop_profile.dart`
+  - hub de configuracoes do estabelecimento
+  - header usa nome/e-mail reais da sessao/API
+  - acessa dados do estabelecimento, galeria, horarios, servicos, notificacoes, privacidade, ajuda e sobre
+- `lib/shop_pages/shop_establishment_data.dart`
+  - formulario real de dados do estabelecimento
+  - carrega dados via `GET /api/me`
+  - salva nome, telefone, e-mail, CNPJ, responsavel e endereco via `PUT /api/me`
+  - usa a mesma validacao de perfil para e-mail, telefone com DDD e endereco com rua/numero
+- `lib/shop_pages/shop_gallery.dart`
+  - galeria mockada de fotos com estado local
+- `lib/shop_pages/shop_work_days.dart`
+  - configuracao mockada de dias de funcionamento
+- `lib/shop_pages/shop_work_hours.dart`
+  - configuracao mockada de horarios de atendimento
+- `lib/shop_pages/shop_service_duration.dart`
+  - configuracao mockada de servicos, duracao e preco
+- `lib/shop_pages/shop_notifications.dart`
+  - preferencias mockadas de notificacao
+- `lib/shop_pages/shop_privacy.dart`
+  - preferencias mockadas de privacidade e seguranca
+- `lib/shop_pages/shop_help.dart`
+  - ajuda mockada do estabelecimento
+- `lib/shop_pages/shop_about.dart`
+  - informacoes mockadas sobre a experiencia de estabelecimento
 
 ## Modelos
 
@@ -208,6 +268,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - modelo de conversa cliente/prestador vinda do backend
 - `lib/models/chat_mensagem.dart`
   - modelo de mensagem de chat vinda do backend
+- `lib/models/notificacao.dart`
+  - modelo do feed de notificacoes in-app vindo do backend
+- `lib/models/notificacao_preferencias.dart`
+  - modelo das preferencias persistidas de notificacao
+- `lib/models/usuario_perfil.dart`
+  - modelo de perfil autenticado usado por `GET/PUT /api/me`
 
 ## Backend principal
 
@@ -227,11 +293,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `backend/src/main/java/com/duckhat/api/controller/UsuarioController.java`
   - criacao e leitura de usuarios
 - `backend/src/main/java/com/duckhat/api/controller/MeController.java`
-  - retorno do usuario autenticado
+  - retorno completo do usuario autenticado
+  - atualizacao real do proprio perfil autenticado via `PUT /api/me`
 - `backend/src/main/java/com/duckhat/api/controller/AvaliacaoController.java`
   - endpoints de avaliacoes
 - `backend/src/main/java/com/duckhat/api/controller/NotificacaoEventoController.java`
-  - endpoints de notificacoes
+  - endpoints de notificacoes, contagem de nao lidas, leitura individual/em massa e preferencias
 - `backend/src/main/java/com/duckhat/api/controller/ChatController.java`
   - endpoints de conversas e mensagens do chat autenticado
 - `backend/src/main/java/com/duckhat/api/service/AgendamentoService.java`
@@ -246,7 +313,13 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cria/busca conversa entre cliente e prestador
   - lista conversas e mensagens autorizadas por participante
   - envia mensagens e atualiza `ultima_mensagem_em`
+  - gera notificacao real para o outro participante quando uma mensagem e enviada
   - limpa mensagens expiradas diariamente preservando a ultima mensagem por conversa e aplicando graca de 5 dias pela ultima atividade
+- `backend/src/main/java/com/duckhat/api/service/NotificacaoEventoService.java`
+  - mantem o feed de notificacoes por usuario
+  - aplica owner-check por usuario autenticado
+  - gerencia preferencias persistidas de notificacoes
+  - gera notificacoes automaticas de agenda e chat respeitando preferencias
 - `backend/src/main/resources/application.properties`
   - configuracao com fallback local e override por variaveis de ambiente
 
@@ -266,6 +339,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - adiciona limite persistente de tentativas na recuperacao de senha
 - `database/migrations/V5__chat_conversations_and_messages.sql`
   - cria `chat_conversas`, `chat_mensagens` e indices do chat real
+- `database/migrations/V6__notification_feed_and_preferences.sql`
+  - evolui `notificacao_eventos` para feed por usuario e cria `notificacao_preferencias`
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`
@@ -284,11 +359,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cancelamento de agendamento
   - disponibilidade e ocupacao do prestador
   - chat entre cliente e prestador
+  - notificacoes in-app e preferencias persistidas
 - Mockados ou locais
   - busca textual e filtros da busca
   - resultados e mapa da busca
   - reviews e FAQ do estabelecimento
-  - subpaginas de perfil
+  - parte das subpaginas de perfil
   - minhas localizacoes no perfil
   - banner promocional e boa parte da home
 

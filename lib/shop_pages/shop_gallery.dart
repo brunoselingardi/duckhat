@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopGalleryPage extends StatefulWidget {
   const ShopGalleryPage({super.key});
@@ -12,7 +13,7 @@ class _ShopGalleryPageState extends State<ShopGalleryPage> {
   final List<String> _photos = [
     'assets/ondas.jpg',
     'assets/Ducklogo.jpg',
-    'assets/icon.jpg',
+    'assets/Ducklogo.jpg',
     'assets/barbiesalon.jpg',
     'assets/jamessalon.jpg',
   ];
@@ -21,22 +22,9 @@ class _ShopGalleryPageState extends State<ShopGalleryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Galeria de Fotos',
-          style: TextStyle(
-            color: AppColors.accent,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      appBar: buildShopAppBar(
+        context,
+        title: 'Galeria de Fotos',
         actions: [
           IconButton(
             icon: const Icon(
@@ -104,7 +92,7 @@ class _ShopGalleryPageState extends State<ShopGalleryPage> {
             Image.asset(
               _photos[index],
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(
+              errorBuilder: (_, _, _) => Container(
                 color: AppColors.inputBackground,
                 child: const Icon(Icons.image, color: AppColors.textMuted),
               ),
@@ -114,11 +102,15 @@ class _ShopGalleryPageState extends State<ShopGalleryPage> {
               right: 8,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.black54,
+                  color: AppColors.secondary.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.white, size: 20),
+                  icon: const Icon(
+                    Icons.delete,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                   onPressed: () => _deletePhoto(index),
                 ),
               ),

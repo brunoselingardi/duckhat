@@ -39,7 +39,22 @@ public class JwtService {
     return extrairClaims(token).getSubject();
   }
 
+  public Long extrairUsuarioId(String token) {
+    Object userId = extrairClaims(token).get("userId");
+    if (userId == null) {
+      return null;
+    }
+    if (userId instanceof Number number) {
+      return number.longValue();
+    }
+    return Long.parseLong(userId.toString());
+  }
+
   public boolean tokenValido(String token, Usuario usuario) {
+    Long usuarioId = extrairUsuarioId(token);
+    if (usuarioId != null) {
+      return usuarioId.equals(usuario.getId()) && !tokenExpirado(token);
+    }
     String email = extrairEmail(token);
     return email.equals(usuario.getEmail()) && !tokenExpirado(token);
   }

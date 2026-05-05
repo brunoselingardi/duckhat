@@ -15,13 +15,16 @@ class ShopBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        border: Border(
+          top: BorderSide(color: AppColors.border.withValues(alpha: 0.9)),
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
-            offset: Offset(0, -2),
-            blurRadius: 4,
+            color: AppColors.cardShadow.withValues(alpha: 0.35),
+            offset: const Offset(0, -2),
+            blurRadius: 10,
           ),
         ],
       ),
@@ -34,8 +37,19 @@ class ShopBottomNav extends StatelessWidget {
           currentIndex: selectedIndex,
           onTap: onTap,
           type: BottomNavigationBarType.fixed,
+          backgroundColor: AppColors.cardBackground,
+          elevation: 0,
+          showUnselectedLabels: true,
           selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.textMuted,
+          unselectedItemColor: AppColors.navUnselected,
+          selectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
           items: [
             BottomNavigationBarItem(
               icon: _NavIcon(
@@ -83,7 +97,7 @@ class _NavIcon extends StatelessWidget {
     return RepaintBoundary(
       child: ColorFiltered(
         colorFilter: ColorFilter.mode(
-          isSelected ? AppColors.accent : AppColors.textMuted,
+          isSelected ? AppColors.accent : AppColors.navUnselected,
           BlendMode.srcIn,
         ),
         child: SvgPicture.asset(asset, width: 32, height: 32),

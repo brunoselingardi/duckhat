@@ -28,15 +28,18 @@ public class AgendamentoService {
   private final UsuarioRepository usuarioRepository;
   private final ServicoRepository servicoRepository;
   private final DisponibilidadeRepository disponibilidadeRepository;
+  private final NotificacaoEventoService notificacaoEventoService;
 
   public AgendamentoService(AgendamentoRepository agendamentoRepository,
       UsuarioRepository usuarioRepository,
       ServicoRepository servicoRepository,
-      DisponibilidadeRepository disponibilidadeRepository) {
+      DisponibilidadeRepository disponibilidadeRepository,
+      NotificacaoEventoService notificacaoEventoService) {
     this.agendamentoRepository = agendamentoRepository;
     this.usuarioRepository = usuarioRepository;
     this.servicoRepository = servicoRepository;
     this.disponibilidadeRepository = disponibilidadeRepository;
+    this.notificacaoEventoService = notificacaoEventoService;
   }
 
   @Transactional
@@ -112,6 +115,7 @@ public class AgendamentoService {
     agendamento.setObservacoes(request.observacoes());
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
+    notificacaoEventoService.registrarAgendamentoCriado(salvo);
     return AgendamentoResponse.fromEntity(salvo);
   }
 
@@ -231,6 +235,7 @@ public class AgendamentoService {
     agendamento.setStatus(StatusAgendamento.CANCELADO);
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
+    notificacaoEventoService.registrarAgendamentoCancelado(salvo, usuario);
     return AgendamentoResponse.fromEntity(salvo);
   }
 
@@ -299,6 +304,7 @@ public class AgendamentoService {
     agendamento.setStatus(StatusAgendamento.CONFIRMADO);
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
+    notificacaoEventoService.registrarAgendamentoConfirmado(salvo);
     return AgendamentoResponse.fromEntity(salvo);
   }
 
@@ -341,6 +347,7 @@ public class AgendamentoService {
     agendamento.setStatus(StatusAgendamento.CONCLUIDO);
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
+    notificacaoEventoService.registrarAgendamentoConcluido(salvo);
     return AgendamentoResponse.fromEntity(salvo);
   }
 }

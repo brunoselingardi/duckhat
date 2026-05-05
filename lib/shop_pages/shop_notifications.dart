@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 
 class ShopNotificationsPage extends StatefulWidget {
   const ShopNotificationsPage({super.key});
@@ -19,22 +20,9 @@ class _ShopNotificationsPageState extends State<ShopNotificationsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Notificações',
-          style: TextStyle(
-            color: AppColors.accent,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+      appBar: buildShopAppBar(
+        context,
+        title: 'Notificações',
         actions: [
           TextButton(
             onPressed: () => _save(context),
@@ -116,13 +104,7 @@ class _ShopNotificationsPageState extends State<ShopNotificationsPage> {
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Row(
         children: [

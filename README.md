@@ -68,6 +68,13 @@ docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
   mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/002_seed_barbie_services.sql
 ```
 
+Para atualizar um banco local existente com notificações in-app e preferências:
+
+```bash
+docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/migrations/V6__notification_feed_and_preferences.sql
+```
+
 ## Backend
 
 Crie um ambiente local opcional para sobrescrever as configurações padrão:
@@ -176,10 +183,17 @@ Fluxo principal integrado atualmente:
 6. Criar agendamento via API Spring Boot
 7. Ver o item refletido na agenda integrada
 
+Também estão integrados com API e MySQL:
+
+- chat real entre cliente e prestador
+- notificações in-app geradas por agenda e chat
+- preferências persistidas de notificações
+- leitura individual e leitura em massa de notificações
+
 ## Observações técnicas
 
 - O backend escuta por padrão em `8081`.
 - O banco local esperado fica em `localhost:3307`.
 - O app depende de `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD` para autenticar na API.
-- Parte do app ainda usa dados mockados, mas o fluxo de agendamento está integrado com API e MySQL.
+- Parte do app ainda usa dados mockados, mas agenda, chat, autenticação e notificações estão integrados com API e MySQL.
 - O arquivo `backend/.env` é local e não deve ser versionado.
