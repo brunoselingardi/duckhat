@@ -128,6 +128,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _enterDevMode(_AccountType accountType) async {
+    FocusScope.of(context).unfocus();
+    if (_loading || _finishingLogin) return;
+
+    setState(() {
+      _accountType = accountType;
+      _loading = true;
+      _error = null;
+    });
+
+    DuckHatApi.instance.startDevSession(tipo: accountType.apiType);
+
+    await _playSuccessSequence();
+    if (!mounted) return;
+    _openApp();
+  }
+
   Future<void> _playSuccessSequence() async {
     setState(() {
       _finishingLogin = true;
@@ -184,7 +201,77 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   void _openCreateAccount() {
     Navigator.of(context)
         .push<SignupSuccessResult>(
-          MaterialPageRoute(builder: (_) => const SignupPage()),
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 620),
+            reverseTransitionDuration: const Duration(milliseconds: 260),
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const SignupPage(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  final curved = CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  );
+                  final duckAnimation = CurvedAnimation(
+                    parent: animation,
+                    curve: const Interval(0, 0.72, curve: Curves.easeOutBack),
+                  );
+                  final duckFade = CurvedAnimation(
+                    parent: animation,
+                    curve: const Interval(0.38, 1, curve: Curves.easeOutCubic),
+                  );
+                  return Stack(
+                    children: [
+                      FadeTransition(
+                        opacity: curved,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.08),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: child,
+                        ),
+                      ),
+                      IgnorePointer(
+                        child: FadeTransition(
+                          opacity: ReverseAnimation(duckFade),
+                          child: Center(
+                            child: ScaleTransition(
+                              scale: Tween<double>(
+                                begin: 0.64,
+                                end: 1.08,
+                              ).animate(duckAnimation),
+                              child: Container(
+                                width: 112,
+                                height: 112,
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Color(0x1A000000),
+                                      blurRadius: 20,
+                                      offset: Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/duck-dance.gif',
+                                    fit: BoxFit.cover,
+                                    gaplessPlayback: true,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+          ),
         )
         .then((result) {
           if (result == null || !mounted) return;
@@ -322,41 +409,54 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         const SizedBox(height: 38),
                         _Entrance(
                           delayMs: 220,
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: _loading || _finishingLogin
-                                      ? null
-                                      : _openCreateAccount,
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: AppColors.textRegular,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 14,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: _loading || _finishingLogin
+                                          ? null
+                                          : _openCreateAccount,
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: AppColors.textRegular,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'Criar conta',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'Criar conta',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  const SizedBox(width: 12),
+                                  _LoginButton(
+                                    key: _buttonKey,
+                                    pressed: _buttonPressed,
+                                    loading: _loading || _finishingLogin,
+                                    onTapDown: (_) {
+                                      setState(() => _buttonPressed = true);
+                                    },
+                                    onTapEnd: () {
+                                      if (!mounted) return;
+                                      setState(() => _buttonPressed = false);
+                                    },
+                                    onPressed: _submit,
                                   ),
-                                ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              _LoginButton(
-                                key: _buttonKey,
-                                pressed: _buttonPressed,
-                                loading: _loading || _finishingLogin,
-                                onTapDown: (_) {
-                                  setState(() => _buttonPressed = true);
-                                },
-                                onTapEnd: () {
-                                  if (!mounted) return;
-                                  setState(() => _buttonPressed = false);
-                                },
-                                onPressed: _submit,
+                              const SizedBox(height: 18),
+                              _DevModePanel(
+                                enabled: !_loading && !_finishingLogin,
+                                onEnterCliente: () =>
+                                    _enterDevMode(_AccountType.cliente),
+                                onEnterEmpresa: () =>
+                                    _enterDevMode(_AccountType.empresa),
                               ),
                             ],
                           ),
@@ -378,6 +478,127 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _DevModePanel extends StatelessWidget {
+  final bool enabled;
+  final VoidCallback onEnterCliente;
+  final VoidCallback onEnterEmpresa;
+
+  const _DevModePanel({
+    required this.enabled,
+    required this.onEnterCliente,
+    required this.onEnterEmpresa,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.32)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 15,
+                    color: AppColors.textRegular.withValues(alpha: 0.72),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Modo dev',
+                    style: TextStyle(
+                      color: AppColors.textRegular.withValues(alpha: 0.78),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: _DevModeButton(
+                    label: 'Entrar como cliente',
+                    icon: Icons.person_outline,
+                    backgroundColor: AppColors.accent,
+                    foregroundColor: Colors.white,
+                    enabled: enabled,
+                    onPressed: onEnterCliente,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _DevModeButton(
+                    label: 'Entrar como estabelecimento',
+                    icon: Icons.storefront_outlined,
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: Colors.white,
+                    enabled: enabled,
+                    onPressed: onEnterEmpresa,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DevModeButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color backgroundColor;
+  final Color foregroundColor;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  const _DevModeButton({
+    required this.label,
+    required this.icon,
+    required this.backgroundColor,
+    required this.foregroundColor,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: enabled ? onPressed : null,
+      style: FilledButton.styleFrom(
+        backgroundColor: backgroundColor,
+        disabledBackgroundColor: backgroundColor.withValues(alpha: 0.34),
+        foregroundColor: foregroundColor,
+        disabledForegroundColor: foregroundColor.withValues(alpha: 0.72),
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        minimumSize: const Size(0, 46),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      icon: Icon(icon, size: 17),
+      label: Text(
+        label,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -684,6 +905,7 @@ class _LoginButton extends StatelessWidget {
               backgroundColor: AppColors.accent,
               foregroundColor: Colors.white,
               elevation: 0,
+              padding: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),

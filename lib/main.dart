@@ -3,7 +3,7 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/core/app_scroll_behavior.dart';
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
-import 'pages/login.dart';
+import 'pages/launch_intro.dart';
 import 'pages/schedule_date.dart';
 
 void main() {
@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
           themeMode: themeMode,
           debugShowCheckedModeBanner: false,
           scrollBehavior: const AppScrollBehavior(),
-          home: const LoginPage(),
+          home: const LaunchIntroPage(),
           onGenerateRoute: (settings) {
             if (settings.name == '/schedule-date') {
               final args = settings.arguments as Map<String, dynamic>;

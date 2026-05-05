@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 
 import '../core/api_config.dart';
+import 'search_intent.dart';
 
 class GeoSearchService {
   GeoSearchService._();
@@ -30,9 +31,7 @@ class GeoSearchService {
   Future<GeocodedLocation> _geocodeBrazilianCep(String cep) async {
     final response = await _client.get(
       Uri.https('viacep.com.br', '/ws/$cep/json/'),
-      headers: const {
-        'Accept': 'application/json',
-      },
+      headers: const {'Accept': 'application/json'},
     );
 
     if (response.statusCode != 200) {
@@ -79,9 +78,7 @@ class GeoSearchService {
         'format': 'json',
         'apiKey': ApiConfig.geoapifyApiKey,
       }),
-      headers: const {
-        'Accept': 'application/json',
-      },
+      headers: const {'Accept': 'application/json'},
     );
 
     if (response.statusCode != 200) {
@@ -109,9 +106,7 @@ class GeoSearchService {
     return GeocodedLocation(
       point: LatLng(lat, lon),
       formattedAddress:
-          first['formatted'] as String? ??
-          fallbackFormattedAddress ??
-          query,
+          first['formatted'] as String? ?? fallbackFormattedAddress ?? query,
     );
   }
 
@@ -154,7 +149,8 @@ class GeoSearchService {
 
     final results = body['results'];
     if (results is! List || results.isEmpty) {
-      if (fallbackFormattedAddress != null && fallbackFormattedAddress.isNotEmpty) {
+      if (fallbackFormattedAddress != null &&
+          fallbackFormattedAddress.isNotEmpty) {
         return _geocodeWithGeoapify(
           fallbackFormattedAddress,
           fallbackFormattedAddress: fallbackFormattedAddress,
@@ -174,9 +170,7 @@ class GeoSearchService {
     return GeocodedLocation(
       point: LatLng(lat, lon),
       formattedAddress:
-          first['formatted'] as String? ??
-          fallbackFormattedAddress ??
-          postcode,
+          first['formatted'] as String? ?? fallbackFormattedAddress ?? postcode,
     );
   }
 
@@ -186,12 +180,13 @@ class GeoSearchService {
   }) async {
     _requireApiKey();
 
-    final normalizedQuery = query.trim();
-    final categories = _categoriesForQuery(normalizedQuery);
-    final nameFilter = _nameFilterForQuery(normalizedQuery);
+    final intent = SearchIntent.fromQuery(query);
+    final nameFilter = intent.usesExternalNameFilter
+        ? intent.serviceTerm
+        : null;
     final response = await _client.get(
       Uri.https('api.geoapify.com', '/v2/places', {
-        'categories': categories,
+        'categories': intent.geoapifyCategories,
         ...?nameFilter == null ? null : {'name': nameFilter},
         'filter':
             'circle:${center.longitude},${center.latitude},$_searchRadiusMeters',
@@ -217,47 +212,50 @@ class GeoSearchService {
       return const [];
     }
 
-    return features.map((item) {
-      final feature = Map<String, dynamic>.from(item as Map);
-      final properties = Map<String, dynamic>.from(
-        feature['properties'] as Map<String, dynamic>? ?? const {},
-      );
-      final geometry = Map<String, dynamic>.from(
-        feature['geometry'] as Map<String, dynamic>? ?? const {},
-      );
-      final coordinates = geometry['coordinates'];
-      final latitude = properties['lat'] as num?;
-      final longitude = properties['lon'] as num?;
+    return features
+        .map((item) {
+          final feature = Map<String, dynamic>.from(item as Map);
+          final properties = Map<String, dynamic>.from(
+            feature['properties'] as Map<String, dynamic>? ?? const {},
+          );
+          final geometry = Map<String, dynamic>.from(
+            feature['geometry'] as Map<String, dynamic>? ?? const {},
+          );
+          final coordinates = geometry['coordinates'];
+          final latitude = properties['lat'] as num?;
+          final longitude = properties['lon'] as num?;
 
-      double? lat = latitude?.toDouble();
-      double? lon = longitude?.toDouble();
-      if ((lat == null || lon == null) && coordinates is List && coordinates.length >= 2) {
-        lon = (coordinates[0] as num?)?.toDouble();
-        lat = (coordinates[1] as num?)?.toDouble();
-      }
+          double? lat = latitude?.toDouble();
+          double? lon = longitude?.toDouble();
+          if ((lat == null || lon == null) &&
+              coordinates is List &&
+              coordinates.length >= 2) {
+            lon = (coordinates[0] as num?)?.toDouble();
+            lat = (coordinates[1] as num?)?.toDouble();
+          }
 
-      if (lat == null || lon == null) {
-        return null;
-      }
+          if (lat == null || lon == null) {
+            return null;
+          }
 
-      return PlaceSearchResult(
-        id: properties['place_id'] as String? ?? '',
-        name: _stringOrNull(properties['name']) ?? 'Estabelecimento',
-        formattedAddress:
-            _stringOrNull(properties['formatted']) ??
-            _buildFormattedAddress([
-              properties['address_line1'],
-              properties['address_line2'],
-              properties['city'],
-              properties['state'],
-            ]) ??
-            'Endereco indisponivel',
-        location: LatLng(
-          lat,
-          lon,
-        ),
-      );
-    }).whereType<PlaceSearchResult>().toList();
+          return PlaceSearchResult(
+            id: properties['place_id'] as String? ?? '',
+            name: _stringOrNull(properties['name']) ?? 'Estabelecimento',
+            phone: _extractPhone(properties),
+            formattedAddress:
+                _stringOrNull(properties['formatted']) ??
+                _buildFormattedAddress([
+                  properties['address_line1'],
+                  properties['address_line2'],
+                  properties['city'],
+                  properties['state'],
+                ]) ??
+                'Endereco indisponivel',
+            location: LatLng(lat, lon),
+          );
+        })
+        .whereType<PlaceSearchResult>()
+        .toList();
   }
 
   String? _normalizeCep(String value) {
@@ -282,152 +280,23 @@ class GeoSearchService {
     return normalized.join(', ');
   }
 
-  String _categoriesForQuery(String query) {
-    final normalized = query
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9\s]+'), ' ')
-        .trim();
+  String? _extractPhone(Map<String, dynamic> properties) {
+    final direct =
+        _stringOrNull(properties['phone']) ??
+        _stringOrNull(properties['contact:phone']) ??
+        _stringOrNull(properties['contact_phone']);
+    if (direct != null) return direct;
 
-    if (normalized.isEmpty) {
-      return 'service,commercial,catering';
+    final datasource = properties['datasource'];
+    if (datasource is Map) {
+      final raw = datasource['raw'];
+      if (raw is Map) {
+        return _stringOrNull(raw['phone']) ??
+            _stringOrNull(raw['contact:phone']) ??
+            _stringOrNull(raw['contact_phone']);
+      }
     }
-
-    if (_containsAny(normalized, [
-      'barbearia',
-      'barbeiro',
-      'barber',
-      'cabelo',
-      'cabeleireiro',
-      'cabeleireira',
-      'salao',
-      'salon',
-      'manicure',
-      'pedicure',
-      'estetica',
-      'beauty',
-    ])) {
-      return 'service.beauty,service.beauty.hairdresser';
-    }
-
-    if (_containsAny(normalized, [
-      'restaurante',
-      'lanchonete',
-      'lanche',
-      'pizzaria',
-      'pizza',
-      'hamburguer',
-      'hamburger',
-      'sushi',
-      'acai',
-      'cafe',
-      'cafeteria',
-      'bar',
-    ])) {
-      return 'catering,catering.restaurant,catering.cafe,catering.fast_food,catering.bar';
-    }
-
-    if (_containsAny(normalized, [
-      'academia',
-      'gym',
-      'crossfit',
-      'fitness',
-    ])) {
-      return 'sport.fitness,sport.fitness.fitness_centre,sport.sports_centre';
-    }
-
-    if (_containsAny(normalized, [
-      'hotel',
-      'pousada',
-      'hostel',
-      'motel',
-    ])) {
-      return 'accommodation,accommodation.hotel,accommodation.guest_house,accommodation.hostel,accommodation.motel';
-    }
-
-    if (_containsAny(normalized, [
-      'pet',
-      'veterinario',
-      'veterinaria',
-      'petshop',
-    ])) {
-      return 'pet,pet.shop,pet.veterinary,pet.service';
-    }
-
-    if (_containsAny(normalized, [
-      'mercado',
-      'supermercado',
-      'loja',
-      'shopping',
-      'comercio',
-    ])) {
-      return 'commercial';
-    }
-
-    return 'service,commercial,catering,office,pet,sport,accommodation';
-  }
-
-  String? _nameFilterForQuery(String query) {
-    final normalized = query
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9\s]+'), ' ')
-        .trim();
-
-    if (normalized.isEmpty) return null;
-
-    if (_containsAny(normalized, [
-      'barbearia',
-      'barbeiro',
-      'barber',
-      'cabelo',
-      'cabeleireiro',
-      'cabeleireira',
-      'salao',
-      'salon',
-      'manicure',
-      'pedicure',
-      'estetica',
-      'beauty',
-      'restaurante',
-      'lanchonete',
-      'lanche',
-      'pizzaria',
-      'pizza',
-      'hamburguer',
-      'hamburger',
-      'sushi',
-      'acai',
-      'cafe',
-      'cafeteria',
-      'bar',
-      'academia',
-      'gym',
-      'crossfit',
-      'fitness',
-      'hotel',
-      'pousada',
-      'hostel',
-      'motel',
-      'pet',
-      'veterinario',
-      'veterinaria',
-      'petshop',
-      'mercado',
-      'supermercado',
-      'loja',
-      'shopping',
-      'comercio',
-    ])) {
-      return null;
-    }
-
-    return query.trim();
-  }
-
-  bool _containsAny(String text, List<String> keywords) {
-    for (final keyword in keywords) {
-      if (text.contains(keyword)) return true;
-    }
-    return false;
+    return null;
   }
 
   void _requireApiKey() {
@@ -442,21 +311,20 @@ class GeocodedLocation {
   final LatLng point;
   final String formattedAddress;
 
-  const GeocodedLocation({
-    required this.point,
-    required this.formattedAddress,
-  });
+  const GeocodedLocation({required this.point, required this.formattedAddress});
 }
 
 class PlaceSearchResult {
   final String id;
   final String name;
+  final String? phone;
   final String formattedAddress;
   final LatLng location;
 
   const PlaceSearchResult({
     required this.id,
     required this.name,
+    this.phone,
     required this.formattedAddress,
     required this.location,
   });

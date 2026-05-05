@@ -73,10 +73,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - agenda integrada do usuario
   - lista agendamentos via API
   - botao atualizar recarrega dados
-  - botao adicionar abre bottom sheet de novo agendamento
   - estado de erro exibe CTA `Tentar novamente`
-  - cada card inteiro abre os detalhes; cancelamento fica na tela de detalhe
-  - bottom sheet possui selecao de servico, data, horario, observacoes e CTA de criacao
+  - cada card pode abrir detalhe ou cancelar direto
   - em sessao `PRESTADOR`, usa a agenda do prestador e mostra acoes de confirmar/concluir
   - toque em item abre `AppointmentDetailPage`
 - `lib/pages/schedule_date.dart`
