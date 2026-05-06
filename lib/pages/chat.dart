@@ -6,7 +6,18 @@ import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+  final String title;
+  final String searchHint;
+  final String emptyTitle;
+  final String emptyMessage;
+
+  const ChatPage({
+    super.key,
+    this.title = 'Mensagens',
+    this.searchHint = 'Buscar conversas',
+    this.emptyTitle = 'Nenhuma conversa',
+    this.emptyMessage = 'Abra um estabelecimento e toque em Enviar Mensagem.',
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -115,7 +126,7 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: Text(
-              'Mensagens',
+              widget.title,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -140,7 +151,7 @@ class _ChatPageState extends State<ChatPage> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Buscar conversas',
+          hintText: widget.searchHint,
           prefixIcon: const Icon(Icons.search),
           filled: true,
           fillColor: Colors.white,
@@ -180,11 +191,11 @@ class _ChatPageState extends State<ChatPage> {
     if (conversas.isEmpty) {
       return ListView(
         padding: const EdgeInsets.all(24),
-        children: const [
+        children: [
           _ChatStateMessage(
             icon: Icons.chat_bubble_outline_rounded,
-            title: 'Nenhuma conversa',
-            message: 'Abra um estabelecimento e toque em Enviar Mensagem.',
+            title: widget.emptyTitle,
+            message: widget.emptyMessage,
           ),
         ],
       );
@@ -274,7 +285,9 @@ class _ChatPageState extends State<ChatPage> {
     final now = DateTime.now();
     final local = date.toLocal();
     final sameDay =
-        now.year == local.year && now.month == local.month && now.day == local.day;
+        now.year == local.year &&
+        now.month == local.month &&
+        now.day == local.day;
     if (sameDay) {
       return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
     }

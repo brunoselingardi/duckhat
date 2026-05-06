@@ -218,7 +218,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - FAQ com `ExpansionTile` e canais de contato
   - contatos exibem `SnackBar` placeholder
 
-### Area shop mockada
+### Area shop
 
 - `lib/shop_pages/shop_home.dart`
   - dashboard mockado do estabelecimento
@@ -227,8 +227,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - agenda mockada do estabelecimento com calendario e lista do dia
   - cards, estados selecionados e superficies usam o tema central
 - `lib/shop_pages/shop_clients.dart`
-  - lista de clientes e conversa mockada
-  - busca, cards e tela de chat usam o mesmo padrao visual do app
+  - aba de chat real do estabelecimento
+  - reutiliza `ChatPage`, lista conversas reais da API e abre `ChatDetailPage` para responder clientes
 - `lib/shop_pages/shop_profile.dart`
   - hub de configuracoes do estabelecimento
   - header usa nome/e-mail reais da sessao/API
@@ -316,7 +316,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - aplica limite de tentativas invalidas e bloqueio temporario por token
 - `backend/src/main/java/com/duckhat/api/service/ChatService.java`
   - cria/busca conversa entre cliente e prestador
-  - lista conversas e mensagens autorizadas por participante
+  - lista conversas e mensagens autorizadas por participante, com ultima mensagem carregada em lote
   - envia mensagens e atualiza `ultima_mensagem_em`
   - gera notificacao real para o outro participante quando uma mensagem e enviada
   - limpa mensagens expiradas diariamente preservando a ultima mensagem por conversa e aplicando graca de 5 dias pela ultima atividade
