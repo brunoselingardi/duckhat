@@ -17,6 +17,22 @@ CREATE TABLE usuarios (
     CONSTRAINT uq_usuarios_cnpj UNIQUE (cnpj)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE estabelecimentos (
+    usuario_id BIGINT NOT NULL,
+    nome VARCHAR(120) NOT NULL,
+    telefone VARCHAR(20) NULL,
+    cnpj VARCHAR(14) NOT NULL,
+    responsavel_nome VARCHAR(120) NOT NULL,
+    endereco VARCHAR(255) NULL,
+    descricao TEXT NULL,
+    horario_atendimento VARCHAR(160) NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT pk_estabelecimentos PRIMARY KEY (usuario_id),
+    CONSTRAINT uq_estabelecimentos_cnpj UNIQUE (cnpj),
+    CONSTRAINT fk_estabelecimentos_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE recuperacao_senha_tokens (
     id BIGINT NOT NULL AUTO_INCREMENT,
     usuario_id BIGINT NOT NULL,

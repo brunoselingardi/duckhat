@@ -3,8 +3,10 @@ package com.duckhat.api.service;
 import com.duckhat.api.dto.CreateUsuarioRequest;
 import com.duckhat.api.dto.UpdatePerfilRequest;
 import com.duckhat.api.dto.UsuarioResponse;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
+import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,10 +26,16 @@ public class UsuarioService {
             Pattern.CASE_INSENSITIVE);
 
     private final UsuarioRepository usuarioRepository;
+    private final EstabelecimentoRepository estabelecimentoRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            EstabelecimentoRepository estabelecimentoRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.usuarioRepository = usuarioRepository;
+        this.estabelecimentoRepository = estabelecimentoRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -58,6 +66,9 @@ public class UsuarioService {
         usuario.setTipo(request.tipo());
 
         Usuario salvo = usuarioRepository.save(usuario);
+        if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
+            salvarEstabelecimento(salvo, null);
+        }
         return UsuarioResponse.fromEntity(salvo);
     }
 
@@ -113,7 +124,26 @@ public class UsuarioService {
         usuario.setDataNascimento(request.dataNascimento());
         usuario.setEndereco(endereco);
 
-        return UsuarioResponse.fromEntity(usuarioRepository.save(usuario));
+        Usuario salvo = usuarioRepository.save(usuario);
+        if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
+            salvarEstabelecimento(salvo, endereco);
+        }
+
+        return UsuarioResponse.fromEntity(salvo);
+    }
+
+    private void salvarEstabelecimento(Usuario prestador, String endereco) {
+        Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(prestador.getId())
+                .orElseGet(Estabelecimento::new);
+
+        estabelecimento.setUsuario(prestador);
+        estabelecimento.setNome(prestador.getNome());
+        estabelecimento.setTelefone(prestador.getTelefone());
+        estabelecimento.setCnpj(prestador.getCnpj());
+        estabelecimento.setResponsavelNome(prestador.getResponsavelNome());
+        estabelecimento.setEndereco(endereco);
+
+        estabelecimentoRepository.save(estabelecimento);
     }
 
     private void validarCamposPrestador(
