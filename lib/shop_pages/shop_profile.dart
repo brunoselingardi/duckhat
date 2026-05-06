@@ -511,6 +511,18 @@ class _ShopQuickStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = session?.nome.trim() ?? '';
     final initial = name.isEmpty ? 'D' : name.characters.first.toUpperCase();
+    final horario = session?.horarioAtendimento?.trim();
+    final endereco = session?.endereco?.trim();
+    final descricao = session?.descricao?.trim();
+    final resumo = [
+      if (horario != null && horario.isNotEmpty) horario,
+      if (endereco != null && endereco.isNotEmpty) endereco,
+    ].join(' · ');
+    final subtitle = resumo.isNotEmpty
+        ? resumo
+        : (descricao != null && descricao.isNotEmpty)
+        ? descricao
+        : 'Organize dados, fotos, agenda e servicos do estabelecimento.';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -543,22 +555,26 @@ class _ShopQuickStats extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Vitrine pronta para ajustes',
-                  style: TextStyle(
+                  name.isEmpty ? 'Vitrine pronta para ajustes' : name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: AppColors.textBold,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
-                  'Organize dados, fotos, agenda e servicos do estabelecimento.',
-                  style: TextStyle(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: AppColors.textRegular,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

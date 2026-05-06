@@ -30,6 +30,12 @@ public record UpdatePerfilRequest(
     LocalDate dataNascimento,
 
     @Size(max = 255)
-    String endereco
+    String endereco,
+
+    @Size(max = 500)
+    String descricao,
+
+    @Size(max = 160)
+    String horarioAtendimento
 ) {
 }
