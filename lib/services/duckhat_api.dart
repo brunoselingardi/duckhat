@@ -61,6 +61,12 @@ class DuckHatApi {
         responsavelNome: tipo == 'PRESTADOR' ? 'Responsável Dev' : null,
         dataNascimento: null,
         endereco: null,
+        descricao: tipo == 'PRESTADOR'
+            ? 'Perfil de desenvolvimento do estabelecimento.'
+            : null,
+        horarioAtendimento: tipo == 'PRESTADOR'
+            ? 'Segunda a sexta 9h - 20h'
+            : null,
         tipo: tipo,
         token: _token!,
       ),
@@ -294,6 +300,8 @@ class DuckHatApi {
       responsavelNome: body['responsavelNome'] as String?,
       dataNascimento: _parseDate(body['dataNascimento']),
       endereco: body['endereco'] as String?,
+      descricao: body['descricao'] as String?,
+      horarioAtendimento: body['horarioAtendimento'] as String?,
       tipo: body['tipo'] as String? ?? '',
       token: token,
     );
@@ -862,6 +870,8 @@ class DuckHatApi {
         responsavelNome: perfil.responsavelNome,
         dataNascimento: perfil.dataNascimento,
         endereco: perfil.endereco,
+        descricao: perfil.descricao,
+        horarioAtendimento: perfil.horarioAtendimento,
         tipo: perfil.tipo,
       ),
     );
@@ -927,6 +937,8 @@ class LoginSession {
   final String? responsavelNome;
   final DateTime? dataNascimento;
   final String? endereco;
+  final String? descricao;
+  final String? horarioAtendimento;
   final String tipo;
   final String token;
 
@@ -939,6 +951,8 @@ class LoginSession {
     required this.responsavelNome,
     required this.dataNascimento,
     required this.endereco,
+    required this.descricao,
+    required this.horarioAtendimento,
     required this.tipo,
     required this.token,
   });
@@ -952,6 +966,8 @@ class LoginSession {
     String? responsavelNome,
     DateTime? dataNascimento,
     String? endereco,
+    String? descricao,
+    String? horarioAtendimento,
     String? tipo,
     String? token,
   }) {
@@ -964,6 +980,8 @@ class LoginSession {
       responsavelNome: responsavelNome,
       dataNascimento: dataNascimento,
       endereco: endereco,
+      descricao: descricao,
+      horarioAtendimento: horarioAtendimento,
       tipo: tipo ?? this.tipo,
       token: token ?? this.token,
     );

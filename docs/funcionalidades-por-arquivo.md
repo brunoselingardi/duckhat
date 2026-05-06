@@ -235,7 +235,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_establishment_data.dart`
   - formulario real de dados do estabelecimento
   - carrega dados via `GET /api/me`
-  - salva nome, telefone, e-mail, CNPJ, responsavel e endereco via `PUT /api/me`
+  - salva nome, telefone, e-mail, CNPJ, responsavel, endereco, descricao e horario de atendimento via `PUT /api/me`
+  - a pre-visualizacao publica usa os dados carregados do estabelecimento vinculado
   - usa a mesma validacao de perfil para e-mail, telefone com DDD e endereco com rua/numero
 - `lib/shop_pages/shop_gallery.dart`
   - galeria mockada de fotos com estado local
@@ -294,7 +295,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - criacao e leitura de usuarios
 - `backend/src/main/java/com/duckhat/api/controller/MeController.java`
   - retorno completo do usuario autenticado
-  - atualizacao real do proprio perfil autenticado via `PUT /api/me`
+  - para prestadores, junta `usuarios` com o registro vinculado em `estabelecimentos`
+  - atualizacao real do proprio perfil autenticado via `PUT /api/me`, incluindo dados publicos do estabelecimento quando o usuario e `PRESTADOR`
 - `backend/src/main/java/com/duckhat/api/controller/AvaliacaoController.java`
   - endpoints de avaliacoes
 - `backend/src/main/java/com/duckhat/api/controller/NotificacaoEventoController.java`

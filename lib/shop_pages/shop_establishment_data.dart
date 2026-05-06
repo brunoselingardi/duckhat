@@ -59,6 +59,8 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
         responsavelNome: session.responsavelNome,
         dataNascimento: session.dataNascimento,
         endereco: session.endereco,
+        descricao: session.descricao,
+        horarioAtendimento: session.horarioAtendimento,
         tipo: session.tipo,
       ),
     );
@@ -94,6 +96,10 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     _cnpjController.text = perfil.cnpj ?? '';
     _responsavelController.text = perfil.responsavelNome ?? '';
     _addressController.text = perfil.endereco ?? '';
+    _descriptionController.text = perfil.descricao ?? '';
+    _hoursController.text =
+        perfil.horarioAtendimento ??
+        'Segunda a sexta 9h - 20h | Sabado 9h - 18h';
   }
 
   @override
@@ -405,6 +411,8 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           responsavelNome: _responsavelController.text,
           dataNascimento: current.dataNascimento,
           endereco: _addressController.text,
+          descricao: _descriptionController.text,
+          horarioAtendimento: _hoursController.text,
           tipo: current.tipo,
         ),
       );

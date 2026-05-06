@@ -22,7 +22,7 @@ public class MeController {
 
   @GetMapping("/api/me")
   public UsuarioResponse me(@AuthenticationPrincipal Usuario usuario) {
-    return UsuarioResponse.fromEntity(usuario);
+    return usuarioService.buscarMeuPerfil(usuario);
   }
 
   @PutMapping("/api/me")

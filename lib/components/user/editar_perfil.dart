@@ -62,6 +62,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         responsavelNome: session.responsavelNome,
         dataNascimento: session.dataNascimento,
         endereco: session.endereco,
+        descricao: session.descricao,
+        horarioAtendimento: session.horarioAtendimento,
         tipo: session.tipo,
       ),
     );
@@ -129,6 +131,8 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
             _dataNascimentoController.text,
           ),
           endereco: _enderecoController.text,
+          descricao: current.descricao,
+          horarioAtendimento: current.horarioAtendimento,
           tipo: current.tipo,
         ),
       );
