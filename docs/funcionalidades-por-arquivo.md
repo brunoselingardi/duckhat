@@ -92,8 +92,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - permite cancelar quando o status suporta isso
   - botao voltar no app bar retorna
   - botao `Cancelar agendamento` executa cancelamento real quando disponivel
-  - mostra avaliacao local quando o status e `CONCLUIDO`
-  - estrelas de nota e botao de envio de review sao locais/mockados
+  - quando o status e `CONCLUIDO`, carrega avaliacao existente por `GET /api/avaliacoes/agendamento/{id}`
+  - estrelas, comentario e envio de avaliacao persistem no banco via `POST /api/avaliacoes`
+  - possui estados de carregamento, erro, envio e avaliacao ja enviada
 - `lib/pages/chat.dart`
   - lista conversas reais do usuario autenticado pela API
   - possui busca local por nome do participante ou ultima mensagem
@@ -259,6 +260,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/models/agendamento.dart`
   - modelo consumido pela agenda e detalhe do agendamento
+- `lib/models/avaliacao.dart`
+  - modelo de avaliacao real persistida em `/api/avaliacoes`
 - `lib/models/servico_catalogo.dart`
   - modelo de servicos vindos do catalogo/API
 - `lib/models/disponibilidade_catalogo.dart`
@@ -362,10 +365,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - disponibilidade e ocupacao do prestador
   - chat entre cliente e prestador
   - notificacoes in-app e preferencias persistidas
+  - avaliacao de agendamento concluido pelo cliente
 - Mockados ou locais
   - busca textual e filtros da busca
   - resultados e mapa da busca
-  - reviews e FAQ do estabelecimento
+  - reviews e FAQ da pagina publica do estabelecimento
   - parte das subpaginas de perfil
   - minhas localizacoes no perfil
   - banner promocional e boa parte da home

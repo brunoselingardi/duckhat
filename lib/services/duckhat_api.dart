@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/api_config.dart';
 import '../models/agendamento.dart';
+import '../models/avaliacao.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
 import '../models/disponibilidade_catalogo.dart';
@@ -549,6 +550,79 @@ class DuckHatApi {
     final agendamento = Agendamento.fromJson(body);
     _emitAgendamentoSync(focusDate: agendamento.inicioEm);
     return agendamento;
+  }
+
+  Future<Avaliacao?> buscarAvaliacaoPorAgendamento(int agendamentoId) async {
+    if (_devMode) return null;
+
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/avaliacoes/agendamento/$agendamentoId',
+      ),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode == 404) {
+      return null;
+    }
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar a avaliação.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar avaliação.');
+    }
+
+    return Avaliacao.fromJson(body);
+  }
+
+  Future<Avaliacao> criarAvaliacao({
+    required int agendamentoId,
+    required int nota,
+    String? comentario,
+  }) async {
+    if (_devMode) {
+      return Avaliacao(
+        id: 0,
+        agendamentoId: agendamentoId,
+        nota: nota,
+        comentario: _nullableTrim(comentario),
+        criadoEm: DateTime.now(),
+      );
+    }
+
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({
+        'agendamentoId': agendamentoId,
+        'nota': nota,
+        'comentario': _nullableTrim(comentario),
+      }),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível enviar a avaliação.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao enviar avaliação.');
+    }
+
+    return Avaliacao.fromJson(body);
   }
 
   void _emitAgendamentoSync({DateTime? focusDate}) {
