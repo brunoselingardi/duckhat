@@ -1,11 +1,31 @@
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
+import 'service_image.dart';
+
 class ServiceInfoCard extends StatelessWidget {
   final VoidCallback? onMessageTap;
   final VoidCallback? onAvaliarTap;
+  final String name;
+  final double ratingValue;
+  final int reviewCount;
+  final String? logoSource;
+  final String? address;
+  final String? schedule;
+  final String? description;
 
-  const ServiceInfoCard({super.key, this.onMessageTap, this.onAvaliarTap});
+  const ServiceInfoCard({
+    super.key,
+    this.onMessageTap,
+    this.onAvaliarTap,
+    required this.name,
+    required this.ratingValue,
+    required this.reviewCount,
+    this.logoSource,
+    this.address,
+    this.schedule,
+    this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,12 +49,12 @@ class ServiceInfoCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Barbie Dream Barber',
+                      name,
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w700,
@@ -47,7 +67,7 @@ class ServiceInfoCard extends StatelessWidget {
                         Icon(Icons.star_rounded, color: Color(0xFFFFB547)),
                         SizedBox(width: 6),
                         Text(
-                          '4.9',
+                          ratingValue.toStringAsFixed(1),
                           style: TextStyle(
                             color: AppColors.accent,
                             fontSize: 16,
@@ -56,7 +76,7 @@ class ServiceInfoCard extends StatelessWidget {
                         ),
                         SizedBox(width: 6),
                         Text(
-                          '(1200 avaliacoes)',
+                          '($reviewCount avaliacoes)',
                           style: TextStyle(
                             color: AppColors.accent,
                             fontSize: 15,
@@ -77,19 +97,26 @@ class ServiceInfoCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: Image.asset('assets/barbielogo.jpg', fit: BoxFit.cover),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: ServiceImage(
+                    source: logoSource,
+                    fit: BoxFit.cover,
+                    cacheWidth: 200,
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-          const _InfoRow(
+          _InfoRow(
             icon: Icons.location_on_outlined,
-            text: 'Dream Avenue, 808 - Centro Fashion',
+            text: address ?? 'Endereco indisponivel',
           ),
           const SizedBox(height: 12),
-          const _InfoRow(
+          _InfoRow(
             icon: Icons.access_time_rounded,
-            text: 'Segunda a sexta 9h - 20h | Sabado 9h - 18h',
+            text: schedule ?? 'Horario nao informado',
           ),
           const SizedBox(height: 16),
           Container(
@@ -100,8 +127,8 @@ class ServiceInfoCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: const Color(0xFFE6EDFF)),
             ),
-            child: const Text(
-              '"Uma barberaria com energia Barbie: visual marcante, atendimento caloroso e uma experiencia pensada para quem quer sair com mais estilo e personalidade."',
+            child: Text(
+              '"${description ?? 'Descricao publica indisponivel no momento.'}"',
               style: TextStyle(
                 fontSize: 13.5,
                 height: 1.6,

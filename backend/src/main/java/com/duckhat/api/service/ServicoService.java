@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ServicoService {
@@ -135,5 +136,14 @@ public class ServicoService {
         .stream()
         .map(ServicoResponse::fromEntity)
         .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<Long> buscarPrestadorIdsPorNomeDeServicoPublico(String nome) {
+    return servicoRepository.findByAtivoTrueAndNomeContainingIgnoreCase(nome)
+        .stream()
+        .map(servico -> servico.getPrestador().getId())
+        .distinct()
+        .collect(Collectors.toList());
   }
 }

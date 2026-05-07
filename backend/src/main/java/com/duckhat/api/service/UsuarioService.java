@@ -1,6 +1,8 @@
 package com.duckhat.api.service;
 
 import com.duckhat.api.dto.CreateUsuarioRequest;
+import com.duckhat.api.dto.CatalogoPrestadorBuscaResponse;
+import com.duckhat.api.dto.PrestadorPublicoResponse;
 import com.duckhat.api.dto.UpdatePerfilRequest;
 import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Estabelecimento;
@@ -15,8 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.regex.Pattern;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService {
@@ -86,6 +89,45 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
 
         return UsuarioResponse.fromEntity(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    public PrestadorPublicoResponse buscarPrestadorPublico(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
+
+        if (usuario.getTipo() != TipoUsuario.PRESTADOR) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado");
+        }
+
+        return PrestadorPublicoResponse.fromEntity(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogoPrestadorBuscaResponse> buscarPrestadoresPublicosPorNome(
+            String nome,
+            List<Long> prestadorIdsPorServico
+    ) {
+        String termo = nome == null ? "" : nome.trim();
+        LinkedHashMap<Long, CatalogoPrestadorBuscaResponse> resultados = new LinkedHashMap<>();
+
+        if (!termo.isEmpty()) {
+            usuarioRepository.findByTipoAndNomeContainingIgnoreCase(TipoUsuario.PRESTADOR, termo)
+                    .forEach(usuario -> resultados.putIfAbsent(
+                            usuario.getId(),
+                            CatalogoPrestadorBuscaResponse.fromEntity(usuario, "Estabelecimento")));
+        }
+
+        if (prestadorIdsPorServico != null && !prestadorIdsPorServico.isEmpty()) {
+            usuarioRepository.findAllById(prestadorIdsPorServico)
+                    .stream()
+                    .filter(usuario -> usuario.getTipo() == TipoUsuario.PRESTADOR)
+                    .forEach(usuario -> resultados.putIfAbsent(
+                            usuario.getId(),
+                            CatalogoPrestadorBuscaResponse.fromEntity(usuario, "Servico no DuckHat")));
+        }
+
+        return List.copyOf(resultados.values());
     }
 
     @Transactional

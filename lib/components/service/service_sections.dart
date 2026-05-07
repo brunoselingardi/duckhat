@@ -2,6 +2,7 @@ import 'package:duckhat/components/service/service_experience_section.dart';
 import 'package:duckhat/components/service/service_faq_section.dart';
 import 'package:duckhat/components/service/service_gallery_section.dart';
 import 'package:duckhat/components/service/service_models.dart';
+import 'package:duckhat/components/service/service_profile_fallbacks.dart';
 import 'package:duckhat/components/service/service_reviews_section.dart';
 import 'package:duckhat/components/service/service_services_section.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class ServiceSections extends StatelessWidget {
   final ValueChanged<int> onGalleryChanged;
   final ValueChanged<int> onGallerySelected;
   final VoidCallback onOpenGallery;
+  final ServiceExperienceData experience;
 
   const ServiceSections({
     super.key,
@@ -36,6 +38,7 @@ class ServiceSections extends StatelessWidget {
     required this.onGalleryChanged,
     required this.onGallerySelected,
     required this.onOpenGallery,
+    required this.experience,
   });
 
   @override
@@ -48,7 +51,11 @@ class ServiceSections extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ServiceExperienceSection(key: sectionKeys[0]),
+          ServiceExperienceSection(
+            key: sectionKeys[0],
+            summary: experience.summary,
+            highlights: experience.highlights,
+          ),
           const Divider(height: 1, color: Color(0xFFE8EDF6)),
           ServiceServicesSection(
             key: sectionKeys[1],

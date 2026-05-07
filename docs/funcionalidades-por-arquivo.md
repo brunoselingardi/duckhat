@@ -46,7 +46,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - filtros horizontais alternam categoria localmente
   - CTA `Ver todos` e exibido na secao de sugestoes
   - CTA `Pesquisar` abre `SearchResultsPage` com termo, localizacao e categoria selecionados
-  - toque em recente ou sugestao aplica texto ou leva para `ServicePage`
+  - toque em recente ou sugestao aplica texto ou leva para `ServicePage(prestadorId: ...)` quando o item interno ja e conhecido
   - busca ainda e local, sem integracao com catalogo real
 - `lib/pages/search_results.dart`
   - tela de resultados locais da busca
@@ -56,11 +56,14 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botao voltar retorna para a busca
   - botao `Pesquisar` refiltra a lista localmente
   - botoes do mapa permitem aproximar, afastar e recentralizar
-  - toque em estabelecimento ou CTA `Servicos disponiveis` abre `ServicePage`
-  - resultados ainda sao locais/mockados, sem integracao com catalogo real
+  - toque em estabelecimento interno ou CTA `Abrir estabelecimento` abre `ServicePage(prestadorId: ...)`
+  - resultados externos seguem no fluxo de contato
+  - resultados ainda nao usam catalogo interno completo do backend
 - `lib/pages/service.dart`
   - pagina do estabelecimento/prestador
+  - recebe `prestadorId` obrigatorio
   - carrega servicos reais do prestador pela API
+  - tenta carregar perfil publico do estabelecimento pela API e usa fallback centralizado quando necessario
   - possui hero, info card, tabs, galeria, reviews, FAQ e CTA `Agendar`
   - botao voltar no hero retorna
   - tabs horizontais navegam entre secoes
@@ -68,6 +71,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - a lista de servicos e apenas informativa, sem botao `Agendar` por item
   - CTA global flutuante abre a tela de agendamento com os servicos do estabelecimento
   - CTA `Enviar Mensagem` do info card cria/abre conversa real com o prestador
+  - reviews, FAQ, experiencia e galeria ainda usam fallback de fase 1 quando o backend nao expoe esses blocos
   - existem CTAs visuais locais sem acao real em componentes como experiencia
 - `lib/pages/schedule.dart`
   - agenda integrada do usuario
@@ -148,7 +152,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/components/home/rebook.dart`
   - secao de reagendamento
 - `lib/components/home/rebookcard.dart`
-  - card clicavel que abre `ServicePage`
+  - card clicavel que abre `ServicePage(prestadorId: ...)`
 - `lib/components/home/appointment.dart`
   - secao de agendamentos do dia
 - `lib/components/home/appointmentcard.dart`
@@ -164,9 +168,10 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/components/service/service_hero.dart`
   - hero da pagina do estabelecimento com retorno visual
+  - aceita capa por asset ou URL
 - `lib/components/service/service_info_card.dart`
   - resumo do estabelecimento
-  - possui CTA visual local sem integracao real
+  - renderiza nome, nota, endereco, horario, descricao e logo dinamicamente
 - `lib/components/service/service_tab_menu.dart`
   - tabs horizontais da pagina de servico
 - `lib/components/service/service_sections.dart`
@@ -176,15 +181,19 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cada linha possui botao `Agendar`
 - `lib/components/service/service_gallery_section.dart`
   - galeria com selecao e abertura fullscreen
+  - aceita imagens por asset ou URL
 - `lib/components/service/service_reviews_section.dart`
-  - reviews mockadas
+  - reviews vindas da camada de fallback de fase 1
 - `lib/components/service/service_faq_section.dart`
-  - FAQ mockado
+  - FAQ vindo da camada de fallback de fase 1
 - `lib/components/service/service_experience_section.dart`
   - bloco de experiencia/descricao
+  - recebe conteudo dinamico da camada de fallback de fase 1
   - possui CTA visual local sem handler funcional
-- `lib/components/service/service_data.dart`
-  - dados locais usados pela pagina de servico
+- `lib/components/service/service_profile_fallbacks.dart`
+  - fallback centralizado da fase 1 para perfil publico, experiencia, galeria, reviews e FAQ
+- `lib/components/service/service_image.dart`
+  - renderer de imagem que aceita asset ou URL
 - `lib/components/service/service_models.dart`
   - modelos de apoio para ofertas, reviews e FAQ
 

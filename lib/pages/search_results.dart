@@ -1,5 +1,7 @@
+import 'package:duckhat/models/catalogo_prestador_busca.dart';
 import 'package:duckhat/services/geo_search_service.dart';
 import 'package:duckhat/services/search_intent.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -107,6 +109,8 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       _moveMap(origin.point, 13.8);
 
       final intent = SearchIntent.fromQuery(_queryController.text);
+      final internalProviders = await DuckHatApi.instance
+          .buscarPrestadoresCatalogo(intent.internalCatalogTerm);
       final places = await _search.searchText(
         center: origin.point,
         query: _queryController.text,
@@ -115,16 +119,21 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       if (!mounted) return;
 
       final items = [
-        ...intent
-            .demoPlaces(
-              SearchPoint(
-                latitude: origin.point.latitude,
-                longitude: origin.point.longitude,
+        ...internalProviders.map(
+          (item) => _PlaceCardModel.fromInternalCatalog(item, origin.point),
+        ),
+        if (internalProviders.isEmpty)
+          ...intent
+              .demoPlaces(
+                SearchPoint(
+                  latitude: origin.point.latitude,
+                  longitude: origin.point.longitude,
+                ),
+              )
+              .map(
+                (item) =>
+                    _PlaceCardModel.fromDemo(item, origin.point, _distance),
               ),
-            )
-            .map(
-              (item) => _PlaceCardModel.fromDemo(item, origin.point, _distance),
-            ),
         ...places.map(
           (item) => _PlaceCardModel.fromGoogle(item, origin.point, _distance),
         ),
@@ -195,8 +204,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   void _openProvider(_PlaceCardModel result) {
-    if (!result.hasInternalPage) return;
-    Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+    if (!result.hasInternalPage || result.prestadorId == null) return;
+    Navigator.of(context).push(
+      AppRoute(builder: (_) => ServicePage(prestadorId: result.prestadorId!)),
+    );
   }
 
   Future<void> _openWhatsApp(_PlaceCardModel result) async {
@@ -1014,6 +1025,7 @@ class _PlaceCardModel {
   final double distanceMeters;
   final String distanceLabel;
   final bool hasInternalPage;
+  final int? prestadorId;
   final String phone;
   final Uri whatsappUrl;
   final String dedupeKey;
@@ -1026,6 +1038,7 @@ class _PlaceCardModel {
     required this.distanceMeters,
     required this.distanceLabel,
     required this.hasInternalPage,
+    required this.prestadorId,
     required this.phone,
     required this.whatsappUrl,
     required this.dedupeKey,
@@ -1037,8 +1050,6 @@ class _PlaceCardModel {
     Distance distance,
   ) {
     final meters = distance.as(LengthUnit.Meter, origin, item.location);
-    final hasInternalPage = _hasInternalPage(item.name);
-
     return _PlaceCardModel(
       name: item.name,
       categoryLabel: 'Estabelecimento',
@@ -1046,7 +1057,8 @@ class _PlaceCardModel {
       location: item.location,
       distanceMeters: meters,
       distanceLabel: _formatDistance(meters),
-      hasInternalPage: hasInternalPage,
+      hasInternalPage: false,
+      prestadorId: null,
       phone: item.phone ?? '5562999990100',
       whatsappUrl: SearchContact.whatsappUri(
         phone: item.phone ?? '5562999990100',
@@ -1054,6 +1066,29 @@ class _PlaceCardModel {
             'Ola, encontrei ${item.name.trim()} pelo DuckHat e gostaria de atendimento.',
       ),
       dedupeKey: _dedupeKey(item.name),
+    );
+  }
+
+  factory _PlaceCardModel.fromInternalCatalog(
+    CatalogoPrestadorBusca item,
+    LatLng origin,
+  ) {
+    return _PlaceCardModel(
+      name: item.nome,
+      categoryLabel: item.categoriaLabel,
+      address: item.endereco ?? 'Endereco indisponivel',
+      location: origin,
+      distanceMeters: -1,
+      distanceLabel: 'No app',
+      hasInternalPage: true,
+      prestadorId: item.prestadorId,
+      phone: item.telefone ?? '5562999990100',
+      whatsappUrl: SearchContact.whatsappUri(
+        phone: item.telefone ?? '5562999990100',
+        message:
+            'Ola, encontrei ${item.nome.trim()} pelo DuckHat e gostaria de atendimento.',
+      ),
+      dedupeKey: _dedupeKey(item.nome),
     );
   }
 
@@ -1073,17 +1108,11 @@ class _PlaceCardModel {
       distanceMeters: meters,
       distanceLabel: _formatDistance(meters),
       hasInternalPage: item.hasInternalPage,
+      prestadorId: item.prestadorId,
       phone: item.phone,
       whatsappUrl: item.whatsappUrl,
       dedupeKey: _dedupeKey(item.name),
     );
-  }
-
-  static bool _hasInternalPage(String name) {
-    final normalized = _dedupeKey(name);
-    return normalized.contains('barbie dream barber') ||
-        normalized.contains('barbie salon') ||
-        normalized.contains('barbies salon');
   }
 
   static String _dedupeKey(String value) {

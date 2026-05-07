@@ -98,7 +98,9 @@ class _PromotionsPageState extends State<PromotionsPage> {
   }
 
   void _openFeaturedDeal() {
-    Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+    Navigator.of(context).push(
+      AppRoute(builder: (_) => const ServicePage(prestadorId: 2)),
+    );
   }
 
   void _openAllServices() {

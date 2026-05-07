@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'service_image.dart';
+
 class ServiceHero extends StatelessWidget {
   final VoidCallback onBack;
+  final String? imageSource;
 
-  const ServiceHero({super.key, required this.onBack});
+  const ServiceHero({super.key, required this.onBack, this.imageSource});
 
   @override
   Widget build(BuildContext context) {
@@ -12,8 +15,8 @@ class ServiceHero extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            'assets/barbie.jpg',
+          ServiceImage(
+            source: imageSource,
             fit: BoxFit.cover,
             cacheWidth: 800,
             filterQuality: FilterQuality.medium,

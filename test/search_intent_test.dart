@@ -17,6 +17,17 @@ void main() {
       );
     });
 
+    test('prefers normalized internal catalog terms for known intents', () {
+      expect(
+        SearchIntent.fromQuery('cano banheiro').internalCatalogTerm,
+        'encanador',
+      );
+      expect(
+        SearchIntent.fromQuery('barbie dream barber').internalCatalogTerm,
+        'barbie dream barber',
+      );
+    });
+
     test('narrows external search for maintenance services', () {
       expect(SearchIntent.fromQuery('cano').usesExternalNameFilter, isTrue);
       expect(SearchIntent.fromQuery('luz').usesExternalNameFilter, isTrue);
@@ -27,13 +38,13 @@ void main() {
         'cabeleireiros proximos a mim',
       ).demoPlaces(const SearchPoint(latitude: -16.6869, longitude: -49.2648));
 
-      expect(results.map((item) => item.name), contains('Barbie Dream Barber'));
-      expect(
-        results
-            .singleWhere((item) => item.name == 'Barbie Dream Barber')
-            .hasInternalPage,
-        isTrue,
+      final barbie = results.singleWhere(
+        (item) => item.name == 'Barbie Dream Barber',
       );
+
+      expect(results.map((item) => item.name), contains('Barbie Dream Barber'));
+      expect(barbie.hasInternalPage, isTrue);
+      expect(barbie.prestadorId, 2);
     });
 
     test('builds WhatsApp url for external results', () {

@@ -55,7 +55,9 @@ class _SearchPageState extends State<SearchPage> {
 
   void _openSuggestion(_SearchSuggestion suggestion) {
     if (suggestion.opensEstablishment) {
-      Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+      Navigator.of(context).push(
+        AppRoute(builder: (_) => const ServicePage(prestadorId: 2)),
+      );
       return;
     }
 

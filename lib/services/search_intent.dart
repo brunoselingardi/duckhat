@@ -105,6 +105,14 @@ class SearchIntent {
       kind == SearchServiceKind.plumbing ||
       kind == SearchServiceKind.electrical;
 
+  String get internalCatalogTerm {
+    final trimmed = rawQuery.trim();
+    if (kind == SearchServiceKind.generic) {
+      return trimmed.isEmpty ? serviceTerm : trimmed;
+    }
+    return serviceTerm;
+  }
+
   String get geoapifyCategories {
     return switch (kind) {
       SearchServiceKind.beauty ||
@@ -131,6 +139,7 @@ class SearchIntent {
           longitude: origin.longitude + 0.003,
           phone: '5562999990001',
           hasInternalPage: true,
+          prestadorId: 2,
         ),
       );
     }
@@ -229,6 +238,7 @@ class SearchDemoPlace {
   final double longitude;
   final String phone;
   final bool hasInternalPage;
+  final int? prestadorId;
 
   const SearchDemoPlace({
     required this.id,
@@ -239,6 +249,7 @@ class SearchDemoPlace {
     required this.longitude,
     required this.phone,
     this.hasInternalPage = false,
+    this.prestadorId,
   });
 
   Uri get whatsappUrl => SearchContact.whatsappUri(

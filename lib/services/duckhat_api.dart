@@ -8,7 +8,9 @@ import '../models/agendamento.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
 import '../models/avaliacao.dart';
+import '../models/catalogo_prestador_busca.dart';
 import '../models/disponibilidade_catalogo.dart';
+import '../models/estabelecimento_publico.dart';
 import '../models/notificacao.dart';
 import '../models/notificacao_preferencias.dart';
 import '../models/ocupacao_prestador.dart';
@@ -383,6 +385,59 @@ class DuckHatApi {
         .map(
           (item) =>
               ServicoCatalogo.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .toList();
+  }
+
+  Future<EstabelecimentoPublico> carregarEstabelecimentoPublico(
+    int prestadorId,
+  ) async {
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/catalogo/prestadores/$prestadorId'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar o estabelecimento público.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar estabelecimento.');
+    }
+
+    return EstabelecimentoPublico.fromJson(body);
+  }
+
+  Future<List<CatalogoPrestadorBusca>> buscarPrestadoresCatalogo(
+    String nome,
+  ) async {
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/catalogo/prestadores/busca?nome=${Uri.encodeQueryComponent(nome)}'),
+      headers: {'Accept': 'application/json'},
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar o catálogo.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao buscar catálogo.');
+    }
+
+    return body
+        .map(
+          (item) => CatalogoPrestadorBusca.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
         )
         .toList();
   }

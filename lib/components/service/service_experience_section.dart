@@ -2,7 +2,14 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceExperienceSection extends StatelessWidget {
-  const ServiceExperienceSection({super.key});
+  final String summary;
+  final List<String> highlights;
+
+  const ServiceExperienceSection({
+    super.key,
+    required this.summary,
+    required this.highlights,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +28,8 @@ class ServiceExperienceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Um espaco criativo com energia pop e atendimento premium para quem quer um visual impecavel, moderno e cheio de presenca.',
+          Text(
+            summary,
             style: TextStyle(
               fontSize: 15,
               height: 1.6,
@@ -39,11 +46,7 @@ class ServiceExperienceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const _BulletLine(
-            'Visual Barbiecore reinterpretado para o universo masculino',
-          ),
-          const _BulletLine('Equipe focada em imagem, acabamento e identidade'),
-          const _BulletLine('Ambiente instagramavel com experiencia premium'),
+          for (final item in highlights) _BulletLine(item),
           const SizedBox(height: 22),
           const Text(
             'Formatos de atendimento',

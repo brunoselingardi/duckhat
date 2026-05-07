@@ -8,6 +8,7 @@ class RebookCard extends StatelessWidget {
   final String image;
   final double rating;
   final int reviews;
+  final int prestadorId;
 
   const RebookCard({
     super.key,
@@ -15,10 +16,14 @@ class RebookCard extends StatelessWidget {
     required this.image,
     this.rating = 0.0,
     this.reviews = 0,
+    this.prestadorId = 2,
   });
 
   void _navigateToEstabelecimento(BuildContext context) {
-    Navigator.push(context, AppRoute(builder: (_) => const ServicePage()));
+    Navigator.push(
+      context,
+      AppRoute(builder: (_) => ServicePage(prestadorId: prestadorId)),
+    );
   }
 
   @override

@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 
 import com.duckhat.api.dto.CreateUsuarioRequest;
 import com.duckhat.api.dto.UpdatePerfilRequest;
+import com.duckhat.api.dto.CatalogoPrestadorBuscaResponse;
+import com.duckhat.api.dto.PrestadorPublicoResponse;
 import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
@@ -17,6 +19,7 @@ import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -86,6 +89,57 @@ class UsuarioServiceTest {
         TipoUsuario.CLIENTE));
 
     verify(estabelecimentoRepository, never()).save(any(Estabelecimento.class));
+  }
+
+  @Test
+  void buscarPrestadorPublicoRetornaCamposPublicosDoPrestador() {
+    Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
+    usuario.setDescricaoPublica("Cortes e cuidados para todos os estilos.");
+    usuario.setHorarioAtendimento("Segunda a sexta 9h - 20h");
+    usuario.setImagemCapa("assets/barbie.jpg");
+    usuario.setImagemLogo("assets/barbielogo.jpg");
+    when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
+
+    PrestadorPublicoResponse response = service.buscarPrestadorPublico(2L);
+
+    assertEquals(2L, response.id());
+    assertEquals("Nome Original", response.nome());
+    assertEquals("62999990000", response.telefone());
+    assertEquals("Cortes e cuidados para todos os estilos.", response.descricaoPublica());
+    assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
+  }
+
+  @Test
+  void buscarPrestadorPublicoRecusaUsuarioQueNaoEhPrestador() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.buscarPrestadorPublico(7L));
+
+    assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
+  }
+
+  @Test
+  void buscarPrestadoresPublicosPorNomeCombinaPrestadorEServico() {
+    Usuario prestadorPorNome = usuario(2L, TipoUsuario.PRESTADOR);
+    prestadorPorNome.setNome("Barbie Dream Barber");
+    Usuario prestadorPorServico = usuario(5L, TipoUsuario.PRESTADOR);
+    prestadorPorServico.setNome("Ken Studio");
+
+    when(usuarioRepository.findByTipoAndNomeContainingIgnoreCase(
+        TipoUsuario.PRESTADOR,
+        "barbie")).thenReturn(List.of(prestadorPorNome));
+    when(usuarioRepository.findAllById(List.of(2L, 5L)))
+        .thenReturn(List.of(prestadorPorNome, prestadorPorServico));
+
+    List<CatalogoPrestadorBuscaResponse> response = service
+        .buscarPrestadoresPublicosPorNome("barbie", List.of(2L, 5L));
+
+    assertEquals(2, response.size());
+    assertEquals(2L, response.get(0).prestadorId());
+    assertEquals(5L, response.get(1).prestadorId());
   }
 
   @Test
