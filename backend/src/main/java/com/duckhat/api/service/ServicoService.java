@@ -20,15 +20,21 @@ public class ServicoService {
 
   private final ServicoRepository servicoRepository;
   private final UsuarioRepository usuarioRepository;
+  private final DisponibilidadePadraoService disponibilidadePadraoService;
 
-  public ServicoService(ServicoRepository servicoRepository, UsuarioRepository usuarioRepository) {
+  public ServicoService(ServicoRepository servicoRepository,
+      UsuarioRepository usuarioRepository,
+      DisponibilidadePadraoService disponibilidadePadraoService) {
     this.servicoRepository = servicoRepository;
     this.usuarioRepository = usuarioRepository;
+    this.disponibilidadePadraoService = disponibilidadePadraoService;
   }
 
   @Transactional
   public ServicoResponse criar(CreateServicoRequest request, Usuario prestador) {
     validarPrestador(prestador);
+    disponibilidadePadraoService.garantirDisponibilidadePadrao(prestador);
+
     Servico servico = new Servico();
     servico.setPrestador(prestador);
     aplicarDados(servico, request);
