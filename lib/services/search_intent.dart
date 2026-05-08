@@ -61,6 +61,9 @@ class SearchIntent {
       'encanador',
       'encanamento',
       'vazamento',
+      'desentupimento',
+      'hidraulica',
+      'hidraulico',
       'pia',
       'ralo',
     ])) {

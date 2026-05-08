@@ -12,6 +12,14 @@ void main() {
     test('maps maintenance keywords to service terms', () {
       expect(SearchIntent.fromQuery('cano banheiro').serviceTerm, 'encanador');
       expect(
+        SearchIntent.fromQuery('desentupimento de pia').serviceTerm,
+        'encanador',
+      );
+      expect(
+        SearchIntent.fromQuery('manutencao hidráulica').serviceTerm,
+        'encanador',
+      );
+      expect(
         SearchIntent.fromQuery('luz do quarto').serviceTerm,
         'eletricista',
       );
