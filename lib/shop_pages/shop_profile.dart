@@ -5,14 +5,7 @@ import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
 import 'shop_establishment_data.dart';
-import 'shop_gallery.dart';
-import 'shop_work_days.dart';
-import 'shop_work_hours.dart';
 import 'shop_service_duration.dart';
-import 'shop_notifications.dart';
-import 'shop_privacy.dart';
-import 'shop_help.dart';
-import 'shop_about.dart';
 
 class ShopProfilePage extends StatefulWidget {
   const ShopProfilePage({super.key});
@@ -231,7 +224,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Atualize sua vitrine, agenda, servicos e preferencias do estabelecimento.',
+                      'Atualize sua vitrine publica e os servicos oferecidos pelo estabelecimento.',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -273,36 +266,6 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
           ),
           _buildDivider(),
           _buildMenuItem(
-            icon: Icons.photo_library,
-            title: 'Galeria de Fotos',
-            subtitle: '5 fotos cadastradas',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopGalleryPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.calendar_month,
-            title: 'Dias de Funcionamento',
-            subtitle: 'Seg a Sex (Sáb e Dom fechado)',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopWorkDaysPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.schedule,
-            title: 'Horários de Serviço',
-            subtitle: '08:00 às 18:00',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopWorkHoursPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
             icon: Icons.timer,
             title: 'Serviços e Preços',
             subtitle: 'Tempo e valor de cada serviço',
@@ -311,52 +274,6 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
               MaterialPageRoute(
                 builder: (_) => const ShopServiceDurationPage(),
               ),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _buildSectionTitle('CONTA E PREFERENCIAS'),
-        _buildMenuCard([
-          _buildMenuItem(
-            icon: Icons.notifications,
-            title: 'Notificações',
-            subtitle: 'Preferencias de alertas e mensagens',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopNotificationsPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.lock,
-            title: 'Privacidade e Segurança',
-            subtitle: 'Protecao, dados e acesso da empresa',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopPrivacyPage()),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _buildSectionTitle('SUPORTE E SOBRE'),
-        _buildMenuCard([
-          _buildMenuItem(
-            icon: Icons.help,
-            title: 'Ajuda',
-            subtitle: 'Duvidas e canais de atendimento',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopHelpPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.info,
-            title: 'Sobre o App',
-            subtitle: 'Versao e informacoes do DuckHat',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopAboutPage()),
             ),
           ),
         ]),

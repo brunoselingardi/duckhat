@@ -256,7 +256,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_profile.dart`
   - hub de configuracoes do estabelecimento
   - header usa nome/e-mail reais da sessao/API
-  - acessa dados do estabelecimento, galeria, horarios, servicos, notificacoes, privacidade, ajuda e sobre
+  - exibe apenas entradas principais ja conectadas ao fluxo real: dados do estabelecimento, servicos/precos e logout
+  - telas locais/demo de galeria, horarios, notificacoes, privacidade, ajuda e sobre nao ficam mais expostas no menu principal
 - `lib/shop_pages/shop_establishment_data.dart`
   - formulario real de dados do estabelecimento
   - carrega dados via `GET /api/me`
@@ -265,22 +266,29 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - usa a mesma validacao de perfil para e-mail, telefone com DDD e endereco com rua/numero
 - `lib/shop_pages/shop_gallery.dart`
   - galeria mockada de fotos com estado local
+  - nao fica exposta no menu principal do estabelecimento enquanto nao houver persistencia real
 - `lib/shop_pages/shop_work_days.dart`
   - configuracao mockada de dias de funcionamento
+  - nao fica exposta no menu principal do estabelecimento enquanto disponibilidade real continuar centralizada no backend
 - `lib/shop_pages/shop_work_hours.dart`
   - configuracao mockada de horarios de atendimento
+  - nao fica exposta no menu principal do estabelecimento enquanto disponibilidade real continuar centralizada no backend
 - `lib/shop_pages/shop_service_duration.dart`
   - editor real de servicos do prestador autenticado
   - carrega `GET /api/servicos`, cria servicos com `POST /api/servicos` e atualiza nome/descricao/duracao/preco/status com `PUT /api/servicos/{id}`
   - permite pausar servico existente para remover do catalogo publico sem apagar historico de agendamentos
 - `lib/shop_pages/shop_notifications.dart`
   - preferencias mockadas de notificacao
+  - nao fica exposta no menu principal do estabelecimento enquanto nao consumir preferencias reais do prestador
 - `lib/shop_pages/shop_privacy.dart`
   - preferencias mockadas de privacidade e seguranca
+  - nao fica exposta no menu principal do estabelecimento enquanto nao houver integracao real
 - `lib/shop_pages/shop_help.dart`
   - ajuda mockada do estabelecimento
+  - nao fica exposta no menu principal do estabelecimento nesta fase
 - `lib/shop_pages/shop_about.dart`
   - informacoes mockadas sobre a experiencia de estabelecimento
+  - nao fica exposta no menu principal do estabelecimento nesta fase
 
 ## Modelos
 
