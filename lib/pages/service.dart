@@ -5,6 +5,7 @@ import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/components/service/service_sections.dart';
 import 'package:duckhat/components/service/service_tab_menu.dart';
 import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
 import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/services/duckhat_api.dart';
@@ -12,7 +13,14 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServicePage extends StatefulWidget {
-  const ServicePage({super.key});
+  final int prestadorId;
+  final EstabelecimentoCatalogo? estabelecimento;
+
+  const ServicePage({
+    super.key,
+    this.prestadorId = servicePrestadorId,
+    this.estabelecimento,
+  });
 
   @override
   State<ServicePage> createState() => _ServicePageState();
@@ -30,6 +38,7 @@ class _ServicePageState extends State<ServicePage> {
   bool _isAutoScrolling = false;
   bool _loadingServices = true;
   String? _servicesError;
+  EstabelecimentoCatalogo? _estabelecimento;
   List<ServiceOffer> _offers = const [];
 
   @override
@@ -42,7 +51,7 @@ class _ServicePageState extends State<ServicePage> {
         precacheImage(AssetImage(image), context);
       }
     });
-    _loadServices();
+    _loadEstablishment();
   }
 
   @override
@@ -107,20 +116,23 @@ class _ServicePageState extends State<ServicePage> {
     }
   }
 
-  Future<void> _loadServices() async {
+  Future<void> _loadEstablishment() async {
     setState(() {
       _loadingServices = true;
       _servicesError = null;
     });
 
     try {
-      final services = await DuckHatApi.instance.listarServicosPorPrestador(
-        servicePrestadorId,
-      );
+      final estabelecimento =
+          widget.estabelecimento ??
+          await DuckHatApi.instance.buscarEstabelecimentoCatalogo(
+            widget.prestadorId,
+          );
       if (!mounted) return;
 
       setState(() {
-        _offers = services.map(_offerFromServico).toList();
+        _estabelecimento = estabelecimento;
+        _offers = estabelecimento.servicos.map(_offerFromServico).toList();
         _loadingServices = false;
       });
     } catch (error) {
@@ -132,6 +144,22 @@ class _ServicePageState extends State<ServicePage> {
       });
     }
   }
+
+  int get _prestadorId => _estabelecimento?.prestadorId ?? widget.prestadorId;
+
+  String get _establishmentName =>
+      _estabelecimento?.nome ?? serviceEstablishmentName;
+
+  String get _establishmentAddress =>
+      _estabelecimento?.enderecoPublico ?? 'Dream Avenue, 808 - Centro Fashion';
+
+  String get _establishmentSchedule =>
+      _estabelecimento?.horarioPublico ??
+      'Segunda a sexta 9h - 20h | Sabado 9h - 18h';
+
+  String get _establishmentDescription =>
+      _estabelecimento?.descricaoPublica ??
+      'Uma barbearia com atendimento caloroso e uma experiencia pensada para quem quer sair com mais estilo e personalidade.';
 
   ServiceOffer _offerFromServico(ServicoCatalogo service) {
     return ServiceOffer(
@@ -187,14 +215,15 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
-  Future<void> _openBookingFlow() async {
+  Future<void> _openBookingFlow({int? initialServiceId}) async {
     final created = await Navigator.pushNamed(
       context,
       '/schedule-date',
       arguments: {
-        'prestadorId': servicePrestadorId,
-        'establishmentName': serviceEstablishmentName,
+        'prestadorId': _prestadorId,
+        'establishmentName': _establishmentName,
         'serviceOffers': _offers,
+        'initialServiceId': initialServiceId,
       },
     );
 
@@ -211,7 +240,7 @@ class _ServicePageState extends State<ServicePage> {
   Future<void> _openChat() async {
     try {
       final conversa = await DuckHatApi.instance.criarOuBuscarConversaChat(
-        servicePrestadorId,
+        _prestadorId,
       );
       if (!mounted) return;
 
@@ -245,12 +274,21 @@ class _ServicePageState extends State<ServicePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ServiceHero(onBack: () => Navigator.pop(context)),
+            ServiceHero(
+              onBack: () => Navigator.pop(context),
+              bannerImagemBase64: _estabelecimento?.bannerImagemBase64,
+            ),
             Container(
               transform: Matrix4.translationValues(0, -28, 0),
               child: Column(
                 children: [
-                  ServiceInfoCard(onMessageTap: _openChat),
+                  ServiceInfoCard(
+                    establishmentName: _establishmentName,
+                    address: _establishmentAddress,
+                    schedule: _establishmentSchedule,
+                    description: _establishmentDescription,
+                    onMessageTap: _openChat,
+                  ),
                   const SizedBox(height: 8),
                   ServiceTabMenu(
                     tabs: serviceTabs,
@@ -260,9 +298,13 @@ class _ServicePageState extends State<ServicePage> {
                   ServiceSections(
                     sectionKeys: _sectionKeys,
                     offers: _offers,
+                    establishmentName: _establishmentName,
+                    experienceDescription: _establishmentDescription,
                     isServicesLoading: _loadingServices,
                     servicesError: _servicesError,
-                    onServicesRetry: _loadServices,
+                    onServicesRetry: _loadEstablishment,
+                    onBookOffer: (offer) =>
+                        _openBookingFlow(initialServiceId: offer.serviceId),
                     reviews: serviceReviews,
                     faqs: serviceFaqs,
                     galleryImages: serviceGalleryImages,
@@ -279,7 +321,7 @@ class _ServicePageState extends State<ServicePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _offers.isEmpty ? null : _openBookingFlow,
+        onPressed: _offers.isEmpty ? null : () => _openBookingFlow(),
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.primary,
         icon: const Icon(Icons.calendar_today),

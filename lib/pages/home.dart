@@ -86,8 +86,7 @@ class _HomeState extends State<Home> {
         item.inicioEm.day,
       );
       return itemDay == today && item.status != 'CANCELADO';
-    }).toList()
-      ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
+    }).toList()..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
 
     return items
         .map(
@@ -106,7 +105,9 @@ class _HomeState extends State<Home> {
   List<Map<String, dynamic>> get _favoriteServices {
     final counts = <String, _FavoriteAggregate>{};
 
-    for (final item in _agendamentos.where((entry) => entry.status != 'CANCELADO')) {
+    for (final item in _agendamentos.where(
+      (entry) => entry.status != 'CANCELADO',
+    )) {
       final place = item.prestadorNome ?? 'Prestador #${item.prestadorId}';
       final key = '${item.prestadorId ?? 0}::$place';
       final current = counts[key];
@@ -114,6 +115,7 @@ class _HomeState extends State<Home> {
       if (current == null) {
         counts[key] = _FavoriteAggregate(
           place: place,
+          prestadorId: item.prestadorId,
           image: _imageForAppointment(item),
           lastUsedAt: item.inicioEm,
           uses: 1,
@@ -140,6 +142,7 @@ class _HomeState extends State<Home> {
       final rating = 4.4 + (item.uses.clamp(0, 5) * 0.1);
       return {
         'name': item.place,
+        'prestadorId': item.prestadorId,
         'image': item.image,
         'rating': rating.clamp(0, 5),
         'reviews': item.uses * 7,
@@ -148,8 +151,8 @@ class _HomeState extends State<Home> {
   }
 
   String _imageForAppointment(Agendamento item) {
-    final source =
-        '${item.prestadorNome ?? ''} ${item.servicoNome ?? ''}'.toLowerCase();
+    final source = '${item.prestadorNome ?? ''} ${item.servicoNome ?? ''}'
+        .toLowerCase();
 
     if (source.contains('barbie')) return 'assets/barbiesalon.jpg';
     if (source.contains('james')) return 'assets/jamessalon.jpg';
@@ -383,9 +386,7 @@ class _HomeLoadingState extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 40),
-      child: Center(
-        child: CircularProgressIndicator(color: AppColors.accent),
-      ),
+      child: Center(child: CircularProgressIndicator(color: AppColors.accent)),
     );
   }
 }
@@ -438,12 +439,14 @@ class _HomeErrorState extends StatelessWidget {
 
 class _FavoriteAggregate {
   final String place;
+  final int? prestadorId;
   final String image;
   final DateTime lastUsedAt;
   final int uses;
 
   const _FavoriteAggregate({
     required this.place,
+    required this.prestadorId,
     required this.image,
     required this.lastUsedAt,
     required this.uses,
@@ -451,12 +454,14 @@ class _FavoriteAggregate {
 
   _FavoriteAggregate copyWith({
     String? place,
+    int? prestadorId,
     String? image,
     DateTime? lastUsedAt,
     int? uses,
   }) {
     return _FavoriteAggregate(
       place: place ?? this.place,
+      prestadorId: prestadorId ?? this.prestadorId,
       image: image ?? this.image,
       lastUsedAt: lastUsedAt ?? this.lastUsedAt,
       uses: uses ?? this.uses,

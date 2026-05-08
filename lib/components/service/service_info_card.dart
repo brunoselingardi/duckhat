@@ -2,9 +2,20 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceInfoCard extends StatelessWidget {
+  final String establishmentName;
+  final String address;
+  final String schedule;
+  final String description;
   final VoidCallback? onMessageTap;
 
-  const ServiceInfoCard({super.key, this.onMessageTap});
+  const ServiceInfoCard({
+    super.key,
+    required this.establishmentName,
+    required this.address,
+    required this.schedule,
+    required this.description,
+    this.onMessageTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,20 +39,20 @@ class ServiceInfoCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Barbie Dream Barber',
-                      style: TextStyle(
+                      establishmentName,
+                      style: const TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textBold,
                       ),
                     ),
-                    SizedBox(height: 10),
-                    Row(
+                    const SizedBox(height: 10),
+                    const Row(
                       children: [
                         Icon(Icons.star_rounded, color: Color(0xFFFFB547)),
                         SizedBox(width: 6),
@@ -76,20 +87,18 @@ class ServiceInfoCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: Image.asset('assets/barbielogo.jpg', fit: BoxFit.cover),
+                child: const Icon(
+                  Icons.storefront_rounded,
+                  color: AppColors.accent,
+                  size: 34,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-          const _InfoRow(
-            icon: Icons.location_on_outlined,
-            text: 'Dream Avenue, 808 - Centro Fashion',
-          ),
+          _InfoRow(icon: Icons.location_on_outlined, text: address),
           const SizedBox(height: 12),
-          const _InfoRow(
-            icon: Icons.access_time_rounded,
-            text: 'Segunda a sexta 9h - 20h | Sabado 9h - 18h',
-          ),
+          _InfoRow(icon: Icons.access_time_rounded, text: schedule),
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
@@ -99,9 +108,9 @@ class ServiceInfoCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: const Color(0xFFE6EDFF)),
             ),
-            child: const Text(
-              '"Uma barberaria com energia Barbie: visual marcante, atendimento caloroso e uma experiencia pensada para quem quer sair com mais estilo e personalidade."',
-              style: TextStyle(
+            child: Text(
+              description,
+              style: const TextStyle(
                 fontSize: 13.5,
                 height: 1.6,
                 color: AppColors.textRegular,

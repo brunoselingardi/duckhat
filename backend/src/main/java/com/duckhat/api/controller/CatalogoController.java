@@ -2,8 +2,10 @@ package com.duckhat.api.controller;
 
 import com.duckhat.api.dto.OcupacaoPrestadorResponse;
 import com.duckhat.api.dto.DisponibilidadeResponse;
+import com.duckhat.api.dto.EstabelecimentoCatalogoResponse;
 import com.duckhat.api.dto.ServicoResponse;
 import com.duckhat.api.service.AgendamentoService;
+import com.duckhat.api.service.CatalogoService;
 import com.duckhat.api.service.DisponibilidadeService;
 import com.duckhat.api.service.ServicoService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,15 +19,35 @@ import java.util.List;
 public class CatalogoController {
 
   private final ServicoService servicoService;
+  private final CatalogoService catalogoService;
   private final DisponibilidadeService disponibilidadeService;
   private final AgendamentoService agendamentoService;
 
   public CatalogoController(ServicoService servicoService,
+      CatalogoService catalogoService,
       DisponibilidadeService disponibilidadeService,
       AgendamentoService agendamentoService) {
     this.servicoService = servicoService;
+    this.catalogoService = catalogoService;
     this.disponibilidadeService = disponibilidadeService;
     this.agendamentoService = agendamentoService;
+  }
+
+  @GetMapping("/api/catalogo/estabelecimentos")
+  public List<EstabelecimentoCatalogoResponse> listarEstabelecimentos(
+      @RequestParam(required = false) String termo) {
+    return catalogoService.listarEstabelecimentos(termo);
+  }
+
+  @GetMapping("/api/catalogo/estabelecimentos/busca")
+  public List<EstabelecimentoCatalogoResponse> buscarEstabelecimentos(
+      @RequestParam(required = false) String termo) {
+    return catalogoService.listarEstabelecimentos(termo);
+  }
+
+  @GetMapping("/api/catalogo/estabelecimentos/{prestadorId}")
+  public EstabelecimentoCatalogoResponse buscarEstabelecimento(@PathVariable Long prestadorId) {
+    return catalogoService.buscarEstabelecimento(prestadorId);
   }
 
   @GetMapping("/api/catalogo/servicos")

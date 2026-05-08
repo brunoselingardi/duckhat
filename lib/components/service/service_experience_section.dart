@@ -2,7 +2,14 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceExperienceSection extends StatelessWidget {
-  const ServiceExperienceSection({super.key});
+  final String establishmentName;
+  final String description;
+
+  const ServiceExperienceSection({
+    super.key,
+    required this.establishmentName,
+    required this.description,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +28,9 @@ class ServiceExperienceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Um espaco criativo com energia pop e atendimento premium para quem quer um visual impecavel, moderno e cheio de presenca.',
-            style: TextStyle(
+          Text(
+            description,
+            style: const TextStyle(
               fontSize: 15,
               height: 1.6,
               color: AppColors.textBold,
@@ -39,11 +46,13 @@ class ServiceExperienceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
+          _BulletLine('Vitrine pública de $establishmentName no DuckHat'),
           const _BulletLine(
-            'Visual Barbiecore reinterpretado para o universo masculino',
+            'Servicos, precos e duracao visiveis antes do agendamento',
           ),
-          const _BulletLine('Equipe focada em imagem, acabamento e identidade'),
-          const _BulletLine('Ambiente instagramavel com experiencia premium'),
+          const _BulletLine(
+            'Agenda conectada ao horario disponivel do estabelecimento',
+          ),
           const SizedBox(height: 22),
           const Text(
             'Formatos de atendimento',

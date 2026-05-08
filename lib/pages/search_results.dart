@@ -1,3 +1,5 @@
+import 'package:duckhat/models/estabelecimento_catalogo.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/services/geo_search_service.dart';
 import 'package:duckhat/services/search_intent.dart';
 import 'package:duckhat/theme.dart';
@@ -32,6 +34,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   static const _fallbackPoint = LatLng(-16.6869, -49.2648);
 
   final _search = GeoSearchService.instance;
+  final _catalogApi = DuckHatApi.instance;
   final _contactLauncher = ExternalContactLauncher.instance;
   final _mapController = MapController();
   final _distance = const Distance();
@@ -89,9 +92,19 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     });
 
     try {
-      final origin = _usingCurrentLocation
-          ? await _loadCurrentPosition()
-          : await _search.geocode(_locationController.text);
+      GeocodedLocation origin;
+      String? geoWarning;
+      try {
+        origin = _usingCurrentLocation
+            ? await _loadCurrentPosition()
+            : await _search.geocode(_locationController.text);
+      } catch (error) {
+        origin = const GeocodedLocation(
+          point: _fallbackPoint,
+          formattedAddress: 'Goiania',
+        );
+        geoWarning = error.toString().replaceFirst('Exception: ', '').trim();
+      }
 
       if (!mounted) return;
 
@@ -107,14 +120,25 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       _moveMap(origin.point, 13.8);
 
       final intent = SearchIntent.fromQuery(_queryController.text);
-      final places = await _search.searchText(
-        center: origin.point,
-        query: _queryController.text,
-      );
+      final internalPlaces = await _loadInternalCatalog(origin.point);
+      var places = <PlaceSearchResult>[];
+      String? externalWarning;
+      try {
+        places = await _search.searchText(
+          center: origin.point,
+          query: _queryController.text,
+        );
+      } catch (error) {
+        externalWarning = error
+            .toString()
+            .replaceFirst('Exception: ', '')
+            .trim();
+      }
 
       if (!mounted) return;
 
       final items = [
+        ...internalPlaces,
         ...intent
             .demoPlaces(
               SearchPoint(
@@ -138,8 +162,19 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       final sortedItems = uniqueItems.values.toList()
         ..sort((a, b) => a.distanceMeters.compareTo(b.distanceMeters));
 
+      final warnings = [
+        if (geoWarning != null && geoWarning.isNotEmpty) geoWarning,
+        if (externalWarning != null &&
+            externalWarning.isNotEmpty &&
+            internalPlaces.isEmpty)
+          externalWarning,
+      ];
+
       setState(() {
         _results = sortedItems;
+        _locationMessage = warnings.isEmpty
+            ? _locationMessage
+            : warnings.join(' ');
         _loading = false;
       });
     } catch (error) {
@@ -150,6 +185,31 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
         _error = error.toString().replaceFirst('Exception: ', '').trim();
       });
     }
+  }
+
+  Future<List<_PlaceCardModel>> _loadInternalCatalog(LatLng origin) async {
+    final term = _catalogSearchTerm;
+    final establishments = await _catalogApi.listarEstabelecimentosCatalogo(
+      termo: term,
+    );
+
+    return [
+      for (var index = 0; index < establishments.length; index++)
+        _PlaceCardModel.fromCatalog(
+          establishments[index],
+          origin,
+          _distance,
+          index,
+        ),
+    ];
+  }
+
+  String? get _catalogSearchTerm {
+    final value = _queryController.text.trim();
+    if (value.isEmpty || value.toLowerCase() == 'estabelecimentos') {
+      return null;
+    }
+    return value;
   }
 
   Future<GeocodedLocation> _loadCurrentPosition() async {
@@ -195,8 +255,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   void _openProvider(_PlaceCardModel result) {
-    if (!result.hasInternalPage) return;
-    Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+    if (!result.hasInternalPage || result.prestadorId == null) return;
+    Navigator.of(context).push(
+      AppRoute(
+        builder: (_) => ServicePage(
+          prestadorId: result.prestadorId!,
+          estabelecimento: result.estabelecimento,
+        ),
+      ),
+    );
   }
 
   Future<void> _openWhatsApp(_PlaceCardModel result) async {
@@ -583,6 +650,13 @@ class _MapPreview extends StatelessWidget {
                     height: 54,
                     child: const _UserMapMarker(),
                   ),
+                  for (final result in results)
+                    Marker(
+                      point: result.location,
+                      width: 44,
+                      height: 44,
+                      child: _ResultMapMarker(internal: result.hasInternalPage),
+                    ),
                 ],
               ),
             ],
@@ -674,6 +748,39 @@ class _UserMapMarker extends StatelessWidget {
               spreadRadius: 4,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultMapMarker extends StatelessWidget {
+  final bool internal;
+
+  const _ResultMapMarker({required this.internal});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: internal ? AppColors.accent : AppColors.secondary,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white, width: 3),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x3321223A),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          internal ? Icons.storefront : Icons.location_city_outlined,
+          size: 12,
+          color: Colors.white,
         ),
       ),
     );
@@ -789,6 +896,11 @@ class _ResultCard extends StatelessWidget {
                       runSpacing: 6,
                       children: [
                         _Badge(text: result.distanceLabel, icon: Icons.near_me),
+                        if (result.priceLabel != null)
+                          _Badge(
+                            text: result.priceLabel!,
+                            icon: Icons.payments_outlined,
+                          ),
                         _Badge(
                           text: result.hasInternalPage
                               ? 'Pagina no app'
@@ -811,6 +923,17 @@ class _ResultCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _DetailLine(icon: Icons.map_outlined, text: result.address),
+              if (result.serviceLabels.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final label in result.serviceLabels.take(3))
+                      _ServicePill(label: label),
+                  ],
+                ),
+              ],
               const SizedBox(height: 14),
               Wrap(
                 spacing: 8,
@@ -884,6 +1007,32 @@ class _Badge extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ServicePill extends StatelessWidget {
+  final String label;
+
+  const _ServicePill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.textBold,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -1014,6 +1163,10 @@ class _PlaceCardModel {
   final double distanceMeters;
   final String distanceLabel;
   final bool hasInternalPage;
+  final int? prestadorId;
+  final EstabelecimentoCatalogo? estabelecimento;
+  final String? priceLabel;
+  final List<String> serviceLabels;
   final String phone;
   final Uri whatsappUrl;
   final String dedupeKey;
@@ -1026,6 +1179,10 @@ class _PlaceCardModel {
     required this.distanceMeters,
     required this.distanceLabel,
     required this.hasInternalPage,
+    this.prestadorId,
+    this.estabelecimento,
+    this.priceLabel,
+    this.serviceLabels = const [],
     required this.phone,
     required this.whatsappUrl,
     required this.dedupeKey,
@@ -1047,6 +1204,8 @@ class _PlaceCardModel {
       distanceMeters: meters,
       distanceLabel: _formatDistance(meters),
       hasInternalPage: hasInternalPage,
+      prestadorId: hasInternalPage ? 2 : null,
+      serviceLabels: const [],
       phone: item.phone ?? '5562999990100',
       whatsappUrl: SearchContact.whatsappUri(
         phone: item.phone ?? '5562999990100',
@@ -1073,9 +1232,49 @@ class _PlaceCardModel {
       distanceMeters: meters,
       distanceLabel: _formatDistance(meters),
       hasInternalPage: item.hasInternalPage,
+      prestadorId: item.hasInternalPage ? 2 : null,
+      serviceLabels: const [],
       phone: item.phone,
       whatsappUrl: item.whatsappUrl,
       dedupeKey: _dedupeKey(item.name),
+    );
+  }
+
+  factory _PlaceCardModel.fromCatalog(
+    EstabelecimentoCatalogo item,
+    LatLng origin,
+    Distance distance,
+    int index,
+  ) {
+    final location = LatLng(
+      origin.latitude + (0.0016 * ((index % 5) + 1)),
+      origin.longitude + (index.isEven ? 0.0018 : -0.0018) * ((index % 3) + 1),
+    );
+    final meters = distance.as(LengthUnit.Meter, origin, location);
+
+    return _PlaceCardModel(
+      name: item.nome,
+      categoryLabel: 'Estabelecimento DuckHat',
+      address: item.enderecoPublico,
+      location: location,
+      distanceMeters: meters,
+      distanceLabel: item.totalServicos > 0
+          ? '${item.totalServicos} servicos'
+          : 'Sem servicos',
+      hasInternalPage: true,
+      prestadorId: item.prestadorId,
+      estabelecimento: item,
+      priceLabel: item.precoInicialLabel,
+      serviceLabels: item.servicos
+          .map((service) => '${service.nome} · ${_formatPrice(service.preco)}')
+          .toList(),
+      phone: item.telefone ?? '5562999990100',
+      whatsappUrl: SearchContact.whatsappUri(
+        phone: item.telefone ?? '5562999990100',
+        message:
+            'Ola, encontrei ${item.nome.trim()} pelo DuckHat e gostaria de atendimento.',
+      ),
+      dedupeKey: _dedupeKey(item.nome),
     );
   }
 
@@ -1118,5 +1317,13 @@ class _PlaceCardModel {
       return '${(meters / 1000).toStringAsFixed(1).replaceAll('.', ',')} km';
     }
     return '${meters.round()} m';
+  }
+
+  static String _formatPrice(double value) {
+    final normalized = value.toStringAsFixed(2).replaceAll('.', ',');
+    final withoutCents = normalized.endsWith(',00')
+        ? normalized.substring(0, normalized.length - 3)
+        : normalized;
+    return 'R\$ $withoutCents';
   }
 }
