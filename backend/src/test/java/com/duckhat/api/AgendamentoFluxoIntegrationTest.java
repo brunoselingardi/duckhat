@@ -21,6 +21,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -97,8 +98,14 @@ class AgendamentoFluxoIntegrationTest {
 
     assertEquals(prestador.getId(), agendamento.prestadorId());
     assertEquals(cliente.getId(), agendamento.clienteId());
+    assertEquals("Cliente Agenda", agendamento.clienteNome());
     assertEquals(servico.id(), agendamento.servicoId());
     assertEquals(StatusAgendamento.PENDENTE, agendamento.status());
+
+    List<AgendamentoResponse> agendaDoPrestador = agendamentoService.listarParaPrestador(prestador);
+    assertEquals(1, agendaDoPrestador.size());
+    assertEquals(cliente.getId(), agendaDoPrestador.get(0).clienteId());
+    assertEquals("Cliente Agenda", agendaDoPrestador.get(0).clienteNome());
   }
 
   private LocalDateTime proximoDiaUtilAs10h() {
