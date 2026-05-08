@@ -14,8 +14,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - define `MainNavigator`
   - controla as 4 abas principais: `Home`, `Agenda`, `Chat`, `Perfil`
 - `lib/shop_main.dart`
-  - define `ShopMainNavigator` da area mockada de estabelecimento
-  - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
+  - define `ShopMainNavigator` da area de estabelecimento
+  - controla as 4 abas `Inicio`, `Agenda`, `Clientes` e `Perfil` do fluxo `shop_*`
+  - `Inicio`, `Agenda`, `Clientes`, `Perfil`, dados do estabelecimento e servicos possuem integracoes reais; galerias, horarios, notificacoes auxiliares, privacidade, ajuda e sobre ainda sao locais/demo
   - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
   - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, cadastro/edicao de servicos do prestador, catalogo publico de estabelecimentos/servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
@@ -39,7 +40,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - card de busca abre `SearchPage`
   - cards de rebook abrem `ServicePage` com o `prestadorId` do agendamento/favorito quando disponivel
   - CTA visual `Ver promoções` nao possui handler real
-  - secao de agendamentos do dia ainda e visual/mockada
+  - secao de agendamentos do dia usa agendamentos reais do cliente autenticado
 - `lib/pages/search.dart`
   - tela de busca com filtros, campo de texto, localizacao, sugestoes e recentes
   - botao voltar retorna para a tela anterior
@@ -227,12 +228,16 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 ### Area shop
 
 - `lib/shop_pages/shop_home.dart`
-  - dashboard mockado do estabelecimento
+  - dashboard real do estabelecimento para a agenda do dia
+  - carrega `GET /api/agendamentos/prestador` e mostra os clientes que agendaram servicos para hoje
+  - possui estados de carregamento, erro, vazio e pull-to-refresh
   - cards e chips foram alinhados aos tokens de `AppColors`
   - possui atalhos reais para editar descricao/banner em `ShopEstablishmentDataPage` e servicos em `ShopServiceDurationPage`
 - `lib/shop_pages/shop_schedule.dart`
-  - agenda mockada do estabelecimento com calendario e lista do dia
-  - cards, estados selecionados e superficies usam o tema central
+  - agenda real do estabelecimento com calendario e lista por dia
+  - carrega `GET /api/agendamentos/prestador` e exibe cliente, servico, horario, status e observacoes reais
+  - permite confirmar agendamentos pendentes e concluir agendamentos confirmados
+  - possui estados de carregamento, erro, vazio, refresh e abre `AppointmentDetailPage`
 - `lib/shop_pages/shop_clients.dart`
   - aba de chat real do estabelecimento
   - reutiliza `ChatPage`, lista conversas reais da API e abre `ChatDetailPage` para responder clientes

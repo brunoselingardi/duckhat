@@ -628,12 +628,16 @@ class _SchedulePageState extends State<SchedulePage> {
                           ),
                           const SizedBox(height: 6),
                           _AppointmentMeta(
-                            icon: Icons.storefront_outlined,
-                            value:
-                                item.prestadorNome ??
-                                (item.prestadorId != null
-                                    ? 'Prestador #${item.prestadorId}'
-                                    : 'Prestador nao informado'),
+                            icon: _isPrestador
+                                ? Icons.person_outline
+                                : Icons.storefront_outlined,
+                            value: _isPrestador
+                                ? (item.clienteNome ??
+                                      'Cliente #${item.clienteId}')
+                                : (item.prestadorNome ??
+                                      (item.prestadorId != null
+                                          ? 'Prestador #${item.prestadorId}'
+                                          : 'Prestador nao informado')),
                           ),
                           if (item.observacoes != null &&
                               item.observacoes!.trim().isNotEmpty) ...[

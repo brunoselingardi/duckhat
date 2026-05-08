@@ -1,3 +1,7 @@
+import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/models/agendamento.dart';
+import 'package:duckhat/pages/appointment_detail.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
@@ -10,114 +14,140 @@ class ShopSchedulePage extends StatefulWidget {
 }
 
 class _ShopSchedulePageState extends State<ShopSchedulePage> {
+  final _api = DuckHatApi.instance;
+
+  bool _loading = true;
+  String? _error;
+  List<Agendamento> _agendamentos = [];
   late DateTime _currentMonth;
   DateTime? _selectedDate;
-  final List<String> _weekdayHeaders = [
-    'Dom',
-    'Seg',
-    'Ter',
-    'Qua',
-    'Qui',
-    'Sex',
-    'Sáb',
-  ];
-
-  List<DateTime?> _visibleDays = [];
-  final Map<DateTime, List<_Appointment>> _appointmentsByDay = {};
-  final Set<DateTime> _blockedTimes = {};
+  int _lastSyncRevision = 0;
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
     _currentMonth = DateTime(now.year, now.month);
-    _selectedDate = now;
-    _generateVisibleDays();
-    _loadMockAppointments();
+    _selectedDate = _dateOnly(now);
+    _lastSyncRevision = _api.agendamentoSync.value.revision;
+    _api.agendamentoSync.addListener(_handleAgendamentoSync);
+    _carregarAgendamentos();
   }
 
-  void _generateVisibleDays() {
-    final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
-    final lastDay = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
-    final startOffset = firstDay.weekday % 7;
+  @override
+  void dispose() {
+    _api.agendamentoSync.removeListener(_handleAgendamentoSync);
+    super.dispose();
+  }
 
-    _visibleDays = [];
-    for (int i = 0; i < startOffset; i++) {
-      _visibleDays.add(null);
+  Future<void> _carregarAgendamentos({bool showLoader = true}) async {
+    if (showLoader) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    } else {
+      setState(() => _error = null);
     }
-    for (int i = 1; i <= lastDay.day; i++) {
-      _visibleDays.add(DateTime(_currentMonth.year, _currentMonth.month, i));
+
+    try {
+      final items = await _api.listarAgendamentosPrestador()
+        ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
+      final initialDate = _pickInitialDate(items);
+
+      if (!mounted) return;
+      setState(() {
+        _agendamentos = items;
+        _selectedDate = _selectedDate == null
+            ? initialDate
+            : _dateOnly(_selectedDate!);
+        _currentMonth = DateTime(
+          (_selectedDate ?? initialDate).year,
+          (_selectedDate ?? initialDate).month,
+        );
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error = _prettyError(error);
+        _loading = false;
+      });
     }
   }
 
-  void _loadMockAppointments() {
+  void _handleAgendamentoSync() {
+    final signal = _api.agendamentoSync.value;
+    if (signal.revision == _lastSyncRevision || !mounted) return;
+    _lastSyncRevision = signal.revision;
+
+    if (signal.focusDate != null) {
+      final focusDate = _dateOnly(signal.focusDate!);
+      setState(() {
+        _selectedDate = focusDate;
+        _currentMonth = DateTime(focusDate.year, focusDate.month);
+      });
+    }
+
+    _carregarAgendamentos(showLoader: false);
+  }
+
+  List<Agendamento> get _selectedDayAppointments {
+    final selected = _selectedDate ?? _dateOnly(DateTime.now());
+
+    return _agendamentos
+        .where((item) => _isSameDay(item.inicioEm, selected))
+        .toList()
+      ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
+  }
+
+  int get _activeCount {
     final now = DateTime.now();
-    _appointmentsByDay[DateTime(now.year, now.month, now.day)] = [
-      _Appointment(
-        time: '09:00',
-        client: 'João Silva',
-        service: 'Corte + Barba',
-        status: 'confirmed',
-      ),
-      _Appointment(
-        time: '10:30',
-        client: 'Pedro Santos',
-        service: 'Corte',
-        status: 'confirmed',
-      ),
-      _Appointment(
-        time: '14:00',
-        client: 'Maria Costa',
-        service: 'Manicure',
-        status: 'pending',
-      ),
-    ];
-
-    final tomorrow = DateTime(now.year, now.month, now.day + 1);
-    _appointmentsByDay[tomorrow] = [
-      _Appointment(
-        time: '09:00',
-        client: 'Carlos Lima',
-        service: 'Barba',
-        status: 'confirmed',
-      ),
-      _Appointment(
-        time: '11:00',
-        client: 'Ana Paula',
-        service: 'Pedicure',
-        status: 'confirmed',
-      ),
-    ];
+    return _agendamentos
+        .where((item) => item.status != 'CANCELADO' && item.fimEm.isAfter(now))
+        .length;
   }
 
-  List<_Appointment> _appointmentsForDay(DateTime day) {
-    final normalized = DateTime(day.year, day.month, day.day);
-    return _appointmentsByDay[normalized] ?? [];
+  int get _currentMonthCount {
+    return _agendamentos.where((item) {
+      return item.inicioEm.year == _currentMonth.year &&
+          item.inicioEm.month == _currentMonth.month &&
+          item.status != 'CANCELADO';
+    }).length;
   }
 
-  void _changeMonth(int delta) {
-    setState(() {
-      _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + delta);
-      _generateVisibleDays();
-    });
+  Future<void> _abrirDetalhe(Agendamento agendamento) async {
+    final changed = await Navigator.of(context).push<bool>(
+      AppRoute(builder: (_) => AppointmentDetailPage(agendamento: agendamento)),
+    );
+
+    if (changed == true && mounted) {
+      await _carregarAgendamentos(showLoader: false);
+    }
   }
 
-  String _monthLabel(DateTime date) {
-    const months = [
-      'Janeiro',
-      'Fevereiro',
-      'Março',
-      'Abril',
-      'Maio',
-      'Junho',
-      'Julho',
-      'Agosto',
-      'Setembro',
-      'Outubro',
-      'Novembro',
-      'Dezembro',
-    ];
-    return '${months[date.month - 1]} ${date.year}';
+  Future<void> _confirmarAgendamento(Agendamento agendamento) async {
+    try {
+      await _api.confirmarAgendamento(agendamento.id);
+      if (!mounted) return;
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento confirmado com sucesso.');
+    } catch (error) {
+      if (!mounted) return;
+      _showSnackBar(_prettyError(error), isError: true);
+    }
+  }
+
+  Future<void> _concluirAgendamento(Agendamento agendamento) async {
+    try {
+      await _api.concluirAgendamento(agendamento.id);
+      if (!mounted) return;
+      await _carregarAgendamentos();
+      _showSnackBar('Agendamento concluido com sucesso.');
+    } catch (error) {
+      if (!mounted) return;
+      _showSnackBar(_prettyError(error), isError: true);
+    }
   }
 
   @override
@@ -125,32 +155,142 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildCalendarCard(),
-            if (_selectedDate != null) _buildSelectedDaySection(),
-            Expanded(child: _buildTimeSlots()),
-          ],
+        bottom: false,
+        child: RefreshIndicator(
+          color: AppColors.accent,
+          onRefresh: _carregarAgendamentos,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _buildHeader()),
+              if (_loading)
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.accent),
+                  ),
+                )
+              else if (_error != null)
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: _buildErrorState(),
+                )
+              else ...[
+                SliverToBoxAdapter(child: _buildOverviewCard()),
+                SliverToBoxAdapter(child: _buildCalendarCard()),
+                SliverToBoxAdapter(child: _buildSelectedDaySection()),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  sliver: _buildAppointmentsSliver(),
+                ),
+              ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+      child: Row(
+        children: [
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Agenda',
+                  style: TextStyle(
+                    color: AppColors.textBold,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Veja os clientes que agendaram servicos no seu estabelecimento.',
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: _loading ? null : _carregarAgendamentos,
+            icon: const Icon(Icons.refresh, color: AppColors.accent),
+            tooltip: 'Atualizar agenda',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOverviewCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [AppColors.secondary, AppColors.accent],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowAccent,
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.groups_2_outlined,
+            color: AppColors.primary,
+            size: 36,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$_activeCount agendamento${_activeCount == 1 ? '' : 's'} ativo${_activeCount == 1 ? '' : 's'}',
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$_currentMonthCount neste mes',
+                  style: TextStyle(
+                    color: AppColors.primary.withValues(alpha: 0.78),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCalendarCard() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
+      decoration: buildShopCardDecoration(radius: 20),
       child: Column(
         children: [
           Row(
@@ -165,13 +305,14 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
                   ),
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.chevron_left, color: AppColors.accent),
-                onPressed: () => _changeMonth(-1),
+              _MonthButton(
+                icon: Icons.chevron_left,
+                onTap: () => _changeMonth(-1),
               ),
-              IconButton(
-                icon: const Icon(Icons.chevron_right, color: AppColors.accent),
-                onPressed: () => _changeMonth(1),
+              const SizedBox(width: 8),
+              _MonthButton(
+                icon: Icons.chevron_right,
+                onTap: () => _changeMonth(1),
               ),
             ],
           ),
@@ -183,7 +324,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
                     child: Center(
                       child: Text(
                         label,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.textMuted,
                           fontWeight: FontWeight.w700,
                           fontSize: 12,
@@ -200,9 +341,9 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 7,
-              mainAxisSpacing: 4,
-              crossAxisSpacing: 4,
-              childAspectRatio: 1.0,
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 6,
+              childAspectRatio: 0.9,
             ),
             itemCount: _visibleDays.length,
             itemBuilder: (context, index) {
@@ -218,31 +359,30 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
 
   Widget _buildDayCell(DateTime day) {
     final selected = _selectedDate != null && _isSameDay(day, _selectedDate!);
-    final today = DateTime.now();
+    final today = _dateOnly(DateTime.now());
     final isToday = _isSameDay(day, today);
-    final isCurrentMonth = day.month == _currentMonth.month;
     final dayItems = _appointmentsForDay(day);
-    final hasItems = dayItems.isNotEmpty;
+    final hasActiveItems = dayItems.any((item) => item.status != 'CANCELADO');
 
     return GestureDetector(
       onTap: () => setState(() => _selectedDate = day),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.accent
-              : hasItems
+              : hasActiveItems
               ? AppColors.accent.withValues(alpha: 0.12)
               : AppColors.primary.withValues(alpha: 0),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected
                 ? AppColors.accent
                 : isToday
                 ? AppColors.accentLight
                 : AppColors.primary.withValues(alpha: 0),
-            width: 1.6,
+            width: 1.4,
           ),
         ),
         child: Column(
@@ -251,22 +391,18 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
             Text(
               '${day.day}',
               style: TextStyle(
+                color: selected ? AppColors.primary : AppColors.textBold,
+                fontWeight: FontWeight.w800,
                 fontSize: 12,
-                color: selected
-                    ? AppColors.primary
-                    : isCurrentMonth
-                    ? AppColors.textBold
-                    : AppColors.textMuted,
-                fontWeight: FontWeight.w700,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 5,
-              height: 5,
+              width: 6,
+              height: 6,
               decoration: BoxDecoration(
-                color: hasItems
+                color: hasActiveItems
                     ? (selected ? AppColors.primary : AppColors.accent)
                     : AppColors.primary.withValues(alpha: 0),
                 shape: BoxShape.circle,
@@ -279,299 +415,222 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
   }
 
   Widget _buildSelectedDaySection() {
-    final selected = _selectedDate ?? DateTime.now();
-    final dayAppointments = _appointmentsForDay(selected);
+    final selected = _selectedDate ?? _dateOnly(DateTime.now());
+    final count = _selectedDayAppointments.length;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _selectedDayLabel(selected),
-                  style: const TextStyle(
-                    color: AppColors.textBold,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                  ),
-                ),
-                Text(
-                  '${dayAppointments.length} agendamento${dayAppointments.length == 1 ? '' : 's'}',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          Text(
+            _selectedDayLabel(selected),
+            style: const TextStyle(
+              color: AppColors.textBold,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          TextButton.icon(
-            onPressed: () => _showBlockDialog(context),
-            icon: const Icon(Icons.block, size: 18),
-            label: const Text('Bloquear'),
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+          const SizedBox(height: 2),
+          Text(
+            '$count cliente${count == 1 ? '' : 's'} agendado${count == 1 ? '' : 's'} nesta data',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeSlots() {
-    final hours = [
-      '08:00',
-      '09:00',
-      '10:00',
-      '11:00',
-      '12:00',
-      '13:00',
-      '14:00',
-      '15:00',
-      '16:00',
-      '17:00',
-      '18:00',
-    ];
-    final dayAppointments = _selectedDate != null
-        ? _appointmentsForDay(_selectedDate!)
-        : [];
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: hours.length,
-      itemBuilder: (context, index) {
-        final time = hours[index];
-        final appointment = dayAppointments
-            .where((a) => a.time == time)
-            .firstOrNull;
-        final isBlocked = _blockedTimes.contains(
-          DateTime(
-            _selectedDate!.year,
-            _selectedDate!.month,
-            _selectedDate!.day,
-            index + 8,
+  Widget _buildErrorState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.cloud_off,
+            size: 64,
+            color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
-        );
-
-        return _TimeSlotCard(
-          time: time,
-          appointment: appointment,
-          isBlocked: isBlocked,
-          onBlockToggle: () => _toggleBlock(
-            DateTime(
-              _selectedDate!.year,
-              _selectedDate!.month,
-              _selectedDate!.day,
-              index + 8,
+          const SizedBox(height: 16),
+          const Text(
+            'Nao foi possivel carregar a agenda',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textBold,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          onReschedule: () => _showRescheduleDialog(context, appointment!),
+          const SizedBox(height: 8),
+          Text(
+            _error ?? '',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
+          ),
+          const SizedBox(height: 20),
+          FilledButton.icon(
+            onPressed: _carregarAgendamentos,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Tentar novamente'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  SliverList _buildAppointmentsSliver() {
+    final items = _selectedDayAppointments;
+
+    if (items.isEmpty) {
+      return SliverList.list(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 42),
+            decoration: buildShopCardDecoration(radius: 20),
+            child: const Column(
+              children: [
+                Icon(
+                  Icons.event_available,
+                  size: 54,
+                  color: AppColors.textMuted,
+                ),
+                SizedBox(height: 14),
+                Text(
+                  'Nenhum cliente agendado nesta data',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textBold,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Quando um cliente agendar um servico deste estabelecimento, ele aparecera aqui.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return SliverList.builder(
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _ShopAppointmentCard(
+            agendamento: item,
+            onTap: () => _abrirDetalhe(item),
+            onConfirm: item.status == 'PENDENTE'
+                ? () => _confirmarAgendamento(item)
+                : null,
+            onComplete: item.status == 'CONFIRMADO'
+                ? () => _concluirAgendamento(item)
+                : null,
+          ),
         );
       },
     );
   }
 
-  void _showRescheduleDialog(BuildContext context, _Appointment appointment) {
-    DateTime selectedDate = DateTime.now().add(const Duration(days: 1));
-    int selectedHour = 9;
+  List<Agendamento> _appointmentsForDay(DateTime day) =>
+      _agendamentos.where((item) => _isSameDay(item.inicioEm, day)).toList();
 
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Remarcar Agendamento'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Cliente: ${appointment.client}'),
-              Text('Serviço: ${appointment.service}'),
-              const SizedBox(height: 16),
-              const Text(
-                'Selecione a nova data e horário:',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: ctx,
-                            initialDate: selectedDate,
-                            firstDate: DateTime.now(),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 90),
-                            ),
-                          );
-                          if (date != null) {
-                            setDialogState(() => selectedDate = date);
-                          }
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.calendar_today,
-                              size: 18,
-                              color: AppColors.accent,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${selectedDate.day}/${selectedDate.month}',
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Container(
-                      height: 48,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.border),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: selectedHour,
-                          isExpanded: true,
-                          items: List.generate(11, (i) => i + 8)
-                              .map(
-                                (h) => DropdownMenuItem(
-                                  value: h,
-                                  child: Text(
-                                    '${h.toString().padLeft(2, '0')}:00',
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (v) =>
-                              setDialogState(() => selectedHour = v!),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'O cliente receberá uma notificação e precisará aceitar a nova data.',
-                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Agendamento remarcado para ${selectedDate.day}/${selectedDate.month} às ${selectedHour.toString().padLeft(2, '0')}:00',
-                    ),
-                  ),
-                );
-              },
-              child: const Text(
-                'Confirmar',
-                style: TextStyle(color: AppColors.accent),
-              ),
-            ),
-          ],
-        ),
+  DateTime _pickInitialDate(List<Agendamento> items) {
+    final today = _dateOnly(DateTime.now());
+    for (final item in items) {
+      final itemDate = _dateOnly(item.inicioEm);
+      if (!itemDate.isBefore(today) && item.status != 'CANCELADO') {
+        return itemDate;
+      }
+    }
+
+    if (items.isNotEmpty) return _dateOnly(items.first.inicioEm);
+
+    return today;
+  }
+
+  List<DateTime?> get _visibleDays {
+    final firstDayOfMonth = DateTime(
+      _currentMonth.year,
+      _currentMonth.month,
+      1,
+    );
+    final totalDays = DateTime(
+      _currentMonth.year,
+      _currentMonth.month + 1,
+      0,
+    ).day;
+    final leadingEmpty = firstDayOfMonth.weekday % 7;
+    final cells = <DateTime?>[];
+
+    for (var index = 0; index < leadingEmpty; index++) {
+      cells.add(null);
+    }
+
+    for (var day = 1; day <= totalDays; day++) {
+      cells.add(DateTime(_currentMonth.year, _currentMonth.month, day));
+    }
+
+    while (cells.length % 7 != 0) {
+      cells.add(null);
+    }
+
+    return cells;
+  }
+
+  void _changeMonth(int offset) {
+    setState(() {
+      _currentMonth = DateTime(
+        _currentMonth.year,
+        _currentMonth.month + offset,
+      );
+      final lastDayOfMonth = DateTime(
+        _currentMonth.year,
+        _currentMonth.month + 1,
+        0,
+      ).day;
+      final desiredDay = (_selectedDate ?? DateTime.now()).day;
+      _selectedDate = DateTime(
+        _currentMonth.year,
+        _currentMonth.month,
+        desiredDay > lastDayOfMonth ? lastDayOfMonth : desiredDay,
+      );
+    });
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppColors.error : AppColors.accent,
       ),
     );
   }
 
-  void _blockEntireDay() {
-    if (_selectedDate == null) return;
-    final hours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-    setState(() {
-      for (final hour in hours) {
-        _blockedTimes.add(
-          DateTime(
-            _selectedDate!.year,
-            _selectedDate!.month,
-            _selectedDate!.day,
-            hour,
-          ),
-        );
-      }
-    });
-  }
+  String _prettyError(Object error) =>
+      error.toString().replaceFirst('Exception: ', '').trim();
 
-  void _toggleBlock(DateTime time) {
-    setState(() {
-      if (_blockedTimes.contains(time)) {
-        _blockedTimes.remove(time);
-      } else {
-        _blockedTimes.add(time);
-      }
-    });
-  }
+  DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 
-  void _showBlockDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Bloquear Dia'),
-        content: const Text(
-          'Deseja bloquear este dia para novos agendamentos? Todos os horários ficarão bloqueados.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _blockEntireDay();
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Dia bloqueado')));
-            },
-            child: const Text(
-              'Bloquear',
-              style: TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
-  String _selectedDayLabel(DateTime date) {
-    const weekdays = [
-      'Segunda',
-      'Terça',
-      'Quarta',
-      'Quinta',
-      'Sexta',
-      'Sábado',
-      'Domingo',
-    ];
+  String _monthLabel(DateTime date) {
     const months = [
       'Janeiro',
       'Fevereiro',
-      'Março',
+      'Marco',
       'Abril',
       'Maio',
       'Junho',
@@ -582,191 +641,252 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
       'Novembro',
       'Dezembro',
     ];
-    return '${weekdays[date.weekday - 1]}, ${date.day} de ${months[date.month - 1]}';
+    return '${months[date.month - 1]} ${date.year}';
   }
 
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
+  String _selectedDayLabel(DateTime date) {
+    const weekdays = [
+      'domingo',
+      'segunda',
+      'terca',
+      'quarta',
+      'quinta',
+      'sexta',
+      'sabado',
+    ];
+    const months = [
+      'janeiro',
+      'fevereiro',
+      'marco',
+      'abril',
+      'maio',
+      'junho',
+      'julho',
+      'agosto',
+      'setembro',
+      'outubro',
+      'novembro',
+      'dezembro',
+    ];
+
+    return '${weekdays[date.weekday % 7]}, ${date.day} de ${months[date.month - 1]}';
   }
+
+  static const List<String> _weekdayHeaders = [
+    'D',
+    'S',
+    'T',
+    'Q',
+    'Q',
+    'S',
+    'S',
+  ];
 }
 
-class _Appointment {
-  final String time;
-  final String client;
-  final String service;
-  final String status;
+class _ShopAppointmentCard extends StatelessWidget {
+  final Agendamento agendamento;
+  final VoidCallback onTap;
+  final VoidCallback? onConfirm;
+  final VoidCallback? onComplete;
 
-  _Appointment({
-    required this.time,
-    required this.client,
-    required this.service,
-    required this.status,
-  });
-}
-
-class _TimeSlotCard extends StatelessWidget {
-  final String time;
-  final _Appointment? appointment;
-  final bool isBlocked;
-  final VoidCallback onBlockToggle;
-  final VoidCallback? onReschedule;
-
-  const _TimeSlotCard({
-    required this.time,
-    this.appointment,
-    required this.isBlocked,
-    required this.onBlockToggle,
-    this.onReschedule,
+  const _ShopAppointmentCard({
+    required this.agendamento,
+    required this.onTap,
+    this.onConfirm,
+    this.onComplete,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (isBlocked) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.error.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Text(
-              time,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.error,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'Bloqueado',
-              style: TextStyle(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.lock_open),
-              color: AppColors.error,
-              onPressed: onBlockToggle,
-            ),
-          ],
-        ),
-      );
-    }
+    final statusColor = _statusColor(agendamento.status);
 
-    if (appointment == null) {
-      return Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Row(
-          children: [
-            Text(
-              time,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.darkAlt,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Text('Disponível', style: TextStyle(color: AppColors.success)),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.block),
-              color: AppColors.textMuted,
-              onPressed: onBlockToggle,
-            ),
-          ],
-        ),
-      );
-    }
-
-    final isConfirmed = appointment!.status == 'confirmed';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 60,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.inputBackground,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(
-                time,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.accent,
-                ),
-              ),
-            ),
+    return Material(
+      color: AppColors.cardBackground,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: buildShopCardDecoration(
+            radius: 18,
+            borderColor: statusColor.withValues(alpha: 0.16),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      color: AppColors.inputBackground,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _formatTime(agendamento.inicioEm),
+                      style: const TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          agendamento.clienteNome ??
+                              'Cliente #${agendamento.clienteId}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textBold,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          agendamento.servicoNome ??
+                              'Servico #${agendamento.servicoId}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${_formatTime(agendamento.inicioEm)} - ${_formatTime(agendamento.fimEm)}',
+                          style: const TextStyle(
+                            color: AppColors.textRegular,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _StatusChip(status: agendamento.status),
+                ],
+              ),
+              if (agendamento.observacoes != null &&
+                  agendamento.observacoes!.trim().isNotEmpty) ...[
+                const SizedBox(height: 12),
                 Text(
-                  appointment!.client,
+                  agendamento.observacoes!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 16,
+                    color: AppColors.textRegular,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.darkAlt,
                   ),
                 ),
-                Text(
-                  appointment!.service,
-                  style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+              ],
+              if (onConfirm != null || onComplete != null) ...[
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: FilledButton.icon(
+                    onPressed: onConfirm ?? onComplete,
+                    icon: Icon(
+                      onConfirm != null
+                          ? Icons.check_circle_outline
+                          : Icons.task_alt,
+                      size: 16,
+                    ),
+                    label: Text(onConfirm != null ? 'Confirmar' : 'Concluir'),
+                  ),
                 ),
               ],
-            ),
+            ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: isConfirmed
-                  ? AppColors.success.withValues(alpha: 0.1)
-                  : AppColors.warning.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              isConfirmed ? 'Confirmado' : 'Pendente',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: isConfirmed ? AppColors.success : AppColors.warning,
-              ),
-            ),
-          ),
-          if (appointment != null) ...[
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(Icons.edit_calendar, size: 20),
-              color: AppColors.accent,
-              onPressed: onReschedule,
-              tooltip: 'Remarcar',
-            ),
-          ],
-        ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime date) =>
+      '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+
+  Color _statusColor(String status) {
+    return switch (status) {
+      'CONFIRMADO' => AppColors.success,
+      'CANCELADO' => AppColors.error,
+      'CONCLUIDO' => AppColors.textMuted,
+      _ => AppColors.warning,
+    };
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String status;
+
+  const _StatusChip({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (status) {
+      'CONFIRMADO' => AppColors.success,
+      'CANCELADO' => AppColors.error,
+      'CONCLUIDO' => AppColors.textMuted,
+      _ => AppColors.warning,
+    };
+
+    final label = switch (status) {
+      'CONFIRMADO' => 'Confirmado',
+      'CANCELADO' => 'Cancelado',
+      'CONCLUIDO' => 'Concluido',
+      _ => 'Pendente',
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+}
+
+class _MonthButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _MonthButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.accent.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(icon, color: AppColors.accent),
+        ),
       ),
     );
   }

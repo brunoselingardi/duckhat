@@ -28,10 +28,12 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   bool _cancelling = false;
   String? _reviewError;
 
+  bool get _isPrestador => DuckHatApi.instance.isPrestador;
+
   @override
   void initState() {
     super.initState();
-    if (widget.agendamento.status == 'CONCLUIDO') {
+    if (widget.agendamento.status == 'CONCLUIDO' && !_isPrestador) {
       _loadReview();
     }
   }
@@ -159,13 +161,16 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 value: item.servicoNome ?? 'Servico #${item.servicoId}',
               ),
               _InfoRow(
-                icon: Icons.storefront_outlined,
-                label: 'Prestador',
-                value:
-                    item.prestadorNome ??
-                    (item.prestadorId == null
-                        ? 'Prestador nao informado'
-                        : 'Prestador #${item.prestadorId}'),
+                icon: _isPrestador
+                    ? Icons.person_outline
+                    : Icons.storefront_outlined,
+                label: _isPrestador ? 'Cliente' : 'Prestador',
+                value: _isPrestador
+                    ? (item.clienteNome ?? 'Cliente #${item.clienteId}')
+                    : (item.prestadorNome ??
+                          (item.prestadorId == null
+                              ? 'Prestador nao informado'
+                              : 'Prestador #${item.prestadorId}')),
               ),
               _InfoRow(
                 icon: Icons.calendar_today_outlined,
@@ -188,9 +193,10 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             ],
           ),
           const SizedBox(height: 16),
-          if (item.podeCancelar)
+          if (item.podeCancelar && widget.onCancel != null)
             _DangerActionCard(cancelling: _cancelling, onCancel: _cancel),
-          if (item.podeCancelar) const SizedBox(height: 16),
+          if (item.podeCancelar && widget.onCancel != null)
+            const SizedBox(height: 16),
           _DetailCard(
             title: 'Status do atendimento',
             children: [
@@ -209,7 +215,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               ),
             ],
           ),
-          if (item.status == 'CONCLUIDO') ...[
+          if (item.status == 'CONCLUIDO' && !_isPrestador) ...[
             const SizedBox(height: 16),
             _ReviewCard(
               rating: _rating,

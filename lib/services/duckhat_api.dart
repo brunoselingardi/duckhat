@@ -871,7 +871,9 @@ class DuckHatApi {
       throw Exception('Resposta inválida ao confirmar agendamento.');
     }
 
-    return Agendamento.fromJson(body);
+    final agendamento = Agendamento.fromJson(body);
+    _emitAgendamentoSync(focusDate: agendamento.inicioEm);
+    return agendamento;
   }
 
   Future<Agendamento> concluirAgendamento(int id) async {
@@ -894,7 +896,9 @@ class DuckHatApi {
       throw Exception('Resposta inválida ao concluir agendamento.');
     }
 
-    return Agendamento.fromJson(body);
+    final agendamento = Agendamento.fromJson(body);
+    _emitAgendamentoSync(focusDate: agendamento.inicioEm);
+    return agendamento;
   }
 
   Future<List<ChatConversa>> listarConversasChat() async {
