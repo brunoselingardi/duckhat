@@ -1,4 +1,6 @@
 import 'package:duckhat/models/agendamento.dart';
+import 'package:duckhat/models/avaliacao.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
@@ -20,8 +22,19 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   final _commentController = TextEditingController();
 
   int _rating = 0;
-  bool _reviewSent = false;
+  Avaliacao? _avaliacao;
+  bool _loadingReview = false;
+  bool _sendingReview = false;
   bool _cancelling = false;
+  String? _reviewError;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.agendamento.status == 'CONCLUIDO') {
+      _loadReview();
+    }
+  }
 
   @override
   void dispose() {
@@ -42,7 +55,36 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     }
   }
 
-  void _sendReview() {
+  Future<void> _loadReview() async {
+    setState(() {
+      _loadingReview = true;
+      _reviewError = null;
+    });
+
+    try {
+      final avaliacao = await DuckHatApi.instance.buscarAvaliacaoPorAgendamento(
+        widget.agendamento.id,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _avaliacao = avaliacao;
+        _rating = avaliacao?.nota ?? 0;
+        _commentController.text = avaliacao?.comentario ?? '';
+        _loadingReview = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadingReview = false;
+        _reviewError = error.toString().replaceFirst('Exception: ', '').trim();
+      });
+    }
+  }
+
+  Future<void> _sendReview() async {
+    if (_sendingReview || _avaliacao != null) return;
+
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -53,13 +95,36 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
       return;
     }
 
-    setState(() => _reviewSent = true);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Avaliacao registrada para teste.'),
-        backgroundColor: AppColors.accent,
-      ),
-    );
+    setState(() {
+      _sendingReview = true;
+      _reviewError = null;
+    });
+
+    try {
+      final avaliacao = await DuckHatApi.instance.criarAvaliacao(
+        agendamentoId: widget.agendamento.id,
+        nota: _rating,
+        comentario: _commentController.text,
+      );
+      if (!mounted) return;
+
+      setState(() => _avaliacao = avaliacao);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Avaliação salva no banco.'),
+          backgroundColor: AppColors.accent,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _reviewError = error.toString().replaceFirst('Exception: ', '').trim();
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _sendingReview = false);
+      }
+    }
   }
 
   @override
@@ -148,9 +213,16 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             const SizedBox(height: 16),
             _ReviewCard(
               rating: _rating,
-              sent: _reviewSent,
+              avaliacao: _avaliacao,
+              loading: _loadingReview,
+              submitting: _sendingReview,
+              error: _reviewError,
               controller: _commentController,
-              onRatingChanged: (value) => setState(() => _rating = value),
+              onRetry: _loadReview,
+              onRatingChanged: (value) {
+                if (_sendingReview || _avaliacao != null) return;
+                setState(() => _rating = value);
+              },
               onSubmit: _sendReview,
             ),
           ],
@@ -487,21 +559,61 @@ class _InfoRow extends StatelessWidget {
 
 class _ReviewCard extends StatelessWidget {
   final int rating;
-  final bool sent;
+  final Avaliacao? avaliacao;
+  final bool loading;
+  final bool submitting;
+  final String? error;
   final TextEditingController controller;
+  final VoidCallback onRetry;
   final ValueChanged<int> onRatingChanged;
   final VoidCallback onSubmit;
 
   const _ReviewCard({
     required this.rating,
-    required this.sent,
+    required this.avaliacao,
+    required this.loading,
+    required this.submitting,
+    required this.error,
     required this.controller,
+    required this.onRetry,
     required this.onRatingChanged,
     required this.onSubmit,
   });
 
   @override
   Widget build(BuildContext context) {
+    final sent = avaliacao != null;
+
+    if (loading) {
+      return const _DetailCard(
+        title: 'Avaliacao',
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 14),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Carregando avaliação...',
+                    style: TextStyle(
+                      color: AppColors.textRegular,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
     return _DetailCard(
       title: 'Avaliacao',
       children: [
@@ -525,12 +637,47 @@ class _ReviewCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        if (error != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.error.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 18,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    error!,
+                    style: const TextStyle(
+                      color: AppColors.error,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+                TextButton(onPressed: onRetry, child: const Text('Tentar')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         if (!sent) ...[
           Row(
             children: List.generate(5, (index) {
               final value = index + 1;
               return IconButton(
-                onPressed: () => onRatingChanged(value),
+                onPressed: submitting ? null : () => onRatingChanged(value),
                 icon: Icon(
                   value <= rating ? Icons.star : Icons.star_border,
                   color: AppColors.star,
@@ -542,6 +689,7 @@ class _ReviewCard extends StatelessWidget {
           const SizedBox(height: 10),
           TextField(
             controller: controller,
+            enabled: !submitting,
             maxLines: 3,
             decoration: InputDecoration(
               hintText: 'Conte como foi o atendimento',
@@ -557,15 +705,49 @@ class _ReviewCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: onSubmit,
-              icon: const Icon(Icons.send_outlined),
-              label: const Text('Enviar avaliacao'),
+              onPressed: submitting ? null : onSubmit,
+              icon: submitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_outlined),
+              label: Text(submitting ? 'Enviando...' : 'Enviar avaliação'),
             ),
           ),
         ] else
-          const Text(
-            'Obrigado por ajudar outros clientes a escolherem melhor.',
-            style: TextStyle(color: AppColors.textRegular),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: List.generate(5, (index) {
+                  final value = index + 1;
+                  return Icon(
+                    value <= avaliacao!.nota ? Icons.star : Icons.star_border,
+                    color: AppColors.star,
+                    size: 24,
+                  );
+                }),
+              ),
+              const SizedBox(height: 10),
+              if (avaliacao!.comentario != null &&
+                  avaliacao!.comentario!.trim().isNotEmpty)
+                Text(
+                  avaliacao!.comentario!.trim(),
+                  style: const TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 13,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                  ),
+                )
+              else
+                const Text(
+                  'Obrigado por ajudar outros clientes a escolherem melhor.',
+                  style: TextStyle(color: AppColors.textRegular),
+                ),
+            ],
           ),
       ],
     );

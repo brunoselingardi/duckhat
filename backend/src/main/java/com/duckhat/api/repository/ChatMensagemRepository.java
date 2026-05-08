@@ -15,6 +15,18 @@ public interface ChatMensagemRepository extends JpaRepository<ChatMensagem, Long
 
   Optional<ChatMensagem> findFirstByConversaIdOrderByCriadoEmDescIdDesc(Long conversaId);
 
+  @Query("""
+      SELECT mensagem
+      FROM ChatMensagem mensagem
+      WHERE mensagem.id IN (
+        SELECT MAX(ultima.id)
+        FROM ChatMensagem ultima
+        WHERE ultima.conversa.id IN :conversaIds
+        GROUP BY ultima.conversa.id
+      )
+      """)
+  List<ChatMensagem> findUltimasMensagensByConversaIds(@Param("conversaIds") List<Long> conversaIds);
+
   @Modifying
   @Query(
       value = """

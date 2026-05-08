@@ -157,7 +157,10 @@ class UsuarioServiceTest {
             null,
             null,
             LocalDate.of(1998, 5, 12),
-            "Rua das Palmas, 42"));
+            "Rua das Palmas, 42",
+            null,
+            null,
+            null));
 
     assertEquals("Maria Duck", response.nome());
     assertEquals("maria@duckhat.com", response.email());
@@ -173,6 +176,7 @@ class UsuarioServiceTest {
     when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
     when(usuarioRepository.save(usuario)).thenReturn(usuario);
     when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.empty());
+    when(estabelecimentoRepository.save(any(Estabelecimento.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     UsuarioResponse response = service.atualizarPerfil(
         usuario,
@@ -183,12 +187,18 @@ class UsuarioServiceTest {
             "11222333000144",
             "Ana Responsavel",
             null,
-            "Av. Central, 100"));
+            "Av. Central, 100",
+            "Atendimento com horario marcado e ambiente profissional.",
+            "Segunda a sexta 9h - 20h",
+            "banner-base64"));
 
     assertEquals("DuckHat Studio", response.nome());
     assertEquals("11222333000144", response.cnpj());
     assertEquals("Ana Responsavel", response.responsavelNome());
     assertEquals("Av. Central, 100", response.endereco());
+    assertEquals("Atendimento com horario marcado e ambiente profissional.", response.descricao());
+    assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
+    assertEquals("banner-base64", response.bannerImagemBase64());
 
     ArgumentCaptor<Estabelecimento> captor = ArgumentCaptor.forClass(Estabelecimento.class);
     verify(estabelecimentoRepository).save(captor.capture());
@@ -199,6 +209,39 @@ class UsuarioServiceTest {
     assertEquals("11222333000144", estabelecimento.getCnpj());
     assertEquals("Ana Responsavel", estabelecimento.getResponsavelNome());
     assertEquals("Av. Central, 100", estabelecimento.getEndereco());
+    assertEquals("Atendimento com horario marcado e ambiente profissional.", estabelecimento.getDescricao());
+    assertEquals("Segunda a sexta 9h - 20h", estabelecimento.getHorarioAtendimento());
+    assertEquals("banner-base64", estabelecimento.getBannerImagemBase64());
+  }
+
+  @Test
+  void buscarMeuPerfilRetornaDadosDoEstabelecimentoVinculado() {
+    Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
+    Estabelecimento estabelecimento = new Estabelecimento();
+    estabelecimento.setUsuario(usuario);
+    estabelecimento.setNome("Studio Publico");
+    estabelecimento.setTelefone("62988887777");
+    estabelecimento.setCnpj("11222333000144");
+    estabelecimento.setResponsavelNome("Ana Responsavel");
+    estabelecimento.setEndereco("Av. Central, 100");
+    estabelecimento.setDescricao("Descricao salva no estabelecimento");
+    estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
+    estabelecimento.setBannerImagemBase64("banner-salvo");
+
+    when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
+    when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.of(estabelecimento));
+
+    UsuarioResponse response = service.buscarMeuPerfil(usuario);
+
+    assertEquals("Studio Publico", response.nome());
+    assertEquals("original@duckhat.com", response.email());
+    assertEquals("62988887777", response.telefone());
+    assertEquals("11222333000144", response.cnpj());
+    assertEquals("Ana Responsavel", response.responsavelNome());
+    assertEquals("Av. Central, 100", response.endereco());
+    assertEquals("Descricao salva no estabelecimento", response.descricao());
+    assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
+    assertEquals("banner-salvo", response.bannerImagemBase64());
   }
 
   @Test
@@ -214,6 +257,9 @@ class UsuarioServiceTest {
             new UpdatePerfilRequest(
                 "Maria Duck",
                 "outro@duckhat.com",
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -240,7 +286,10 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.now().minusYears(12),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe uma data de nascimento válida para maiores de 13 anos", error.getReason());
@@ -263,7 +312,10 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.now().minusYears(121),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe uma data de nascimento válida para maiores de 13 anos", error.getReason());
@@ -286,7 +338,10 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.of(1998, 5, 12),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe um telefone válido com DDD", error.getReason());
@@ -309,7 +364,10 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.of(1998, 5, 12),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe um e-mail válido", error.getReason());
@@ -332,7 +390,10 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.of(1998, 5, 12),
-                "Rua das Palmas")));
+                "Rua das Palmas",
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe um endereço válido com rua e número", error.getReason());

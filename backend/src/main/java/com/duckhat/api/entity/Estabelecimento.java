@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "estabelecimentos")
@@ -34,6 +36,10 @@ public class Estabelecimento {
 
     @Column(name = "horario_atendimento", length = 160)
     private String horarioAtendimento;
+
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "banner_imagem_base64", columnDefinition = "MEDIUMTEXT")
+    private String bannerImagemBase64;
 
     @Column(name = "criado_em", insertable = false, updatable = false)
     private LocalDateTime criadoEm;
@@ -71,6 +77,10 @@ public class Estabelecimento {
 
     public String getHorarioAtendimento() {
         return horarioAtendimento;
+    }
+
+    public String getBannerImagemBase64() {
+        return bannerImagemBase64;
     }
 
     public LocalDateTime getCriadoEm() {
@@ -115,5 +125,9 @@ public class Estabelecimento {
 
     public void setHorarioAtendimento(String horarioAtendimento) {
         this.horarioAtendimento = horarioAtendimento;
+    }
+
+    public void setBannerImagemBase64(String bannerImagemBase64) {
+        this.bannerImagemBase64 = bannerImagemBase64;
     }
 }

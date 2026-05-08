@@ -28,8 +28,8 @@ class _SearchPageState extends State<SearchPage> {
     _SearchSuggestion('Chaveiro', Icons.key_outlined),
     _SearchSuggestion('Pedreiro', Icons.build_outlined),
     _SearchSuggestion(
-      'M&L encanamentos LTDA',
-      Icons.plumbing,
+      'Barbie Dream Barber',
+      Icons.storefront_outlined,
       opensEstablishment: true,
     ),
   ];
@@ -55,9 +55,9 @@ class _SearchPageState extends State<SearchPage> {
 
   void _openSuggestion(_SearchSuggestion suggestion) {
     if (suggestion.opensEstablishment) {
-      Navigator.of(context).push(
-        AppRoute(builder: (_) => const ServicePage(prestadorId: 2)),
-      );
+      Navigator.of(
+        context,
+      ).push(AppRoute(builder: (_) => const ServicePage(prestadorId: 2)));
       return;
     }
 

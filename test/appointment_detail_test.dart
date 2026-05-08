@@ -21,27 +21,27 @@ Agendamento _agendamento({String status = 'CONFIRMADO'}) {
 }
 
 void main() {
-  testWidgets('appointment detail exposes complete action when available', (
+  testWidgets('appointment detail exposes cancel action when available', (
     tester,
   ) async {
-    var completed = false;
+    var cancelled = false;
 
     await tester.pumpWidget(
       MaterialApp(
         home: AppointmentDetailPage(
           agendamento: _agendamento(),
-          onComplete: (agendamento) async {
-            completed = agendamento.id == 42;
+          onCancel: (agendamento) async {
+            cancelled = agendamento.id == 42;
           },
         ),
       ),
     );
 
-    expect(find.text('Concluir atendimento'), findsOneWidget);
+    expect(find.text('Cancelar agendamento'), findsOneWidget);
 
-    await tester.tap(find.text('Concluir'));
+    await tester.tap(find.text('Cancelar'));
     await tester.pump();
 
-    expect(completed, isTrue);
+    expect(cancelled, isTrue);
   });
 }

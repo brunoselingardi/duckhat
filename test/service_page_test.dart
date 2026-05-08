@@ -5,9 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('ServicePage renders dynamic establishment data', (
-    tester,
-  ) async {
+  testWidgets('ServicePage renders dynamic establishment data', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         home: ServicePage(
@@ -30,6 +28,7 @@ void main() {
               descricao: 'Acabamento completo.',
               duracaoMin: 45,
               preco: 39.9,
+              ativo: true,
             ),
           ],
         ),

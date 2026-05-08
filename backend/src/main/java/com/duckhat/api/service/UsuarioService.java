@@ -130,6 +130,19 @@ public class UsuarioService {
         return List.copyOf(resultados.values());
     }
 
+    @Transactional(readOnly = true)
+    public UsuarioResponse buscarMeuPerfil(Usuario autenticado) {
+        Usuario usuario = usuarioRepository.findById(autenticado.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        Estabelecimento estabelecimento = null;
+        if (usuario.getTipo() == TipoUsuario.PRESTADOR) {
+            estabelecimento = estabelecimentoRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        }
+
+        return UsuarioResponse.fromEntity(usuario, estabelecimento);
+    }
+
     @Transactional
     public UsuarioResponse atualizarPerfil(Usuario autenticado, UpdatePerfilRequest request) {
         Usuario usuario = usuarioRepository.findById(autenticado.getId())
@@ -140,6 +153,12 @@ public class UsuarioService {
         String cnpjNormalizado = normalizarCnpj(request.cnpj());
         String responsavelNome = normalizarTexto(request.responsavelNome());
         String endereco = normalizarEndereco(request.endereco());
+        String descricao = normalizarTextoLimitado(request.descricao(), 500, "Descrição deve ter no máximo 500 caracteres");
+        String horarioAtendimento = normalizarTextoLimitado(
+                request.horarioAtendimento(),
+                160,
+                "Horário de atendimento deve ter no máximo 160 caracteres");
+        String bannerImagemBase64 = normalizarImagemBase64(request.bannerImagemBase64());
         validarDataNascimento(request.dataNascimento());
 
         if (!emailNormalizado.equals(usuario.getEmail()) && usuarioRepository.existsByEmail(emailNormalizado)) {
@@ -167,14 +186,25 @@ public class UsuarioService {
         usuario.setEndereco(endereco);
 
         Usuario salvo = usuarioRepository.save(usuario);
+        Estabelecimento estabelecimento = null;
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
-            salvarEstabelecimento(salvo, endereco);
+            estabelecimento = salvarEstabelecimento(salvo, endereco, descricao, horarioAtendimento, bannerImagemBase64);
         }
 
-        return UsuarioResponse.fromEntity(salvo);
+        return UsuarioResponse.fromEntity(salvo, estabelecimento);
     }
 
-    private void salvarEstabelecimento(Usuario prestador, String endereco) {
+    private Estabelecimento salvarEstabelecimento(Usuario prestador, String endereco) {
+        return salvarEstabelecimento(prestador, endereco, null, null, null);
+    }
+
+    private Estabelecimento salvarEstabelecimento(
+            Usuario prestador,
+            String endereco,
+            String descricao,
+            String horarioAtendimento,
+            String bannerImagemBase64
+    ) {
         Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(prestador.getId())
                 .orElseGet(Estabelecimento::new);
 
@@ -184,8 +214,13 @@ public class UsuarioService {
         estabelecimento.setCnpj(prestador.getCnpj());
         estabelecimento.setResponsavelNome(prestador.getResponsavelNome());
         estabelecimento.setEndereco(endereco);
+        estabelecimento.setDescricao(descricao);
+        estabelecimento.setHorarioAtendimento(horarioAtendimento);
+        if (bannerImagemBase64 != null) {
+            estabelecimento.setBannerImagemBase64(bannerImagemBase64);
+        }
 
-        estabelecimentoRepository.save(estabelecimento);
+        return estabelecimentoRepository.save(estabelecimento);
     }
 
     private void validarCamposPrestador(
@@ -242,6 +277,31 @@ public class UsuarioService {
             return null;
         }
         return valor.trim();
+    }
+
+    private String normalizarTextoLimitado(String valor, int maxLength, String mensagemErro) {
+        String normalizado = normalizarTexto(valor);
+        if (normalizado == null) {
+            return null;
+        }
+        String colapsado = normalizado.replaceAll("\\s+", " ");
+        if (colapsado.length() > maxLength) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, mensagemErro);
+        }
+        return colapsado;
+    }
+
+    private String normalizarImagemBase64(String valor) {
+        String normalizado = normalizarTexto(valor);
+        if (normalizado == null) {
+            return null;
+        }
+        if (normalizado.length() > 1_200_000) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Imagem de banner deve ter no máximo 1.200.000 caracteres em Base64");
+        }
+        return normalizado;
     }
 
     private String normalizarEndereco(String endereco) {

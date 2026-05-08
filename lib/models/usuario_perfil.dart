@@ -7,6 +7,9 @@ class UsuarioPerfil {
   final String? responsavelNome;
   final DateTime? dataNascimento;
   final String? endereco;
+  final String? descricao;
+  final String? horarioAtendimento;
+  final String? bannerImagemBase64;
   final String tipo;
 
   const UsuarioPerfil({
@@ -18,6 +21,9 @@ class UsuarioPerfil {
     required this.responsavelNome,
     required this.dataNascimento,
     required this.endereco,
+    required this.descricao,
+    required this.horarioAtendimento,
+    required this.bannerImagemBase64,
     required this.tipo,
   });
 
@@ -31,6 +37,9 @@ class UsuarioPerfil {
       responsavelNome: json['responsavelNome'] as String?,
       dataNascimento: _parseDate(json['dataNascimento']),
       endereco: json['endereco'] as String?,
+      descricao: json['descricao'] as String?,
+      horarioAtendimento: json['horarioAtendimento'] as String?,
+      bannerImagemBase64: json['bannerImagemBase64'] as String?,
       tipo: json['tipo'] as String? ?? '',
     );
   }
@@ -46,6 +55,9 @@ class UsuarioPerfil {
           ? null
           : _formatDate(dataNascimento!),
       'endereco': _nullableTrim(endereco),
+      'descricao': _nullableTrim(descricao),
+      'horarioAtendimento': _nullableTrim(horarioAtendimento),
+      'bannerImagemBase64': _nullableTrim(bannerImagemBase64),
     };
   }
 

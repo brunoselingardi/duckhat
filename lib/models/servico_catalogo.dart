@@ -5,6 +5,7 @@ class ServicoCatalogo {
   final String? descricao;
   final int duracaoMin;
   final double preco;
+  final bool ativo;
 
   ServicoCatalogo({
     required this.id,
@@ -13,6 +14,7 @@ class ServicoCatalogo {
     required this.descricao,
     required this.duracaoMin,
     required this.preco,
+    required this.ativo,
   });
 
   factory ServicoCatalogo.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class ServicoCatalogo {
       descricao: json['descricao'] as String?,
       duracaoMin: parseInt(json['duracaoMin']),
       preco: parseDouble(json['preco']),
+      ativo: json['ativo'] as bool? ?? true,
     );
   }
 

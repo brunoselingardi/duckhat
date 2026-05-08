@@ -98,9 +98,9 @@ class _PromotionsPageState extends State<PromotionsPage> {
   }
 
   void _openFeaturedDeal() {
-    Navigator.of(context).push(
-      AppRoute(builder: (_) => const ServicePage(prestadorId: 2)),
-    );
+    Navigator.of(
+      context,
+    ).push(AppRoute(builder: (_) => const ServicePage(prestadorId: 2)));
   }
 
   void _openAllServices() {
@@ -161,10 +161,7 @@ class _PromotionsPageState extends State<PromotionsPage> {
                   final deal = visibleDeals[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _PromoCard(
-                      deal: deal,
-                      onTap: _openFeaturedDeal,
-                    ),
+                    child: _PromoCard(deal: deal, onTap: _openFeaturedDeal),
                   );
                 },
               ),
@@ -189,10 +186,7 @@ class _PromotionsPageState extends State<PromotionsPage> {
                     final deal = expiringDeals[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _ExpiryTile(
-                        deal: deal,
-                        onTap: _openFeaturedDeal,
-                      ),
+                      child: _ExpiryTile(deal: deal, onTap: _openFeaturedDeal),
                     );
                   },
                 ),
@@ -297,7 +291,10 @@ class _PromoHero extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
@@ -624,7 +621,9 @@ class _PromoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               child: Image.asset(
                 deal.image,
                 width: double.infinity,
@@ -802,10 +801,7 @@ class _ExpiryTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.accent,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.accent),
           ],
         ),
       ),

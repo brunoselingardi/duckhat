@@ -30,7 +30,7 @@ class ServiceExperienceSection extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             summary,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 15,
               height: 1.6,
               color: AppColors.textBold,

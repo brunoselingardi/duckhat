@@ -5,24 +5,24 @@ import 'package:duckhat/pages/service.dart';
 
 class RebookCard extends StatelessWidget {
   final String name;
+  final int? prestadorId;
   final String image;
   final double rating;
   final int reviews;
-  final int prestadorId;
 
   const RebookCard({
     super.key,
     required this.name,
+    this.prestadorId,
     required this.image,
     this.rating = 0.0,
     this.reviews = 0,
-    this.prestadorId = 2,
   });
 
   void _navigateToEstabelecimento(BuildContext context) {
     Navigator.push(
       context,
-      AppRoute(builder: (_) => ServicePage(prestadorId: prestadorId)),
+      AppRoute(builder: (_) => ServicePage(prestadorId: prestadorId ?? 2)),
     );
   }
 
