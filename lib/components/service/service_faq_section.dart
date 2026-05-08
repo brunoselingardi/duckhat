@@ -24,12 +24,40 @@ class ServiceFaqSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          RepaintBoundary(
-            child: Column(
-              children: faqs.map((faq) => _FaqItem(faq: faq)).toList(),
+          if (faqs.isEmpty)
+            const _EmptyFaqs()
+          else
+            RepaintBoundary(
+              child: Column(
+                children: faqs.map((faq) => _FaqItem(faq: faq)).toList(),
+              ),
             ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyFaqs extends StatelessWidget {
+  const _EmptyFaqs();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE8EDF6)),
+      ),
+      child: const Text(
+        'Nenhuma pergunta frequente cadastrada.',
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.5,
+          color: AppColors.textRegular,
+        ),
       ),
     );
   }

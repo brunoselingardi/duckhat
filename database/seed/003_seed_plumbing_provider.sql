@@ -66,6 +66,36 @@ ON DUPLICATE KEY UPDATE
     preco = VALUES(preco),
     ativo = VALUES(ativo);
 
+INSERT INTO estabelecimentos (
+    usuario_id,
+    nome,
+    telefone,
+    cnpj,
+    responsavel_nome,
+    endereco,
+    descricao,
+    horario_atendimento
+)
+SELECT
+    id,
+    nome,
+    telefone,
+    cnpj,
+    responsavel_nome,
+    endereco,
+    descricao_publica,
+    horario_atendimento
+FROM usuarios
+WHERE id = 13
+ON DUPLICATE KEY UPDATE
+    nome = VALUES(nome),
+    telefone = VALUES(telefone),
+    cnpj = VALUES(cnpj),
+    responsavel_nome = VALUES(responsavel_nome),
+    endereco = VALUES(endereco),
+    descricao = VALUES(descricao),
+    horario_atendimento = VALUES(horario_atendimento);
+
 DELETE FROM disponibilidades WHERE prestador_id = 13;
 
 INSERT INTO disponibilidades (prestador_id, dia_semana, hora_inicio, hora_fim, ativo) VALUES

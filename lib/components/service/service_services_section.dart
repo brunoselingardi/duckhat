@@ -27,7 +27,7 @@ class ServiceServicesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Servicos e precos',
+            'Serviços e preços',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
