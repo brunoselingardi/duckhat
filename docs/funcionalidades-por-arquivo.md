@@ -39,8 +39,12 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - home visual com header, busca, banner promocional, rebook e agendamentos do dia
   - card de busca abre `SearchPage`
   - cards de rebook abrem `ServicePage` com o `prestadorId` do agendamento/favorito quando disponivel
-  - CTA visual `Ver promoções` nao possui handler real
+  - CTA `Ver promoções` abre `PromotionsPage`, uma curadoria local que direciona para a busca real
   - secao de agendamentos do dia usa agendamentos reais do cliente autenticado
+- `lib/pages/promotions.dart`
+  - curadoria local de categorias promocionais, sem inventario persistido no backend
+  - CTAs abrem a busca real para o usuario encontrar estabelecimentos e horarios disponiveis
+  - nao representa descontos persistidos ou estoque real de ofertas
 - `lib/pages/search.dart`
   - tela de busca com filtros, campo de texto, localizacao, sugestoes e recentes
   - botao voltar retorna para a tela anterior
@@ -396,7 +400,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - reviews e FAQ da pagina publica do estabelecimento
   - parte das subpaginas de perfil
   - minhas localizacoes no perfil
-  - banner promocional e boa parte da home
+  - banner/promocoes como curadoria local sem backend dedicado
 
 ## Regra de manutencao
 
