@@ -158,6 +158,7 @@ public class UsuarioService {
                 request.horarioAtendimento(),
                 160,
                 "Horário de atendimento deve ter no máximo 160 caracteres");
+        String bannerImagemBase64 = normalizarImagemBase64(request.bannerImagemBase64());
         validarDataNascimento(request.dataNascimento());
 
         if (!emailNormalizado.equals(usuario.getEmail()) && usuarioRepository.existsByEmail(emailNormalizado)) {
@@ -187,21 +188,22 @@ public class UsuarioService {
         Usuario salvo = usuarioRepository.save(usuario);
         Estabelecimento estabelecimento = null;
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
-            estabelecimento = salvarEstabelecimento(salvo, endereco, descricao, horarioAtendimento);
+            estabelecimento = salvarEstabelecimento(salvo, endereco, descricao, horarioAtendimento, bannerImagemBase64);
         }
 
         return UsuarioResponse.fromEntity(salvo, estabelecimento);
     }
 
     private Estabelecimento salvarEstabelecimento(Usuario prestador, String endereco) {
-        return salvarEstabelecimento(prestador, endereco, null, null);
+        return salvarEstabelecimento(prestador, endereco, null, null, null);
     }
 
     private Estabelecimento salvarEstabelecimento(
             Usuario prestador,
             String endereco,
             String descricao,
-            String horarioAtendimento
+            String horarioAtendimento,
+            String bannerImagemBase64
     ) {
         Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(prestador.getId())
                 .orElseGet(Estabelecimento::new);
@@ -214,6 +216,9 @@ public class UsuarioService {
         estabelecimento.setEndereco(endereco);
         estabelecimento.setDescricao(descricao);
         estabelecimento.setHorarioAtendimento(horarioAtendimento);
+        if (bannerImagemBase64 != null) {
+            estabelecimento.setBannerImagemBase64(bannerImagemBase64);
+        }
 
         return estabelecimentoRepository.save(estabelecimento);
     }
@@ -284,6 +289,19 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, mensagemErro);
         }
         return colapsado;
+    }
+
+    private String normalizarImagemBase64(String valor) {
+        String normalizado = normalizarTexto(valor);
+        if (normalizado == null) {
+            return null;
+        }
+        if (normalizado.length() > 1_200_000) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Imagem de banner deve ter no máximo 1.200.000 caracteres em Base64");
+        }
+        return normalizado;
     }
 
     private String normalizarEndereco(String endereco) {

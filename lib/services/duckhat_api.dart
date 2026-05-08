@@ -8,9 +8,9 @@ import '../models/agendamento.dart';
 import '../models/avaliacao.dart';
 import '../models/chat_conversa.dart';
 import '../models/chat_mensagem.dart';
-import '../models/avaliacao.dart';
 import '../models/catalogo_prestador_busca.dart';
 import '../models/disponibilidade_catalogo.dart';
+import '../models/estabelecimento_catalogo.dart';
 import '../models/estabelecimento_publico.dart';
 import '../models/notificacao.dart';
 import '../models/notificacao_preferencias.dart';
@@ -71,6 +71,7 @@ class DuckHatApi {
         horarioAtendimento: tipo == 'PRESTADOR'
             ? 'Segunda a sexta 9h - 20h'
             : null,
+        bannerImagemBase64: null,
         tipo: tipo,
         token: _token!,
       ),
@@ -306,9 +307,192 @@ class DuckHatApi {
       endereco: body['endereco'] as String?,
       descricao: body['descricao'] as String?,
       horarioAtendimento: body['horarioAtendimento'] as String?,
+      bannerImagemBase64: body['bannerImagemBase64'] as String?,
       tipo: body['tipo'] as String? ?? '',
       token: token,
     );
+  }
+
+  Future<List<ServicoCatalogo>> listarMeusServicos() async {
+    if (_devMode) {
+      return [
+        ServicoCatalogo(
+          id: 1,
+          prestadorId: _session?.id ?? 9002,
+          nome: 'Corte de cabelo',
+          descricao: 'Servico de exemplo para ajustar a vitrine.',
+          duracaoMin: 30,
+          preco: 35,
+          ativo: true,
+        ),
+        ServicoCatalogo(
+          id: 2,
+          prestadorId: _session?.id ?? 9002,
+          nome: 'Barba',
+          descricao: 'Acabamento e desenho de barba.',
+          duracaoMin: 25,
+          preco: 28,
+          ativo: true,
+        ),
+      ];
+    }
+
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/servicos'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar seus serviços.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar seus serviços.');
+    }
+
+    return body
+        .map(
+          (item) =>
+              ServicoCatalogo.fromJson(Map<String, dynamic>.from(item as Map)),
+        )
+        .toList();
+  }
+
+  Future<ServicoCatalogo> criarServico({
+    required String nome,
+    required String descricao,
+    required int duracaoMin,
+    required double preco,
+    required bool ativo,
+  }) async {
+    if (_devMode) {
+      return ServicoCatalogo(
+        id: DateTime.now().microsecondsSinceEpoch,
+        prestadorId: _session?.id ?? 9002,
+        nome: nome.trim(),
+        descricao: _nullableTrim(descricao),
+        duracaoMin: duracaoMin,
+        preco: preco,
+        ativo: ativo,
+      );
+    }
+
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/servicos'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(
+        _servicoPayload(
+          nome: nome,
+          descricao: descricao,
+          duracaoMin: duracaoMin,
+          preco: preco,
+          ativo: ativo,
+        ),
+      ),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível criar o serviço.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao criar serviço.');
+    }
+
+    return ServicoCatalogo.fromJson(body);
+  }
+
+  Future<ServicoCatalogo> atualizarServico({
+    required int id,
+    required String nome,
+    required String descricao,
+    required int duracaoMin,
+    required double preco,
+    required bool ativo,
+  }) async {
+    if (_devMode) {
+      return ServicoCatalogo(
+        id: id,
+        prestadorId: _session?.id ?? 9002,
+        nome: nome.trim(),
+        descricao: _nullableTrim(descricao),
+        duracaoMin: duracaoMin,
+        preco: preco,
+        ativo: ativo,
+      );
+    }
+
+    await ensureAuthenticated();
+
+    final response = await _client.put(
+      Uri.parse('${ApiConfig.baseUrl}/api/servicos/$id'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode(
+        _servicoPayload(
+          nome: nome,
+          descricao: descricao,
+          duracaoMin: duracaoMin,
+          preco: preco,
+          ativo: ativo,
+        ),
+      ),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível salvar o serviço.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao salvar serviço.');
+    }
+
+    return ServicoCatalogo.fromJson(body);
+  }
+
+  Future<void> criarDisponibilidade({
+    required int diaSemana,
+    required String horaInicio,
+    required String horaFim,
+    bool ativo = true,
+  }) async {
+    if (_devMode) return;
+
+    await ensureAuthenticated();
+
+    final response = await _client.post(
+      Uri.parse('${ApiConfig.baseUrl}/api/disponibilidades'),
+      headers: _authorizedHeaders(),
+      body: jsonEncode({
+        'diaSemana': diaSemana,
+        'horaInicio': horaInicio,
+        'horaFim': horaFim,
+        'ativo': ativo,
+      }),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível criar disponibilidade.',
+      );
+    }
   }
 
   Future<List<Agendamento>> listarAgendamentos() async {
@@ -422,11 +606,50 @@ class DuckHatApi {
     return EstabelecimentoPublico.fromJson(body);
   }
 
+  Future<List<EstabelecimentoCatalogo>> listarEstabelecimentosCatalogo({
+    String? termo,
+  }) async {
+    final normalized = termo?.trim();
+    final uri = normalized == null || normalized.isEmpty
+        ? Uri.parse('${ApiConfig.baseUrl}/api/catalogo/estabelecimentos')
+        : Uri.parse(
+            '${ApiConfig.baseUrl}/api/catalogo/estabelecimentos/busca',
+          ).replace(queryParameters: {'termo': normalized});
+
+    final response = await _client.get(
+      uri,
+      headers: {'Accept': 'application/json'},
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ??
+            'Não foi possível carregar os estabelecimentos.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar estabelecimentos.');
+    }
+
+    return body
+        .map(
+          (item) => EstabelecimentoCatalogo.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList();
+  }
+
   Future<List<CatalogoPrestadorBusca>> buscarPrestadoresCatalogo(
     String nome,
   ) async {
     final response = await _client.get(
-      Uri.parse('${ApiConfig.baseUrl}/api/catalogo/prestadores/busca?nome=${Uri.encodeQueryComponent(nome)}'),
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/catalogo/prestadores/busca?nome=${Uri.encodeQueryComponent(nome)}',
+      ),
       headers: {'Accept': 'application/json'},
     );
 
@@ -449,6 +672,31 @@ class DuckHatApi {
           ),
         )
         .toList();
+  }
+
+  Future<EstabelecimentoCatalogo> buscarEstabelecimentoCatalogo(
+    int prestadorId,
+  ) async {
+    final response = await _client.get(
+      Uri.parse(
+        '${ApiConfig.baseUrl}/api/catalogo/estabelecimentos/$prestadorId',
+      ),
+      headers: {'Accept': 'application/json'},
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar o estabelecimento.',
+      );
+    }
+
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Resposta inválida ao carregar estabelecimento.');
+    }
+
+    return EstabelecimentoCatalogo.fromJson(body);
   }
 
   Future<List<ServicoCatalogo>> listarServicosPorPrestador(
@@ -640,14 +888,18 @@ class DuckHatApi {
   }
 
   Future<Avaliacao> criarAvaliacao({
-    required int agendamentoId,
+    int? prestadorId,
     required int nota,
     String? comentario,
+    int? servicoId,
+    int? agendamentoId,
   }) async {
     if (_devMode) {
       return Avaliacao(
         id: 0,
-        agendamentoId: agendamentoId,
+        agendamentoId: agendamentoId ?? 0,
+        prestadorId: prestadorId,
+        servicoId: servicoId,
         nota: nota,
         comentario: _nullableTrim(comentario),
         criadoEm: DateTime.now(),
@@ -655,6 +907,10 @@ class DuckHatApi {
     }
 
     await ensureAuthenticated();
+
+    if (agendamentoId == null) {
+      throw Exception('Para avaliar, abra um agendamento concluído.');
+    }
 
     final response = await _client.post(
       Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes'),
@@ -981,44 +1237,6 @@ class DuckHatApi {
     return NotificacaoPreferencias.fromJson(body);
   }
 
-  Future<Avaliacao> criarAvaliacao({
-    required int prestadorId,
-    required int nota,
-    required String comentario,
-    int? servicoId,
-    int? agendamentoId,
-  }) async {
-    await ensureAuthenticated();
-
-    if (agendamentoId == null) {
-      throw Exception('Para avaliar, abra um agendamento concluído.');
-    }
-
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes'),
-      headers: _authorizedHeaders(),
-      body: jsonEncode({
-        'agendamentoId': agendamentoId,
-        'nota': nota,
-        'comentario': comentario.trim().isEmpty ? null : comentario.trim(),
-      }),
-    );
-
-    final body = _decodeBody(response);
-
-    if (response.statusCode != 201) {
-      throw Exception(
-        _extractMessage(body) ?? 'Não foi possível enviar a avaliação.',
-      );
-    }
-
-    if (body is! Map<String, dynamic>) {
-      throw Exception('Resposta inválida ao criar avaliação.');
-    }
-
-    return Avaliacao.fromJson(body);
-  }
-
   void _setSession(LoginSession? session) {
     _session = session;
     sessionNotifier.value = session;
@@ -1040,9 +1258,26 @@ class DuckHatApi {
         endereco: perfil.endereco,
         descricao: perfil.descricao,
         horarioAtendimento: perfil.horarioAtendimento,
+        bannerImagemBase64: perfil.bannerImagemBase64,
         tipo: perfil.tipo,
       ),
     );
+  }
+
+  Map<String, dynamic> _servicoPayload({
+    required String nome,
+    required String descricao,
+    required int duracaoMin,
+    required double preco,
+    required bool ativo,
+  }) {
+    return {
+      'nome': nome.trim(),
+      'descricao': _nullableTrim(descricao),
+      'duracaoMin': duracaoMin,
+      'preco': preco,
+      'ativo': ativo,
+    };
   }
 
   Map<String, String> _authorizedHeaders() {
@@ -1107,6 +1342,7 @@ class LoginSession {
   final String? endereco;
   final String? descricao;
   final String? horarioAtendimento;
+  final String? bannerImagemBase64;
   final String tipo;
   final String token;
 
@@ -1121,6 +1357,7 @@ class LoginSession {
     required this.endereco,
     required this.descricao,
     required this.horarioAtendimento,
+    required this.bannerImagemBase64,
     required this.tipo,
     required this.token,
   });
@@ -1136,6 +1373,7 @@ class LoginSession {
     String? endereco,
     String? descricao,
     String? horarioAtendimento,
+    String? bannerImagemBase64,
     String? tipo,
     String? token,
   }) {
@@ -1150,6 +1388,7 @@ class LoginSession {
       endereco: endereco,
       descricao: descricao,
       horarioAtendimento: horarioAtendimento,
+      bannerImagemBase64: bannerImagemBase64,
       tipo: tipo ?? this.tipo,
       token: token ?? this.token,
     );

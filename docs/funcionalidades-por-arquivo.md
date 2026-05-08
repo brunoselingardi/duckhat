@@ -8,7 +8,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/main.dart`
   - inicia o app com `MyApp`
-  - define `LoginPage` como tela inicial
+  - define `LaunchIntroPage` como tela inicial
   - registra a rota nomeada `/schedule-date`
 - `lib/pages/app_shell.dart`
   - define `MainNavigator`
@@ -18,7 +18,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
   - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
-  - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
+  - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, cadastro/edicao de servicos do prestador, catalogo publico de estabelecimentos/servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
 - `lib/core/api_config.dart`
   - centraliza `API_BASE_URL`, `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD`
 
@@ -37,7 +37,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/home.dart`
   - home visual com header, busca, banner promocional, rebook e agendamentos do dia
   - card de busca abre `SearchPage`
-  - cards de rebook abrem `ServicePage`
+  - cards de rebook abrem `ServicePage` com o `prestadorId` do agendamento/favorito quando disponivel
   - CTA visual `Ver promoções` nao possui handler real
   - secao de agendamentos do dia ainda e visual/mockada
 - `lib/pages/search.dart`
@@ -47,28 +47,31 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - CTA `Ver todos` e exibido na secao de sugestoes
   - CTA `Pesquisar` abre `SearchResultsPage` com termo, localizacao e categoria selecionados
   - toque em recente ou sugestao aplica texto ou leva para `ServicePage(prestadorId: ...)` quando o item interno ja e conhecido
-  - busca ainda e local, sem integracao com catalogo real
+  - a busca de resultados usa o catalogo publico real de estabelecimentos e complementa com Geoapify quando disponivel
 - `lib/pages/search_results.dart`
-  - tela de resultados locais da busca
+  - tela de resultados da busca com catalogo interno e resultados externos
   - exibe barra de busca compacta, filtros rapidos, mapa e cards de estabelecimentos
   - usa `flutter_map` com tiles do OpenStreetMap
   - solicita localizacao via `geolocator`; se falhar, usa Goiania como fallback visual
+  - consulta `GET /api/catalogo/estabelecimentos` ou `/api/catalogo/estabelecimentos/busca`
+  - combina estabelecimentos internos do DuckHat com resultados externos do Geoapify, priorizando o catalogo interno
   - botao voltar retorna para a busca
-  - botao `Pesquisar` refiltra a lista localmente
+  - botao `Pesquisar` executa nova busca na API/catalogo e no provedor externo quando configurado
   - botoes do mapa permitem aproximar, afastar e recentralizar
   - toque em estabelecimento interno ou CTA `Abrir estabelecimento` abre `ServicePage(prestadorId: ...)`
-  - resultados externos seguem no fluxo de contato
-  - resultados ainda nao usam catalogo interno completo do backend
+  - mapa renderiza marcador da origem e marcadores dos estabelecimentos/resultados encontrados
+  - estabelecimentos externos continuam sendo acao informativa/WhatsApp, sem pagina interna do DuckHat
 - `lib/pages/service.dart`
   - pagina do estabelecimento/prestador
-  - recebe `prestadorId` obrigatorio
-  - carrega servicos reais do prestador pela API
-  - tenta carregar perfil publico do estabelecimento pela API e usa fallback centralizado quando necessario
+  - recebe `prestadorId` e opcionalmente `EstabelecimentoCatalogo`
+  - carrega detalhe publico do estabelecimento pela API quando necessario
+  - exibe nome, endereco, descricao, horario, banner e servicos/precos do estabelecimento real
+  - tenta carregar perfil publico do prestador pela API e usa fallback centralizado para capa/logo/galeria/reviews/FAQ quando necessario
   - possui hero, info card, tabs, galeria, reviews, FAQ e CTA `Agendar`
   - botao voltar no hero retorna
   - tabs horizontais navegam entre secoes
   - toque na galeria abre fullscreen
-  - a lista de servicos e apenas informativa, sem botao `Agendar` por item
+  - cada servico possui botao `Agendar`
   - CTA global flutuante abre a tela de agendamento com os servicos do estabelecimento
   - CTA `Enviar Mensagem` do info card cria/abre conversa real com o prestador
   - reviews, FAQ, experiencia e galeria ainda usam fallback de fase 1 quando o backend nao expoe esses blocos
@@ -131,7 +134,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botoes de mostrar/ocultar senha e confirmar senha
   - CTA principal cria conta real e devolve credenciais para login imediato
   - CTA `Ja tenho conta` volta ao login
-  - para prestador, envia tambem `cnpj` e `responsavelNome`
+  - para prestador, o fluxo possui etapas para banner do estabelecimento, descricao da vitrine, servicos iniciais com descricao/preco/duracao, responsavel/contato e acesso
+  - para prestador, cria usuario real, salva descricao/banner via `/api/me`, cadastra servicos iniciais via `/api/servicos` e cria disponibilidade padrao de segunda a sexta
 
 ## Componentes principais por area
 
@@ -173,6 +177,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/components/service/service_info_card.dart`
   - resumo do estabelecimento
   - renderiza nome, nota, endereco, horario, descricao e logo dinamicamente
+  - possui CTA de mensagem conectado ao chat real quando a pagina fornece handler
 - `lib/components/service/service_tab_menu.dart`
   - tabs horizontais da pagina de servico
 - `lib/components/service/service_sections.dart`
@@ -232,6 +237,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_home.dart`
   - dashboard mockado do estabelecimento
   - cards e chips foram alinhados aos tokens de `AppColors`
+  - possui atalhos reais para editar descricao/banner em `ShopEstablishmentDataPage` e servicos em `ShopServiceDurationPage`
 - `lib/shop_pages/shop_schedule.dart`
   - agenda mockada do estabelecimento com calendario e lista do dia
   - cards, estados selecionados e superficies usam o tema central
@@ -245,7 +251,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_establishment_data.dart`
   - formulario real de dados do estabelecimento
   - carrega dados via `GET /api/me`
-  - salva nome, telefone, e-mail, CNPJ, responsavel, endereco, descricao e horario de atendimento via `PUT /api/me`
+  - salva nome, telefone, e-mail, CNPJ, responsavel, endereco, descricao, horario de atendimento e banner em Base64 via `PUT /api/me`
   - a pre-visualizacao publica usa os dados carregados do estabelecimento vinculado
   - usa a mesma validacao de perfil para e-mail, telefone com DDD e endereco com rua/numero
 - `lib/shop_pages/shop_gallery.dart`
@@ -255,7 +261,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_work_hours.dart`
   - configuracao mockada de horarios de atendimento
 - `lib/shop_pages/shop_service_duration.dart`
-  - configuracao mockada de servicos, duracao e preco
+  - editor real de servicos do prestador autenticado
+  - carrega `GET /api/servicos`, cria servicos com `POST /api/servicos` e atualiza nome/descricao/duracao/preco/status com `PUT /api/servicos/{id}`
+  - permite pausar servico existente para remover do catalogo publico sem apagar historico de agendamentos
 - `lib/shop_pages/shop_notifications.dart`
   - preferencias mockadas de notificacao
 - `lib/shop_pages/shop_privacy.dart`
@@ -273,6 +281,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - modelo de avaliacao real persistida em `/api/avaliacoes`
 - `lib/models/servico_catalogo.dart`
   - modelo de servicos vindos do catalogo/API
+- `lib/models/estabelecimento_catalogo.dart`
+  - modelo do catalogo publico de estabelecimentos, com dados de vitrine, preco inicial e servicos ativos
 - `lib/models/disponibilidade_catalogo.dart`
   - disponibilidade publica do prestador
 - `lib/models/ocupacao_prestador.dart`
@@ -296,7 +306,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - login JWT
   - recuperacao de senha: solicitar codigo e redefinir senha
 - `backend/src/main/java/com/duckhat/api/controller/CatalogoController.java`
-  - endpoints publicos de catalogo, disponibilidade e ocupacao
+  - endpoints publicos de estabelecimentos, servicos, disponibilidade e ocupacao
 - `backend/src/main/java/com/duckhat/api/controller/AgendamentoController.java`
   - criacao, listagem, cancelamento, confirmacao e conclusao de agendamentos
 - `backend/src/main/java/com/duckhat/api/controller/ServicoController.java`

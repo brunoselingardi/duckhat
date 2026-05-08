@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:duckhat/models/usuario_perfil.dart';
 import 'package:duckhat/services/duckhat_api.dart';
+import 'package:duckhat/utils/image_base64.dart';
 import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,6 +63,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
         endereco: session.endereco,
         descricao: session.descricao,
         horarioAtendimento: session.horarioAtendimento,
+        bannerImagemBase64: session.bannerImagemBase64,
         tipo: session.tipo,
       ),
     );
@@ -220,6 +223,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                       ],
                       _PublicProfilePreview(
                         coverImage: _coverImage,
+                        coverImageBase64: _perfil?.bannerImagemBase64,
                         logoImage: _logoImage,
                         name: _nameController.text.trim().isEmpty
                             ? 'Nome do estabelecimento'
@@ -401,6 +405,10 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     });
 
     try {
+      final bannerBase64 = _coverImage == null
+          ? current.bannerImagemBase64
+          : await encodeImageFileAsBase64(_coverImage);
+
       await DuckHatApi.instance.atualizarMeuPerfil(
         UsuarioPerfil(
           id: current.id,
@@ -413,6 +421,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           endereco: _addressController.text,
           descricao: _descriptionController.text,
           horarioAtendimento: _hoursController.text,
+          bannerImagemBase64: bannerBase64,
           tipo: current.tipo,
         ),
       );
@@ -439,6 +448,7 @@ enum _EstablishmentImageSlot { cover, logo }
 
 class _PublicProfilePreview extends StatelessWidget {
   final File? coverImage;
+  final String? coverImageBase64;
   final File? logoImage;
   final String name;
   final String address;
@@ -449,6 +459,7 @@ class _PublicProfilePreview extends StatelessWidget {
 
   const _PublicProfilePreview({
     required this.coverImage,
+    required this.coverImageBase64,
     required this.logoImage,
     required this.name,
     required this.address,
@@ -471,7 +482,7 @@ class _PublicProfilePreview extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                _CoverImage(image: coverImage),
+                _CoverImage(image: coverImage, imageBase64: coverImageBase64),
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -575,13 +586,22 @@ class _PublicProfilePreview extends StatelessWidget {
 
 class _CoverImage extends StatelessWidget {
   final File? image;
+  final String? imageBase64;
 
-  const _CoverImage({required this.image});
+  const _CoverImage({required this.image, required this.imageBase64});
 
   @override
   Widget build(BuildContext context) {
     if (image != null) {
       return Image.file(image!, fit: BoxFit.cover);
+    }
+    final savedImage = imageBase64?.trim();
+    if (savedImage != null && savedImage.isNotEmpty) {
+      return Image.memory(
+        base64Decode(savedImage),
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+      );
     }
     return Image.asset(
       'assets/barbie.jpg',

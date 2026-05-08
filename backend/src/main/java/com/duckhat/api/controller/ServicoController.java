@@ -46,6 +46,14 @@ public class ServicoController {
     return servicoService.buscarPorId(id, usuario);
   }
 
+  @PutMapping("/{id}")
+  public ServicoResponse atualizar(
+      @PathVariable Long id,
+      @Valid @RequestBody CreateServicoRequest request,
+      @AuthenticationPrincipal Usuario usuario) {
+    return servicoService.atualizar(id, request, usuario);
+  }
+
   @GetMapping("/prestador/{prestadorId}")
   public List<ServicoResponse> listarPorPrestador(
       @PathVariable Long prestadorId,

@@ -55,29 +55,32 @@ class ServiceInfoCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w700,
                         color: AppColors.textBold,
                       ),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
-                        Icon(Icons.star_rounded, color: Color(0xFFFFB547)),
-                        SizedBox(width: 6),
+                        const Icon(
+                          Icons.star_rounded,
+                          color: Color(0xFFFFB547),
+                        ),
+                        const SizedBox(width: 6),
                         Text(
                           ratingValue.toStringAsFixed(1),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.accent,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                         Text(
                           '($reviewCount avaliacoes)',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.accent,
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
@@ -129,7 +132,7 @@ class ServiceInfoCard extends StatelessWidget {
             ),
             child: Text(
               '"${description ?? 'Descricao publica indisponivel no momento.'}"',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13.5,
                 height: 1.6,
                 color: AppColors.textRegular,

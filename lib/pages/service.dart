@@ -6,6 +6,7 @@ import 'package:duckhat/components/service/service_profile_fallbacks.dart';
 import 'package:duckhat/components/service/service_sections.dart';
 import 'package:duckhat/components/service/service_tab_menu.dart';
 import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/estabelecimento_publico.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
 import 'package:duckhat/pages/avaliar.dart';
@@ -21,12 +22,14 @@ typedef ServiceOffersLoader =
 
 class ServicePage extends StatefulWidget {
   final int prestadorId;
+  final EstabelecimentoCatalogo? estabelecimento;
   final ServiceProfileLoader? profileLoader;
   final ServiceOffersLoader? servicesLoader;
 
   const ServicePage({
     super.key,
     required this.prestadorId,
+    this.estabelecimento,
     this.profileLoader,
     this.servicesLoader,
   });
@@ -49,6 +52,7 @@ class _ServicePageState extends State<ServicePage> {
   bool _loadingServices = true;
   String? _profileError;
   String? _servicesError;
+  EstabelecimentoCatalogo? _catalog;
   EstabelecimentoPublico? _profile;
   ServicePublicPageFallback? _fallback;
   List<ServiceOffer> _offers = const [];
@@ -126,6 +130,7 @@ class _ServicePageState extends State<ServicePage> {
     final fallback = fallbackForPrestador(widget.prestadorId);
     setState(() {
       _fallback = fallback;
+      _catalog = widget.estabelecimento;
       _loadingProfile = true;
       _loadingServices = true;
       _profileError = null;
@@ -138,7 +143,8 @@ class _ServicePageState extends State<ServicePage> {
   Future<void> _loadProfile(ServicePublicPageFallback? fallback) async {
     try {
       final loader =
-          widget.profileLoader ?? DuckHatApi.instance.carregarEstabelecimentoPublico;
+          widget.profileLoader ??
+          DuckHatApi.instance.carregarEstabelecimentoPublico;
       final loaded = await loader(widget.prestadorId);
       if (!mounted) return;
 
@@ -153,8 +159,8 @@ class _ServicePageState extends State<ServicePage> {
 
       setState(() {
         _loadingProfile = false;
-        _profile = fallback?.profile;
-        _profileError = fallback == null
+        _profile = _profileFromCatalog(_catalog) ?? fallback?.profile;
+        _profileError = fallback == null && _profile == null
             ? error.toString().replaceFirst('Exception: ', '')
             : null;
       });
@@ -168,26 +174,47 @@ class _ServicePageState extends State<ServicePage> {
     });
 
     try {
-      final loader =
-          widget.servicesLoader ?? DuckHatApi.instance.listarServicosPorPrestador;
-      final services = await loader(widget.prestadorId);
+      final catalog =
+          widget.estabelecimento ??
+          await DuckHatApi.instance.buscarEstabelecimentoCatalogo(
+            widget.prestadorId,
+          );
       if (!mounted) return;
 
       setState(() {
-        _offers = services.map(_offerFromServico).toList();
+        _catalog = catalog;
+        _profile ??= _profileFromCatalog(catalog);
+        _offers = catalog.servicos.map(_offerFromServico).toList();
         _loadingServices = false;
       });
-    } catch (error) {
-      if (!mounted) return;
+    } catch (catalogError) {
+      try {
+        final loader =
+            widget.servicesLoader ??
+            DuckHatApi.instance.listarServicosPorPrestador;
+        final services = await loader(widget.prestadorId);
+        if (!mounted) return;
 
-      setState(() {
-        _loadingServices = false;
-        _servicesError = error.toString().replaceFirst('Exception: ', '');
-      });
+        setState(() {
+          _offers = services.map(_offerFromServico).toList();
+          _loadingServices = false;
+        });
+      } catch (error) {
+        if (!mounted) return;
+
+        setState(() {
+          _loadingServices = false;
+          _servicesError = error.toString().replaceFirst('Exception: ', '');
+        });
+      }
     }
   }
 
-  EstabelecimentoPublico? get _effectiveProfile => _profile ?? _fallback?.profile;
+  EstabelecimentoPublico? get _effectiveProfile =>
+      _profile ?? _profileFromCatalog(_catalog) ?? _fallback?.profile;
+
+  int get _prestadorId =>
+      _catalog?.prestadorId ?? _effectiveProfile?.id ?? widget.prestadorId;
 
   List<String> get _galleryImages => _fallback?.galleryImages ?? const [];
 
@@ -197,12 +224,39 @@ class _ServicePageState extends State<ServicePage> {
 
   ServiceExperienceData get _experience =>
       _fallback?.experience ??
-      const ServiceExperienceData(summary: '', highlights: []);
+      ServiceExperienceData(
+        summary:
+            _effectiveProfile?.descricaoPublica ??
+            'Este estabelecimento ainda esta ajustando sua experiencia publica.',
+        highlights: const [
+          'Servicos, precos e duracao visiveis antes do agendamento',
+          'Agenda conectada aos horarios disponiveis do estabelecimento',
+          'Contato direto por mensagem dentro do DuckHat',
+        ],
+      );
 
   double get _averageRating {
     if (_reviews.isEmpty) return 0;
     final total = _reviews.fold<int>(0, (sum, item) => sum + item.rating);
     return total / _reviews.length;
+  }
+
+  EstabelecimentoPublico? _profileFromCatalog(
+    EstabelecimentoCatalogo? catalog,
+  ) {
+    if (catalog == null) return null;
+    final fallback = fallbackForPrestador(catalog.prestadorId)?.profile;
+
+    return EstabelecimentoPublico(
+      id: catalog.prestadorId,
+      nome: catalog.nome,
+      telefone: catalog.telefone,
+      endereco: catalog.endereco,
+      descricaoPublica: catalog.descricao,
+      horarioAtendimento: catalog.horarioAtendimento,
+      imagemCapa: fallback?.imagemCapa,
+      imagemLogo: fallback?.imagemLogo,
+    );
   }
 
   ServiceOffer _offerFromServico(ServicoCatalogo service) {
@@ -263,15 +317,16 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
-  Future<void> _openBookingFlow() async {
+  Future<void> _openBookingFlow({int? initialServiceId}) async {
     final profile = _effectiveProfile;
     final created = await Navigator.pushNamed(
       context,
       '/schedule-date',
       arguments: {
-        'prestadorId': widget.prestadorId,
+        'prestadorId': _prestadorId,
         'establishmentName': profile?.nome ?? '',
         'serviceOffers': _offers,
+        'initialServiceId': initialServiceId,
       },
     );
 
@@ -288,7 +343,7 @@ class _ServicePageState extends State<ServicePage> {
   Future<void> _openChat() async {
     try {
       final conversa = await DuckHatApi.instance.criarOuBuscarConversaChat(
-        widget.prestadorId,
+        _prestadorId,
       );
       if (!mounted) return;
 
@@ -318,7 +373,7 @@ class _ServicePageState extends State<ServicePage> {
       context,
       AppRoute(
         builder: (context) => AvaliarPage(
-          prestadorId: widget.prestadorId,
+          prestadorId: _prestadorId,
           prestadorNome: profile?.nome ?? 'Estabelecimento',
         ),
       ),
@@ -364,6 +419,7 @@ class _ServicePageState extends State<ServicePage> {
                   ServiceHero(
                     onBack: () => Navigator.pop(context),
                     imageSource: profile.imagemCapa,
+                    bannerImagemBase64: _catalog?.bannerImagemBase64,
                   ),
                   Transform.translate(
                     offset: const Offset(0, -28),
@@ -389,9 +445,15 @@ class _ServicePageState extends State<ServicePage> {
                         ServiceSections(
                           sectionKeys: _sectionKeys,
                           offers: _offers,
+                          establishmentName: profile.nome,
+                          experienceDescription:
+                              profile.descricaoPublica ?? _experience.summary,
                           isServicesLoading: _loadingServices,
                           servicesError: _servicesError,
                           onServicesRetry: _loadPageData,
+                          onBookOffer: (offer) => _openBookingFlow(
+                            initialServiceId: offer.serviceId,
+                          ),
                           reviews: _reviews,
                           faqs: _faqs,
                           galleryImages: _galleryImages,
@@ -409,7 +471,7 @@ class _ServicePageState extends State<ServicePage> {
               ),
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _offers.isEmpty ? null : _openBookingFlow,
+        onPressed: _offers.isEmpty ? null : () => _openBookingFlow(),
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.primary,
         icon: const Icon(Icons.calendar_today),

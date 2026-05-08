@@ -18,6 +18,7 @@ public record UsuarioResponse(
         String endereco,
         String descricao,
         String horarioAtendimento,
+        String bannerImagemBase64,
         TipoUsuario tipo,
         LocalDateTime criadoEm
 ) {
@@ -31,6 +32,7 @@ public record UsuarioResponse(
                 usuario.getResponsavelNome(),
                 usuario.getDataNascimento(),
                 usuario.getEndereco(),
+                null,
                 null,
                 null,
                 usuario.getTipo(),
@@ -54,6 +56,7 @@ public record UsuarioResponse(
                 estabelecimento.getEndereco() == null ? usuario.getEndereco() : estabelecimento.getEndereco(),
                 estabelecimento.getDescricao(),
                 estabelecimento.getHorarioAtendimento(),
+                estabelecimento.getBannerImagemBase64(),
                 usuario.getTipo(),
                 usuario.getCriadoEm()
         );

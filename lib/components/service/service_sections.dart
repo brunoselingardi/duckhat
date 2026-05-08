@@ -10,9 +10,12 @@ import 'package:flutter/material.dart';
 class ServiceSections extends StatelessWidget {
   final List<GlobalKey> sectionKeys;
   final List<ServiceOffer> offers;
+  final String establishmentName;
+  final String experienceDescription;
   final bool isServicesLoading;
   final String? servicesError;
   final VoidCallback? onServicesRetry;
+  final ValueChanged<ServiceOffer>? onBookOffer;
   final List<ServiceReview> reviews;
   final List<ServiceFaq> faqs;
   final List<String> galleryImages;
@@ -27,9 +30,12 @@ class ServiceSections extends StatelessWidget {
     super.key,
     required this.sectionKeys,
     required this.offers,
+    required this.establishmentName,
+    required this.experienceDescription,
     this.isServicesLoading = false,
     this.servicesError,
     this.onServicesRetry,
+    this.onBookOffer,
     required this.reviews,
     required this.faqs,
     required this.galleryImages,
@@ -63,6 +69,7 @@ class ServiceSections extends StatelessWidget {
             isLoading: isServicesLoading,
             error: servicesError,
             onRetry: onServicesRetry,
+            onBookOffer: onBookOffer,
           ),
           const Divider(height: 1, color: Color(0xFFE8EDF6)),
           ServiceGallerySection(

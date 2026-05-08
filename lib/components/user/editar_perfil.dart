@@ -64,6 +64,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         endereco: session.endereco,
         descricao: session.descricao,
         horarioAtendimento: session.horarioAtendimento,
+        bannerImagemBase64: session.bannerImagemBase64,
         tipo: session.tipo,
       ),
     );
@@ -133,6 +134,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           endereco: _enderecoController.text,
           descricao: current.descricao,
           horarioAtendimento: current.horarioAtendimento,
+          bannerImagemBase64: current.bannerImagemBase64,
           tipo: current.tipo,
         ),
       );
