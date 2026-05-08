@@ -79,6 +79,7 @@ class DuckHatApi {
   void clearSession() {
     _devMode = false;
     _token = null;
+    ApiConfig.resetResolvedBaseUrl();
     _setSession(null);
   }
 
@@ -159,22 +160,15 @@ class DuckHatApi {
     String? cnpj,
     String? responsavelNome,
   }) async {
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/usuarios'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({
-        'nome': nome.trim(),
-        'email': email.trim().toLowerCase(),
-        'senha': senha,
-        'telefone': telefone.trim(),
-        'cnpj': _nullableTrim(cnpj),
-        'responsavelNome': _nullableTrim(responsavelNome),
-        'tipo': tipo,
-      }),
-    );
+    final response = await _postPublicJson('/api/usuarios', {
+      'nome': nome.trim(),
+      'email': email.trim().toLowerCase(),
+      'senha': senha,
+      'telefone': telefone.trim(),
+      'cnpj': _nullableTrim(cnpj),
+      'responsavelNome': _nullableTrim(responsavelNome),
+      'tipo': tipo,
+    });
 
     final body = _decodeBody(response);
 
@@ -202,13 +196,9 @@ class DuckHatApi {
   Future<SolicitacaoRecuperacaoSenhaResponse> solicitarRecuperacaoSenha({
     required String email,
   }) async {
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/recuperar-senha/solicitar'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({'email': email.trim().toLowerCase()}),
+    final response = await _postPublicJson(
+      '/api/auth/recuperar-senha/solicitar',
+      {'email': email.trim().toLowerCase()},
     );
 
     final body = _decodeBody(response);
@@ -235,18 +225,12 @@ class DuckHatApi {
     required String codigo,
     required String novaSenha,
   }) async {
-    final response = await _client.post(
-      Uri.parse('${ApiConfig.baseUrl}/api/auth/recuperar-senha/redefinir'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: jsonEncode({
-        'email': email.trim().toLowerCase(),
-        'codigo': codigo.trim(),
-        'novaSenha': novaSenha,
-      }),
-    );
+    final response =
+        await _postPublicJson('/api/auth/recuperar-senha/redefinir', {
+          'email': email.trim().toLowerCase(),
+          'codigo': codigo.trim(),
+          'novaSenha': novaSenha,
+        });
 
     final body = _decodeBody(response);
 
@@ -261,23 +245,10 @@ class DuckHatApi {
     required String email,
     required String password,
   }) async {
-    final http.Response response;
-    try {
-      response = await _client
-          .post(
-            Uri.parse('${ApiConfig.baseUrl}/api/auth/login'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: jsonEncode({'email': email.trim(), 'senha': password}),
-          )
-          .timeout(const Duration(seconds: 8));
-    } catch (_) {
-      throw Exception(
-        'Não foi possível conectar à API em ${ApiConfig.baseUrl}. Verifique se o backend está rodando e se o endereço está correto para o emulador ou dispositivo.',
-      );
-    }
+    final response = await _postPublicJson('/api/auth/login', {
+      'email': email.trim(),
+      'senha': password,
+    });
 
     final body = _decodeBody(response);
 
@@ -1221,6 +1192,40 @@ class DuckHatApi {
       'Accept': 'application/json',
       'Authorization': 'Bearer $_token',
     };
+  }
+
+  Map<String, String> _jsonHeaders() {
+    return {'Content-Type': 'application/json', 'Accept': 'application/json'};
+  }
+
+  Future<http.Response> _postPublicJson(
+    String path,
+    Map<String, dynamic> payload,
+  ) async {
+    Object? lastError;
+    for (final baseUrl in ApiConfig.baseUrlCandidates) {
+      try {
+        final response = await _client
+            .post(
+              Uri.parse('$baseUrl$path'),
+              headers: _jsonHeaders(),
+              body: jsonEncode(payload),
+            )
+            .timeout(const Duration(seconds: 8));
+        ApiConfig.useBaseUrl(baseUrl);
+        return response;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    final tested = ApiConfig.baseUrlCandidates.join(', ');
+    throw Exception(
+      'Não foi possível conectar à API. Endereços testados: $tested. '
+      'Confirme se o Spring Boot está rodando em 8081. No celular físico, '
+      'autorize a depuração USB e rode: adb reverse tcp:8081 tcp:8081.'
+      '${lastError == null ? '' : ' Erro: ${lastError.runtimeType}.'}',
+    );
   }
 
   dynamic _decodeBody(http.Response response) {

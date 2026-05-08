@@ -437,7 +437,6 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
             ativo: true,
           );
         }
-        await _criarDisponibilidadesPadrao();
       } catch (_) {
         vitrineCompleta = false;
       }
@@ -578,15 +577,6 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
     );
   }
 
-  Future<void> _criarDisponibilidadesPadrao() async {
-    for (var dia = 1; dia <= 5; dia++) {
-      await DuckHatApi.instance.criarDisponibilidade(
-        diaSemana: dia,
-        horaInicio: '09:00:00',
-        horaFim: '18:00:00',
-      );
-    }
-  }
 }
 
 class _BusinessDataStep extends StatelessWidget {

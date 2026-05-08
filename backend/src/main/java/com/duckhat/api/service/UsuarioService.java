@@ -28,15 +28,18 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final EstabelecimentoRepository estabelecimentoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DisponibilidadePadraoService disponibilidadePadraoService;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
             EstabelecimentoRepository estabelecimentoRepository,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            DisponibilidadePadraoService disponibilidadePadraoService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.estabelecimentoRepository = estabelecimentoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.disponibilidadePadraoService = disponibilidadePadraoService;
     }
 
     @Transactional
@@ -68,6 +71,7 @@ public class UsuarioService {
         Usuario salvo = usuarioRepository.save(usuario);
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
             salvarEstabelecimento(salvo, null);
+            disponibilidadePadraoService.garantirDisponibilidadePadrao(salvo);
         }
         return UsuarioResponse.fromEntity(salvo);
     }

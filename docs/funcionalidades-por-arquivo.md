@@ -133,7 +133,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - CTA principal cria conta real e devolve credenciais para login imediato
   - CTA `Ja tenho conta` volta ao login
   - para prestador, o fluxo possui etapas para banner do estabelecimento, descricao da vitrine, servicos iniciais com descricao/preco/duracao, responsavel/contato e acesso
-  - para prestador, cria usuario real, salva descricao/banner via `/api/me`, cadastra servicos iniciais via `/api/servicos` e cria disponibilidade padrao de segunda a sexta
+  - para prestador, cria usuario real, salva descricao/banner via `/api/me` e cadastra servicos iniciais via `/api/servicos`; o backend garante disponibilidade padrao de segunda a sexta para novos prestadores
 
 ## Componentes principais por area
 
