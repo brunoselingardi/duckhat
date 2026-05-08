@@ -22,7 +22,9 @@ INSERT INTO estabelecimentos (
     telefone,
     cnpj,
     responsavel_nome,
-    endereco
+    endereco,
+    descricao,
+    horario_atendimento
 )
 SELECT
     id,
@@ -30,7 +32,9 @@ SELECT
     telefone,
     cnpj,
     responsavel_nome,
-    endereco
+    endereco,
+    descricao_publica,
+    horario_atendimento
 FROM usuarios
 WHERE tipo = 'PRESTADOR'
   AND cnpj IS NOT NULL
@@ -40,4 +44,6 @@ ON DUPLICATE KEY UPDATE
     telefone = VALUES(telefone),
     cnpj = VALUES(cnpj),
     responsavel_nome = VALUES(responsavel_nome),
-    endereco = VALUES(endereco);
+    endereco = VALUES(endereco),
+    descricao = VALUES(descricao),
+    horario_atendimento = VALUES(horario_atendimento);
