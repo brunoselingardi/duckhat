@@ -90,5 +90,7 @@ void main() {
     expect(find.text('Serviços e preços'), findsOneWidget);
     expect(find.text('Nenhuma avaliação publicada ainda.'), findsOneWidget);
     expect(find.text('Nenhuma pergunta frequente cadastrada.'), findsOneWidget);
+    expect(find.text('Barbie Dream Barber'), findsNothing);
+    expect(find.text('Mostrar mais detalhes'), findsNothing);
   });
 }

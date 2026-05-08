@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 class ServiceExperienceSection extends StatelessWidget {
   final String summary;
   final List<String> highlights;
+  final VoidCallback? onShowMore;
 
   const ServiceExperienceSection({
     super.key,
     required this.summary,
     required this.highlights,
+    this.onShowMore,
   });
 
   @override
@@ -69,26 +71,28 @@ class ServiceExperienceSection extends StatelessWidget {
             subtitle:
                 'Converse antes e alinhe o look ideal para o seu horario.',
           ),
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () {},
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFF3EFE8),
-                foregroundColor: AppColors.textBold,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+          if (onShowMore != null) ...[
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onShowMore,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFF3EFE8),
+                  foregroundColor: AppColors.textBold,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Mostrar mais detalhes',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: const Text(
+                  'Mostrar mais detalhes',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
