@@ -3,6 +3,7 @@ package com.duckhat.api.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,10 +33,13 @@ class UsuarioServiceTest {
   private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
   private final EstabelecimentoRepository estabelecimentoRepository = mock(EstabelecimentoRepository.class);
   private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+  private final DisponibilidadePadraoService disponibilidadePadraoService =
+      mock(DisponibilidadePadraoService.class);
   private final UsuarioService service = new UsuarioService(
       usuarioRepository,
       estabelecimentoRepository,
-      passwordEncoder);
+      passwordEncoder,
+      disponibilidadePadraoService);
 
   @Test
   void criarPrestadorCriaUsuarioEEstabelecimentoVinculado() {
@@ -72,6 +76,8 @@ class UsuarioServiceTest {
     assertEquals("62999998888", estabelecimento.getTelefone());
     assertEquals("11222333000144", estabelecimento.getCnpj());
     assertEquals("Ana Responsavel", estabelecimento.getResponsavelNome());
+    verify(disponibilidadePadraoService)
+        .garantirDisponibilidadePadrao(argThat(usuario -> usuario != null && usuario.getId().equals(42L)));
   }
 
   @Test
@@ -89,6 +95,7 @@ class UsuarioServiceTest {
         TipoUsuario.CLIENTE));
 
     verify(estabelecimentoRepository, never()).save(any(Estabelecimento.class));
+    verify(disponibilidadePadraoService, never()).garantirDisponibilidadePadrao(any(Usuario.class));
   }
 
   @Test

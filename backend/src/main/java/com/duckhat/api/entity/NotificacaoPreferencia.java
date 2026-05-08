@@ -7,12 +7,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import java.time.LocalDateTime;
+import org.springframework.data.domain.Persistable;
 
 @Entity
 @Table(name = "notificacao_preferencias")
-public class NotificacaoPreferencia {
+public class NotificacaoPreferencia implements Persistable<Long> {
 
     @Id
     @Column(name = "usuario_id")
@@ -40,6 +44,25 @@ public class NotificacaoPreferencia {
 
     @Column(name = "atualizado_em", insertable = false, updatable = false)
     private LocalDateTime atualizadoEm;
+
+    @Transient
+    private boolean novo = true;
+
+    @Override
+    public Long getId() {
+        return usuarioId;
+    }
+
+    @Override
+    public boolean isNew() {
+        return novo;
+    }
+
+    @PostLoad
+    @PostPersist
+    void marcarComoPersistido() {
+        this.novo = false;
+    }
 
     public Long getUsuarioId() {
         return usuarioId;

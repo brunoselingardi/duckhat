@@ -24,7 +24,29 @@ class ServicoServiceTest {
 
   private final ServicoRepository servicoRepository = mock(ServicoRepository.class);
   private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
-  private final ServicoService service = new ServicoService(servicoRepository, usuarioRepository);
+  private final DisponibilidadePadraoService disponibilidadePadraoService =
+      mock(DisponibilidadePadraoService.class);
+  private final ServicoService service = new ServicoService(
+      servicoRepository,
+      usuarioRepository,
+      disponibilidadePadraoService);
+
+  @Test
+  void criarGaranteDisponibilidadePadraoDoPrestador() {
+    Usuario prestador = usuario(2L, TipoUsuario.PRESTADOR);
+    when(servicoRepository.save(any(Servico.class))).thenAnswer(invocation -> {
+      Servico servico = invocation.getArgument(0);
+      servico.setId(10L);
+      return servico;
+    });
+
+    ServicoResponse response = service.criar(
+        new CreateServicoRequest("Corte", "Corte completo", 30, new BigDecimal("40.00"), true),
+        prestador);
+
+    assertEquals(10L, response.id());
+    verify(disponibilidadePadraoService).garantirDisponibilidadePadrao(prestador);
+  }
 
   @Test
   void atualizarEditaServicoDoPrestadorAutenticado() {
