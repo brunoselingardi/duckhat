@@ -65,6 +65,8 @@ class DuckHatApi {
         responsavelNome: tipo == 'PRESTADOR' ? 'Responsável Dev' : null,
         dataNascimento: null,
         endereco: null,
+        categoria: tipo == 'PRESTADOR' ? 'barbearia' : null,
+        categoriaLabel: tipo == 'PRESTADOR' ? 'Barbearia' : null,
         descricao: tipo == 'PRESTADOR'
             ? 'Perfil de desenvolvimento do estabelecimento.'
             : null,
@@ -161,6 +163,7 @@ class DuckHatApi {
     required String tipo,
     String? cnpj,
     String? responsavelNome,
+    String? categoria,
   }) async {
     final response = await _postPublicJson('/api/usuarios', {
       'nome': nome.trim(),
@@ -169,6 +172,7 @@ class DuckHatApi {
       'telefone': telefone.trim(),
       'cnpj': _nullableTrim(cnpj),
       'responsavelNome': _nullableTrim(responsavelNome),
+      'categoria': _nullableTrim(categoria),
       'tipo': tipo,
     });
 
@@ -276,6 +280,8 @@ class DuckHatApi {
       responsavelNome: body['responsavelNome'] as String?,
       dataNascimento: _parseDate(body['dataNascimento']),
       endereco: body['endereco'] as String?,
+      categoria: body['categoria'] as String?,
+      categoriaLabel: body['categoriaLabel'] as String?,
       descricao: body['descricao'] as String?,
       horarioAtendimento: body['horarioAtendimento'] as String?,
       bannerImagemBase64: body['bannerImagemBase64'] as String?,
@@ -1231,6 +1237,8 @@ class DuckHatApi {
         responsavelNome: perfil.responsavelNome,
         dataNascimento: perfil.dataNascimento,
         endereco: perfil.endereco,
+        categoria: perfil.categoria,
+        categoriaLabel: perfil.categoriaLabel,
         descricao: perfil.descricao,
         horarioAtendimento: perfil.horarioAtendimento,
         bannerImagemBase64: perfil.bannerImagemBase64,
@@ -1349,6 +1357,8 @@ class LoginSession {
   final String? responsavelNome;
   final DateTime? dataNascimento;
   final String? endereco;
+  final String? categoria;
+  final String? categoriaLabel;
   final String? descricao;
   final String? horarioAtendimento;
   final String? bannerImagemBase64;
@@ -1364,6 +1374,8 @@ class LoginSession {
     required this.responsavelNome,
     required this.dataNascimento,
     required this.endereco,
+    required this.categoria,
+    required this.categoriaLabel,
     required this.descricao,
     required this.horarioAtendimento,
     required this.bannerImagemBase64,
@@ -1380,6 +1392,8 @@ class LoginSession {
     String? responsavelNome,
     DateTime? dataNascimento,
     String? endereco,
+    String? categoria,
+    String? categoriaLabel,
     String? descricao,
     String? horarioAtendimento,
     String? bannerImagemBase64,
@@ -1395,6 +1409,8 @@ class LoginSession {
       responsavelNome: responsavelNome,
       dataNascimento: dataNascimento,
       endereco: endereco,
+      categoria: categoria,
+      categoriaLabel: categoriaLabel,
       descricao: descricao,
       horarioAtendimento: horarioAtendimento,
       bannerImagemBase64: bannerImagemBase64,

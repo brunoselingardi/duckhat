@@ -38,18 +38,6 @@ public class Usuario {
     @Column(length = 255)
     private String endereco;
 
-    @Column(name = "descricao_publica", length = 600)
-    private String descricaoPublica;
-
-    @Column(name = "horario_atendimento", length = 160)
-    private String horarioAtendimento;
-
-    @Column(name = "imagem_capa", length = 255)
-    private String imagemCapa;
-
-    @Column(name = "imagem_logo", length = 255)
-    private String imagemLogo;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
@@ -100,22 +88,6 @@ public class Usuario {
         return endereco;
     }
 
-    public String getDescricaoPublica() {
-        return descricaoPublica;
-    }
-
-    public String getHorarioAtendimento() {
-        return horarioAtendimento;
-    }
-
-    public String getImagemCapa() {
-        return imagemCapa;
-    }
-
-    public String getImagemLogo() {
-        return imagemLogo;
-    }
-
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
@@ -154,22 +126,6 @@ public class Usuario {
 
     public void setEndereco(String endereco) {
         this.endereco = endereco;
-    }
-
-    public void setDescricaoPublica(String descricaoPublica) {
-        this.descricaoPublica = descricaoPublica;
-    }
-
-    public void setHorarioAtendimento(String horarioAtendimento) {
-        this.horarioAtendimento = horarioAtendimento;
-    }
-
-    public void setImagemCapa(String imagemCapa) {
-        this.imagemCapa = imagemCapa;
-    }
-
-    public void setImagemLogo(String imagemLogo) {
-        this.imagemLogo = imagemLogo;
     }
 
     public void setTipo(TipoUsuario tipo) {

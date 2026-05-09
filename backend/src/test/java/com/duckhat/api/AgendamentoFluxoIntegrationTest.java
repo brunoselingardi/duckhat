@@ -57,6 +57,7 @@ class AgendamentoFluxoIntegrationTest {
         "62999998888",
         "11.222.333/0001-44",
         "Ana Responsavel",
+        "barbearia",
         TipoUsuario.PRESTADOR));
     Usuario prestador = usuarioRepository.findByEmail("studio.agenda@duckhat.test")
         .orElseThrow();
@@ -75,6 +76,7 @@ class AgendamentoFluxoIntegrationTest {
         "cliente.agenda@duckhat.test",
         "123456",
         "62999997777",
+        null,
         null,
         null,
         TipoUsuario.CLIENTE));

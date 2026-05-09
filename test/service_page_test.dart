@@ -57,6 +57,8 @@ void main() {
             nome: 'Jorje Encanamentos',
             telefone: '62999990013',
             endereco: 'Rua dos Canos, 45 - Setor Oeste',
+            categoria: 'encanador',
+            categoriaLabel: 'Encanador',
             descricao:
                 'Atendimento rapido para vazamentos, pias, ralos e manutencao hidraulica.',
             horarioAtendimento: 'Segunda a sabado 7h - 19h',

@@ -1,4 +1,5 @@
 import 'package:duckhat/models/estabelecimento_catalogo.dart';
+import 'package:duckhat/models/establishment_category.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/services/geo_search_service.dart';
 import 'package:duckhat/services/search_intent.dart';
@@ -193,7 +194,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     LatLng origin,
     SearchIntent intent,
   ) async {
-    final term = _catalogSearchTerm(intent);
+    final term = _catalogSearchTerm();
     final establishments = await _catalogApi.listarEstabelecimentosCatalogo(
       termo: term,
     );
@@ -209,12 +210,15 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     ];
   }
 
-  String? _catalogSearchTerm(SearchIntent intent) {
+  String? _catalogSearchTerm() {
+    if (widget.category != null && widget.category!.trim().isNotEmpty) {
+      return widget.category!.trim();
+    }
     final value = _queryController.text.trim();
     if (value.isEmpty || value.toLowerCase() == 'estabelecimentos') {
       return null;
     }
-    return intent.internalCatalogTerm;
+    return value;
   }
 
   Future<GeocodedLocation> _loadCurrentPosition() async {
@@ -1258,7 +1262,9 @@ class _PlaceCardModel {
 
     return _PlaceCardModel(
       name: item.nome,
-      categoryLabel: 'Estabelecimento DuckHat',
+      categoryLabel: item.categoriaLabel?.trim().isNotEmpty == true
+          ? item.categoriaLabel!.trim()
+          : EstablishmentCategory.byCode(item.categoria).label,
       address: item.enderecoPublico,
       location: location,
       distanceMeters: meters,

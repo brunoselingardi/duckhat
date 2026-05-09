@@ -51,6 +51,7 @@ public class UsuarioService {
         String telefoneNormalizado = normalizarTelefone(request.telefone());
         String cnpjNormalizado = normalizarCnpj(request.cnpj());
         String responsavelNome = normalizarTexto(request.responsavelNome());
+        String categoria = normalizarCategoria(request.categoria(), request.tipo(), true);
 
         validarCamposPrestador(request.tipo(), cnpjNormalizado, responsavelNome);
 
@@ -73,7 +74,7 @@ public class UsuarioService {
 
         Usuario salvo = usuarioRepository.save(usuario);
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
-            salvarEstabelecimento(salvo, null);
+            salvarEstabelecimento(salvo, null, categoria, null, null, null);
             disponibilidadePadraoService.garantirDisponibilidadePadrao(salvo);
         }
         return UsuarioResponse.fromEntity(salvo);
@@ -104,7 +105,8 @@ public class UsuarioService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado");
         }
 
-        return PrestadorPublicoResponse.fromEntity(usuario);
+        Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        return PrestadorPublicoResponse.fromEntity(usuario, estabelecimento);
     }
 
     @Transactional(readOnly = true)
@@ -119,7 +121,10 @@ public class UsuarioService {
             usuarioRepository.findByTipoAndNomeContainingIgnoreCase(TipoUsuario.PRESTADOR, termo)
                     .forEach(usuario -> resultados.putIfAbsent(
                             usuario.getId(),
-                            CatalogoPrestadorBuscaResponse.fromEntity(usuario, "Estabelecimento")));
+                            CatalogoPrestadorBuscaResponse.fromEntity(
+                                    usuario,
+                                    buscarEstabelecimentoDoPrestador(usuario),
+                                    "Estabelecimento")));
         }
 
         if (prestadorIdsPorServico != null && !prestadorIdsPorServico.isEmpty()) {
@@ -128,10 +133,17 @@ public class UsuarioService {
                     .filter(usuario -> usuario.getTipo() == TipoUsuario.PRESTADOR)
                     .forEach(usuario -> resultados.putIfAbsent(
                             usuario.getId(),
-                            CatalogoPrestadorBuscaResponse.fromEntity(usuario, "Servico no DuckHat")));
+                            CatalogoPrestadorBuscaResponse.fromEntity(
+                                    usuario,
+                                    buscarEstabelecimentoDoPrestador(usuario),
+                                    "Servico no DuckHat")));
         }
 
         return List.copyOf(resultados.values());
+    }
+
+    private Estabelecimento buscarEstabelecimentoDoPrestador(Usuario usuario) {
+        return estabelecimentoRepository.findByUsuarioId(usuario.getId()).orElse(null);
     }
 
     @Transactional(readOnly = true)
@@ -157,6 +169,7 @@ public class UsuarioService {
         String cnpjNormalizado = normalizarCnpj(request.cnpj());
         String responsavelNome = normalizarTexto(request.responsavelNome());
         String endereco = normalizarEndereco(request.endereco());
+        String categoria = normalizarCategoria(request.categoria(), usuario.getTipo(), false);
         String descricao = normalizarTextoLimitado(request.descricao(), 500, "Descrição deve ter no máximo 500 caracteres");
         String horarioAtendimento = normalizarTextoLimitado(
                 request.horarioAtendimento(),
@@ -192,19 +205,20 @@ public class UsuarioService {
         Usuario salvo = usuarioRepository.save(usuario);
         Estabelecimento estabelecimento = null;
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
-            estabelecimento = salvarEstabelecimento(salvo, endereco, descricao, horarioAtendimento, bannerImagemBase64);
+            estabelecimento = salvarEstabelecimento(salvo, endereco, categoria, descricao, horarioAtendimento, bannerImagemBase64);
         }
 
         return UsuarioResponse.fromEntity(salvo, estabelecimento);
     }
 
     private Estabelecimento salvarEstabelecimento(Usuario prestador, String endereco) {
-        return salvarEstabelecimento(prestador, endereco, null, null, null);
+        return salvarEstabelecimento(prestador, endereco, null, null, null, null);
     }
 
     private Estabelecimento salvarEstabelecimento(
             Usuario prestador,
             String endereco,
+            String categoria,
             String descricao,
             String horarioAtendimento,
             String bannerImagemBase64
@@ -218,6 +232,9 @@ public class UsuarioService {
         estabelecimento.setCnpj(prestador.getCnpj());
         estabelecimento.setResponsavelNome(prestador.getResponsavelNome());
         estabelecimento.setEndereco(endereco);
+        if (categoria != null) {
+            estabelecimento.setCategoria(categoria);
+        }
         estabelecimento.setDescricao(descricao);
         estabelecimento.setHorarioAtendimento(horarioAtendimento);
         if (bannerImagemBase64 != null) {
@@ -247,6 +264,26 @@ public class UsuarioService {
                     HttpStatus.BAD_REQUEST,
                     "Prestadores precisam informar o nome do responsável");
         }
+    }
+
+    private String normalizarCategoria(String categoria, TipoUsuario tipo, boolean obrigatoria) {
+        String normalizada = normalizarTexto(categoria);
+        if (tipo != TipoUsuario.PRESTADOR) {
+            return null;
+        }
+        if (normalizada == null) {
+            if (!obrigatoria) {
+                return null;
+            }
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Prestadores precisam escolher uma categoria de estabelecimento");
+        }
+        normalizada = normalizada.toLowerCase();
+        if (!EstabelecimentoCategoriaCatalog.existe(normalizada)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria de estabelecimento inválida");
+        }
+        return normalizada;
     }
 
     private String normalizarEmail(String email) {

@@ -24,6 +24,7 @@ CREATE TABLE estabelecimentos (
     cnpj VARCHAR(14) NOT NULL,
     responsavel_nome VARCHAR(120) NOT NULL,
     endereco VARCHAR(255) NULL,
+    categoria VARCHAR(60) NULL,
     descricao TEXT NULL,
     horario_atendimento VARCHAR(160) NULL,
     banner_imagem_base64 MEDIUMTEXT NULL,

@@ -30,6 +30,9 @@ public record CreateUsuarioRequest(
         @Size(max = 120)
         String responsavelNome,
 
+        @Size(max = 60)
+        String categoria,
+
         @NotNull
         TipoUsuario tipo
 ) {
