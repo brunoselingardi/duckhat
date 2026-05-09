@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS estabelecimentos (
     cnpj VARCHAR(14) NOT NULL,
     responsavel_nome VARCHAR(120) NOT NULL,
     endereco VARCHAR(255) NULL,
+    categoria VARCHAR(60) NULL,
     descricao TEXT NULL,
     horario_atendimento VARCHAR(160) NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -23,6 +24,7 @@ INSERT INTO estabelecimentos (
     cnpj,
     responsavel_nome,
     endereco,
+    categoria,
     descricao,
     horario_atendimento
 )
@@ -33,8 +35,9 @@ SELECT
     cnpj,
     responsavel_nome,
     endereco,
-    descricao_publica,
-    horario_atendimento
+    'barbearia',
+    NULL,
+    NULL
 FROM usuarios
 WHERE tipo = 'PRESTADOR'
   AND cnpj IS NOT NULL
@@ -45,5 +48,6 @@ ON DUPLICATE KEY UPDATE
     cnpj = VALUES(cnpj),
     responsavel_nome = VALUES(responsavel_nome),
     endereco = VALUES(endereco),
+    categoria = VALUES(categoria),
     descricao = VALUES(descricao),
     horario_atendimento = VALUES(horario_atendimento);

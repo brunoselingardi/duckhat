@@ -9,10 +9,6 @@ INSERT INTO usuarios (
     cnpj,
     responsavel_nome,
     endereco,
-    descricao_publica,
-    horario_atendimento,
-    imagem_capa,
-    imagem_logo,
     tipo,
     criado_em
 ) VALUES (
@@ -24,10 +20,6 @@ INSERT INTO usuarios (
     '12345678000199',
     'Jorje Silva',
     'Rua dos Canos, 45 - Setor Oeste',
-    'Atendimento rapido para vazamentos, pias, ralos e manutencao hidraulica residencial e comercial.',
-    'Segunda a sabado 7h - 19h',
-    'assets/salao.jpg',
-    'assets/Ducklogo.jpg',
     'PRESTADOR',
     '2026-05-07 18:00:00'
 )
@@ -39,10 +31,6 @@ ON DUPLICATE KEY UPDATE
     cnpj = VALUES(cnpj),
     responsavel_nome = VALUES(responsavel_nome),
     endereco = VALUES(endereco),
-    descricao_publica = VALUES(descricao_publica),
-    horario_atendimento = VALUES(horario_atendimento),
-    imagem_capa = VALUES(imagem_capa),
-    imagem_logo = VALUES(imagem_logo),
     tipo = VALUES(tipo);
 
 INSERT INTO servicos (
@@ -73,6 +61,7 @@ INSERT INTO estabelecimentos (
     cnpj,
     responsavel_nome,
     endereco,
+    categoria,
     descricao,
     horario_atendimento
 )
@@ -83,8 +72,9 @@ SELECT
     cnpj,
     responsavel_nome,
     endereco,
-    descricao_publica,
-    horario_atendimento
+    'encanador',
+    'Atendimento rapido para vazamentos, pias, ralos e manutencao hidraulica residencial e comercial.',
+    'Segunda a sabado 7h - 19h'
 FROM usuarios
 WHERE id = 13
 ON DUPLICATE KEY UPDATE
@@ -93,6 +83,7 @@ ON DUPLICATE KEY UPDATE
     cnpj = VALUES(cnpj),
     responsavel_nome = VALUES(responsavel_nome),
     endereco = VALUES(endereco),
+    categoria = VALUES(categoria),
     descricao = VALUES(descricao),
     horario_atendimento = VALUES(horario_atendimento);
 

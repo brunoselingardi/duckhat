@@ -11,13 +11,14 @@ ON DUPLICATE KEY UPDATE
     responsavel_nome = VALUES(responsavel_nome),
     tipo = VALUES(tipo);
 
-INSERT INTO estabelecimentos (usuario_id, nome, telefone, cnpj, responsavel_nome) VALUES
-    (2, 'Barbie Dream Barber', '19999999999', '11222333000144', 'Barbie Responsavel')
+INSERT INTO estabelecimentos (usuario_id, nome, telefone, cnpj, responsavel_nome, categoria) VALUES
+    (2, 'Barbie Dream Barber', '19999999999', '11222333000144', 'Barbie Responsavel', 'barbearia')
 ON DUPLICATE KEY UPDATE
     nome = VALUES(nome),
     telefone = VALUES(telefone),
     cnpj = VALUES(cnpj),
-    responsavel_nome = VALUES(responsavel_nome);
+    responsavel_nome = VALUES(responsavel_nome),
+    categoria = VALUES(categoria);
 
 INSERT INTO servicos (id, prestador_id, nome, descricao, duracao_min, preco, ativo, criado_em) VALUES
     (1, 2, 'Glow Cut Barbie', 'Corte com acabamento leve, volume alinhado e finalizacao com assinatura fashionista.', 50, 55.00, TRUE, '2026-04-04 13:26:33'),

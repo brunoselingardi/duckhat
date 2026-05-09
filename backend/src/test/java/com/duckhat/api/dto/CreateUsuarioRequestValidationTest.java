@@ -20,6 +20,7 @@ class CreateUsuarioRequestValidationTest {
         "(62) 99999-8888",
         "11.222.333/0001-44",
         "Ana Responsavel",
+        "barbearia",
         TipoUsuario.PRESTADOR);
 
     assertTrue(validator.validate(request).isEmpty());

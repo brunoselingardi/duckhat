@@ -31,6 +31,9 @@ public class Estabelecimento {
     @Column(length = 255)
     private String endereco;
 
+    @Column(length = 60)
+    private String categoria;
+
     @Column(columnDefinition = "TEXT")
     private String descricao;
 
@@ -69,6 +72,10 @@ public class Estabelecimento {
 
     public String getEndereco() {
         return endereco;
+    }
+
+    public String getCategoria() {
+        return categoria;
     }
 
     public String getDescricao() {
@@ -117,6 +124,10 @@ public class Estabelecimento {
 
     public void setEndereco(String endereco) {
         this.endereco = endereco;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
     }
 
     public void setDescricao(String descricao) {

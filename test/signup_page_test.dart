@@ -48,6 +48,15 @@ void main() {
     await tester.tap(find.text('Sou estabelecimento'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Categoria do estabelecimento'), findsOneWidget);
+    expect(find.text('Buscar categoria'), findsOneWidget);
+    expect(find.text('Barbearia'), findsOneWidget);
+
+    await tester.tap(find.text('Barbearia'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Dados do estabelecimento'), findsOneWidget);
     expect(find.text('Adicionar banner'), findsOneWidget);
     expect(find.text('Nome do estabelecimento'), findsOneWidget);

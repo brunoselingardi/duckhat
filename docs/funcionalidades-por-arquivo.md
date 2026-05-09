@@ -48,10 +48,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/search.dart`
   - tela de busca com filtros, campo de texto, localizacao, sugestoes e recentes
   - botao voltar retorna para a tela anterior
-  - filtros horizontais alternam categoria localmente
   - CTA `Ver todos` e exibido na secao de sugestoes
   - CTA `Pesquisar` abre `SearchResultsPage` com termo, localizacao e categoria selecionados
-  - toque em recente ou sugestao aplica texto ou leva para `ServicePage(prestadorId: ...)` quando o item interno ja e conhecido
+  - sugestoes sao geradas a partir das categorias reais de estabelecimento e abrem resultados filtrados por categoria
   - a busca de resultados usa o catalogo publico real de estabelecimentos e complementa com Geoapify quando disponivel
 - `lib/pages/search_results.dart`
   - tela de resultados da busca com catalogo interno e resultados externos
@@ -139,7 +138,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botoes de mostrar/ocultar senha e confirmar senha
   - CTA principal cria conta real e devolve credenciais para login imediato
   - CTA `Ja tenho conta` volta ao login
-  - para prestador, o fluxo possui etapas para banner do estabelecimento, descricao da vitrine, servicos iniciais com descricao/preco/duracao, responsavel/contato e acesso
+  - para prestador, o fluxo possui etapas para categoria do estabelecimento, banner/nome, descricao da vitrine, servicos iniciais com descricao/preco/duracao, responsavel/contato e acesso
+  - a categoria do estabelecimento e escolhida em uma lista pesquisavel com icones contextuais e passa a ser persistida em `estabelecimentos.categoria`
   - para prestador, cria usuario real, salva descricao/banner via `/api/me` e cadastra servicos iniciais via `/api/servicos`; o backend garante disponibilidade padrao de segunda a sexta para novos prestadores
 
 ## Componentes principais por area
@@ -299,7 +299,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/models/servico_catalogo.dart`
   - modelo de servicos vindos do catalogo/API
 - `lib/models/estabelecimento_catalogo.dart`
-  - modelo do catalogo publico de estabelecimentos, com dados de vitrine, preco inicial e servicos ativos
+  - modelo do catalogo publico de estabelecimentos, com categoria, dados de vitrine, preco inicial e servicos ativos
+- `lib/models/establishment_category.dart`
+  - catalogo compartilhado no Flutter para categorias de estabelecimento, icones e palavras-chave usadas no cadastro e nas sugestoes de busca
 - `lib/models/disponibilidade_catalogo.dart`
   - disponibilidade publica do prestador
 - `lib/models/ocupacao_prestador.dart`
@@ -361,6 +363,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - aplica owner-check por usuario autenticado
   - gerencia preferencias persistidas de notificacoes
   - gera notificacoes automaticas de agenda e chat respeitando preferencias
+- `backend/src/main/java/com/duckhat/api/service/EstabelecimentoCategoriaCatalog.java`
+  - define categorias publicas de estabelecimento, labels e palavras-chave normalizadas para cadastro e busca do catalogo
 - `backend/src/main/resources/application.properties`
   - configuracao com fallback local e override por variaveis de ambiente
 
@@ -382,6 +386,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cria `chat_conversas`, `chat_mensagens` e indices do chat real
 - `database/migrations/V6__notification_feed_and_preferences.sql`
   - evolui `notificacao_eventos` para feed por usuario e cria `notificacao_preferencias`
+- `database/migrations/V11__establishment_category.sql`
+  - adiciona `estabelecimentos.categoria` e preenche categorias para registros existentes
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`
@@ -402,9 +408,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - chat entre cliente e prestador
   - notificacoes in-app e preferencias persistidas
   - avaliacao de agendamento concluido pelo cliente
+  - categoria de estabelecimento no cadastro e na busca do catalogo publico
 - Mockados ou locais
-  - busca textual e filtros da busca
-  - resultados e mapa da busca
   - reviews e FAQ da pagina publica do estabelecimento
   - parte das subpaginas de perfil
   - minhas localizacoes no perfil

@@ -60,6 +60,20 @@ class CatalogoServiceTest {
   }
 
   @Test
+  void listarEstabelecimentosFiltraPorCategoriaEPalavraChaveNormalizada() {
+    Estabelecimento encanador = estabelecimento(13L, "Jorje Encanamentos");
+    encanador.setCategoria("encanador");
+    when(estabelecimentoRepository.findAllByOrderByNomeAsc()).thenReturn(List.of(encanador));
+    when(servicoRepository.findAtivosComPrestador()).thenReturn(List.of(
+        servico(10L, 13L, "Visita tecnica", "Reparo de canos e vazamentos", "90.00")));
+
+    List<EstabelecimentoCatalogoResponse> responses = service.listarEstabelecimentos("hidráulica perto de mim");
+
+    assertEquals(1, responses.size());
+    assertEquals("Encanador", responses.get(0).categoriaLabel());
+  }
+
+  @Test
   void buscarEstabelecimentoRetorna404QuandoNaoExiste() {
     when(estabelecimentoRepository.findByUsuarioId(99L)).thenReturn(Optional.empty());
 
@@ -78,6 +92,7 @@ class CatalogoServiceTest {
     estabelecimento.setCnpj("11222333000144");
     estabelecimento.setResponsavelNome("Ana Responsavel");
     estabelecimento.setEndereco("Av. Central, 100");
+    estabelecimento.setCategoria("barbearia");
     estabelecimento.setDescricao("Atendimento profissional.");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 18h");
     estabelecimento.setBannerImagemBase64("banner");

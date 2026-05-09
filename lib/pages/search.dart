@@ -1,8 +1,8 @@
+import 'package:duckhat/models/establishment_category.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 import '../core/app_route.dart';
-import 'service.dart';
 import 'search_results.dart';
 
 class SearchPage extends StatefulWidget {
@@ -18,21 +18,16 @@ class _SearchPageState extends State<SearchPage> {
 
   _SearchMode _mode = _SearchMode.local;
 
-  final _suggestions = const [
-    _SearchSuggestion('Barbeiro', Icons.face_retouching_natural),
-    _SearchSuggestion('Cabeleireiro', Icons.cut),
-    _SearchSuggestion('Manicure', Icons.spa_outlined),
-    _SearchSuggestion('Esteticista', Icons.favorite_border_rounded),
-    _SearchSuggestion('Encanador', Icons.plumbing),
-    _SearchSuggestion('Eletricista', Icons.lightbulb_outline),
-    _SearchSuggestion('Chaveiro', Icons.key_outlined),
-    _SearchSuggestion('Pedreiro', Icons.build_outlined),
-    _SearchSuggestion(
-      'Barbie Dream Barber',
-      Icons.storefront_outlined,
-      opensEstablishment: true,
-    ),
-  ];
+  late final List<_SearchSuggestion> _suggestions = EstablishmentCategory
+      .categories
+      .map(
+        (category) => _SearchSuggestion(
+          title: category.label,
+          icon: category.icon,
+          categoryCode: category.code,
+        ),
+      )
+      .toList();
 
   @override
   void dispose() {
@@ -47,6 +42,7 @@ class _SearchPageState extends State<SearchPage> {
         builder: (_) => SearchResultsPage(
           query: (query ?? _queryController.text).trim(),
           location: _locationController.text.trim(),
+          category: null,
           useCurrentLocation: _mode == _SearchMode.local,
         ),
       ),
@@ -54,15 +50,17 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _openSuggestion(_SearchSuggestion suggestion) {
-    if (suggestion.opensEstablishment) {
-      Navigator.of(
-        context,
-      ).push(AppRoute(builder: (_) => const ServicePage(prestadorId: 2)));
-      return;
-    }
-
     setState(() => _queryController.text = suggestion.title);
-    _submitSearch(query: suggestion.title);
+    Navigator.of(context).push(
+      AppRoute(
+        builder: (_) => SearchResultsPage(
+          query: suggestion.title,
+          location: _locationController.text.trim(),
+          category: suggestion.categoryCode,
+          useCurrentLocation: _mode == _SearchMode.local,
+        ),
+      ),
+    );
   }
 
   @override
@@ -312,11 +310,11 @@ class _SuggestionRow extends StatelessWidget {
 class _SearchSuggestion {
   final String title;
   final IconData icon;
-  final bool opensEstablishment;
+  final String categoryCode;
 
-  const _SearchSuggestion(
-    this.title,
-    this.icon, {
-    this.opensEstablishment = false,
+  const _SearchSuggestion({
+    required this.title,
+    required this.icon,
+    required this.categoryCode,
   });
 }

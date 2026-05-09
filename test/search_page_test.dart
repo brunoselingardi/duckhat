@@ -16,7 +16,8 @@ void main() {
     expect(find.text('Encontre serviços ou estabelecimentos'), findsOneWidget);
     expect(find.text('Encontre por bairro, cidade ou CEP'), findsOneWidget);
     expect(find.text('SUGESTÕES'), findsOneWidget);
-    expect(find.text('Barbeiro'), findsOneWidget);
-    expect(find.text('Cabeleireiro'), findsOneWidget);
+    expect(find.text('Barbearia'), findsOneWidget);
+    expect(find.text('Salão de cabelo'), findsOneWidget);
+    expect(find.text('Encanador'), findsOneWidget);
   });
 }

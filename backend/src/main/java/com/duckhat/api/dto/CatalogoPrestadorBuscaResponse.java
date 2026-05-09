@@ -1,5 +1,6 @@
 package com.duckhat.api.dto;
 
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 
 public record CatalogoPrestadorBuscaResponse(
@@ -15,17 +16,24 @@ public record CatalogoPrestadorBuscaResponse(
 ) {
   public static CatalogoPrestadorBuscaResponse fromEntity(
       Usuario usuario,
+      Estabelecimento estabelecimento,
       String categoriaLabel
   ) {
     return new CatalogoPrestadorBuscaResponse(
         usuario.getId(),
-        usuario.getNome(),
+        estabelecimento == null || estabelecimento.getNome() == null
+            ? usuario.getNome()
+            : estabelecimento.getNome(),
         categoriaLabel,
-        usuario.getEndereco(),
-        usuario.getTelefone(),
-        usuario.getDescricaoPublica(),
-        usuario.getHorarioAtendimento(),
-        usuario.getImagemCapa(),
-        usuario.getImagemLogo());
+        estabelecimento == null || estabelecimento.getEndereco() == null
+            ? usuario.getEndereco()
+            : estabelecimento.getEndereco(),
+        estabelecimento == null || estabelecimento.getTelefone() == null
+            ? usuario.getTelefone()
+            : estabelecimento.getTelefone(),
+        estabelecimento == null ? null : estabelecimento.getDescricao(),
+        estabelecimento == null ? null : estabelecimento.getHorarioAtendimento(),
+        null,
+        null);
   }
 }

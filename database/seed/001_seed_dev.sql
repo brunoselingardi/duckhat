@@ -22,10 +22,10 @@ INSERT INTO usuarios (id, nome, email, senha_hash, telefone, cnpj, responsavel_n
     (8, 'Cliente Fluxo API', 'cliente.fluxo.1775477879@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999993', NULL, NULL, 'CLIENTE', '2026-04-06 12:17:59'),
     (9, 'Cliente API B', 'cliente.api.b@duckhat.com', '$2a$10$RhfsPNigztx9DXgo8efRae5WoXabIFKbFo2H6L2RCewKP98XJSRFu', '19999999994', NULL, NULL, 'CLIENTE', '2026-04-06 12:48:29');
 
-INSERT INTO estabelecimentos (usuario_id, nome, telefone, cnpj, responsavel_nome) VALUES
-    (2, 'Barbie Dream Barber', '19999999999', '11222333000144', 'Barbie Responsavel'),
-    (4, 'Prestador API A', '19999999991', '11222333000145', 'Responsavel API A'),
-    (5, 'Prestador API B', '19999999992', '11222333000146', 'Responsavel API B');
+INSERT INTO estabelecimentos (usuario_id, nome, telefone, cnpj, responsavel_nome, categoria) VALUES
+    (2, 'Barbie Dream Barber', '19999999999', '11222333000144', 'Barbie Responsavel', 'barbearia'),
+    (4, 'Prestador API A', '19999999991', '11222333000145', 'Responsavel API A', 'barbearia'),
+    (5, 'Prestador API B', '19999999992', '11222333000146', 'Responsavel API B', 'barbearia');
 
 INSERT INTO notificacao_preferencias (usuario_id, agendamentos, mensagens, promocoes, novidades, resumo_email) VALUES
     (1, TRUE, TRUE, TRUE, FALSE, TRUE),
