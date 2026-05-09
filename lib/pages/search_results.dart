@@ -194,7 +194,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     LatLng origin,
     SearchIntent intent,
   ) async {
-    final term = _catalogSearchTerm(intent);
+    final term = _catalogSearchTerm();
     final establishments = await _catalogApi.listarEstabelecimentosCatalogo(
       termo: term,
     );
@@ -210,7 +210,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     ];
   }
 
-  String? _catalogSearchTerm(SearchIntent intent) {
+  String? _catalogSearchTerm() {
     if (widget.category != null && widget.category!.trim().isNotEmpty) {
       return widget.category!.trim();
     }
@@ -218,7 +218,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
     if (value.isEmpty || value.toLowerCase() == 'estabelecimentos') {
       return null;
     }
-    return intent.internalCatalogTerm;
+    return value;
   }
 
   Future<GeocodedLocation> _loadCurrentPosition() async {
