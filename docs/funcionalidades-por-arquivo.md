@@ -8,17 +8,18 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/main.dart`
   - inicia o app com `MyApp`
-  - define `LoginPage` como tela inicial
+  - define `LaunchIntroPage` como tela inicial
   - registra a rota nomeada `/schedule-date`
 - `lib/pages/app_shell.dart`
   - define `MainNavigator`
   - controla as 4 abas principais: `Home`, `Agenda`, `Chat`, `Perfil`
 - `lib/shop_main.dart`
-  - define `ShopMainNavigator` da area mockada de estabelecimento
-  - controla as 4 abas `Inicio`, `Agenda`, `Chat` e `Perfil` do fluxo `shop_*`
+  - define `ShopMainNavigator` da area de estabelecimento
+  - controla as 4 abas `Inicio`, `Agenda`, `Clientes` e `Perfil` do fluxo `shop_*`
+  - `Inicio`, `Agenda`, `Clientes`, `Perfil`, dados do estabelecimento e servicos possuem integracoes reais; galerias, horarios, notificacoes auxiliares, privacidade, ajuda e sobre ainda sao locais/demo
   - mantem estado das abas em `IndexedStack` com `PageStorage`
 - `lib/services/duckhat_api.dart`
-  - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, listagem de servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
+  - encapsula login, autenticacao automatica por `dart-define`, perfil autenticado, cadastro/edicao de servicos do prestador, catalogo publico de estabelecimentos/servicos, disponibilidades, ocupacoes, agendamentos, cancelamento, chat e notificacoes
 - `lib/core/api_config.dart`
   - centraliza `API_BASE_URL`, `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD`
 
@@ -37,37 +38,47 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/home.dart`
   - home visual com header, busca, banner promocional, rebook e agendamentos do dia
   - card de busca abre `SearchPage`
-  - cards de rebook abrem `ServicePage`
-  - CTA visual `Ver promoções` nao possui handler real
-  - secao de agendamentos do dia ainda e visual/mockada
+  - cards de rebook abrem `ServicePage` com o `prestadorId` do agendamento/favorito quando disponivel
+  - CTA `Ver promoções` abre `PromotionsPage`, uma curadoria local que direciona para a busca real
+  - secao de agendamentos do dia usa agendamentos reais do cliente autenticado
+- `lib/pages/promotions.dart`
+  - curadoria local de categorias promocionais, sem inventario persistido no backend
+  - CTAs abrem a busca real para o usuario encontrar estabelecimentos e horarios disponiveis
+  - nao representa descontos persistidos ou estoque real de ofertas
 - `lib/pages/search.dart`
   - tela de busca com filtros, campo de texto, localizacao, sugestoes e recentes
   - botao voltar retorna para a tela anterior
-  - filtros horizontais alternam categoria localmente
   - CTA `Ver todos` e exibido na secao de sugestoes
   - CTA `Pesquisar` abre `SearchResultsPage` com termo, localizacao e categoria selecionados
-  - toque em recente ou sugestao aplica texto ou leva para `ServicePage`
-  - busca ainda e local, sem integracao com catalogo real
+  - sugestoes sao geradas a partir das categorias reais de estabelecimento e abrem resultados filtrados por categoria
+  - a busca de resultados usa o catalogo publico real de estabelecimentos e complementa com Geoapify quando disponivel
 - `lib/pages/search_results.dart`
-  - tela de resultados locais da busca
+  - tela de resultados da busca com catalogo interno e resultados externos
   - exibe barra de busca compacta, filtros rapidos, mapa e cards de estabelecimentos
   - usa `flutter_map` com tiles do OpenStreetMap
   - solicita localizacao via `geolocator`; se falhar, usa Goiania como fallback visual
+  - consulta `GET /api/catalogo/estabelecimentos` ou `/api/catalogo/estabelecimentos/busca`
+  - combina estabelecimentos internos do DuckHat com resultados externos do Geoapify, priorizando o catalogo interno
   - botao voltar retorna para a busca
-  - botao `Pesquisar` refiltra a lista localmente
+  - botao `Pesquisar` executa nova busca na API/catalogo e no provedor externo quando configurado
   - botoes do mapa permitem aproximar, afastar e recentralizar
-  - toque em estabelecimento ou CTA `Servicos disponiveis` abre `ServicePage`
-  - resultados ainda sao locais/mockados, sem integracao com catalogo real
+  - toque em estabelecimento interno ou CTA `Abrir estabelecimento` abre `ServicePage(prestadorId: ...)`
+  - mapa renderiza marcador da origem e marcadores dos estabelecimentos/resultados encontrados
+  - estabelecimentos externos continuam sendo acao informativa/WhatsApp, sem pagina interna do DuckHat
 - `lib/pages/service.dart`
   - pagina do estabelecimento/prestador
-  - carrega servicos reais do prestador pela API
+  - recebe `prestadorId` e opcionalmente `EstabelecimentoCatalogo`
+  - carrega detalhe publico do estabelecimento pela API quando necessario
+  - exibe nome, endereco, descricao, horario, banner e servicos/precos do estabelecimento real
+  - tenta carregar perfil publico do prestador pela API e usa fallback centralizado para capa/logo/galeria/reviews/FAQ quando necessario
   - possui hero, info card, tabs, galeria, reviews, FAQ e CTA `Agendar`
   - botao voltar no hero retorna
   - tabs horizontais navegam entre secoes
   - toque na galeria abre fullscreen
-  - a lista de servicos e apenas informativa, sem botao `Agendar` por item
+  - cada servico possui botao `Agendar`
   - CTA global flutuante abre a tela de agendamento com os servicos do estabelecimento
   - CTA `Enviar Mensagem` do info card cria/abre conversa real com o prestador
+  - reviews, FAQ, experiencia e galeria ainda usam fallback de fase 1 quando o backend nao expoe esses blocos
   - existem CTAs visuais locais sem acao real em componentes como experiencia
 - `lib/pages/schedule.dart`
   - agenda integrada do usuario
@@ -92,8 +103,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - permite cancelar quando o status suporta isso
   - botao voltar no app bar retorna
   - botao `Cancelar agendamento` executa cancelamento real quando disponivel
-  - mostra avaliacao local quando o status e `CONCLUIDO`
-  - estrelas de nota e botao de envio de review sao locais/mockados
+  - quando o status e `CONCLUIDO`, carrega avaliacao existente por `GET /api/avaliacoes/agendamento/{id}`
+  - estrelas, comentario e envio de avaliacao persistem no banco via `POST /api/avaliacoes`
+  - possui estados de carregamento, erro, envio e avaliacao ja enviada
 - `lib/pages/chat.dart`
   - lista conversas reais do usuario autenticado pela API
   - possui busca local por nome do participante ou ultima mensagem
@@ -126,7 +138,9 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - botoes de mostrar/ocultar senha e confirmar senha
   - CTA principal cria conta real e devolve credenciais para login imediato
   - CTA `Ja tenho conta` volta ao login
-  - para prestador, envia tambem `cnpj` e `responsavelNome`
+  - para prestador, o fluxo possui etapas para categoria do estabelecimento, banner/nome, descricao da vitrine, servicos iniciais com descricao/preco/duracao, responsavel/contato e acesso
+  - a categoria do estabelecimento e escolhida em uma lista pesquisavel com icones contextuais e passa a ser persistida em `estabelecimentos.categoria`
+  - para prestador, cria usuario real, salva descricao/banner via `/api/me` e cadastra servicos iniciais via `/api/servicos`; o backend garante disponibilidade padrao de segunda a sexta para novos prestadores
 
 ## Componentes principais por area
 
@@ -148,7 +162,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/components/home/rebook.dart`
   - secao de reagendamento
 - `lib/components/home/rebookcard.dart`
-  - card clicavel que abre `ServicePage`
+  - card clicavel que abre `ServicePage(prestadorId: ...)`
 - `lib/components/home/appointment.dart`
   - secao de agendamentos do dia
 - `lib/components/home/appointmentcard.dart`
@@ -164,9 +178,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 
 - `lib/components/service/service_hero.dart`
   - hero da pagina do estabelecimento com retorno visual
+  - aceita capa por asset ou URL
 - `lib/components/service/service_info_card.dart`
   - resumo do estabelecimento
-  - possui CTA visual local sem integracao real
+  - renderiza nome, nota, endereco, horario, descricao e logo dinamicamente
+  - possui CTA de mensagem conectado ao chat real quando a pagina fornece handler
 - `lib/components/service/service_tab_menu.dart`
   - tabs horizontais da pagina de servico
 - `lib/components/service/service_sections.dart`
@@ -176,15 +192,19 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cada linha possui botao `Agendar`
 - `lib/components/service/service_gallery_section.dart`
   - galeria com selecao e abertura fullscreen
+  - aceita imagens por asset ou URL
 - `lib/components/service/service_reviews_section.dart`
-  - reviews mockadas
+  - reviews vindas da camada de fallback de fase 1
 - `lib/components/service/service_faq_section.dart`
-  - FAQ mockado
+  - FAQ vindo da camada de fallback de fase 1
 - `lib/components/service/service_experience_section.dart`
   - bloco de experiencia/descricao
+  - recebe conteudo dinamico da camada de fallback de fase 1
   - possui CTA visual local sem handler funcional
-- `lib/components/service/service_data.dart`
-  - dados locais usados pela pagina de servico
+- `lib/components/service/service_profile_fallbacks.dart`
+  - fallback centralizado da fase 1 para perfil publico, experiencia, galeria, reviews e FAQ
+- `lib/components/service/service_image.dart`
+  - renderer de imagem que aceita asset ou URL
 - `lib/components/service/service_models.dart`
   - modelos de apoio para ofertas, reviews e FAQ
 
@@ -217,49 +237,71 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - FAQ com `ExpansionTile` e canais de contato
   - contatos exibem `SnackBar` placeholder
 
-### Area shop mockada
+### Area shop
 
 - `lib/shop_pages/shop_home.dart`
-  - dashboard mockado do estabelecimento
+  - dashboard real do estabelecimento para a agenda do dia
+  - carrega `GET /api/agendamentos/prestador` e mostra os clientes que agendaram servicos para hoje
+  - possui estados de carregamento, erro, vazio e pull-to-refresh
   - cards e chips foram alinhados aos tokens de `AppColors`
+  - possui atalhos reais para editar descricao/banner em `ShopEstablishmentDataPage` e servicos em `ShopServiceDurationPage`
 - `lib/shop_pages/shop_schedule.dart`
-  - agenda mockada do estabelecimento com calendario e lista do dia
-  - cards, estados selecionados e superficies usam o tema central
+  - agenda real do estabelecimento com calendario e lista por dia
+  - carrega `GET /api/agendamentos/prestador` e exibe cliente, servico, horario, status e observacoes reais
+  - permite confirmar agendamentos pendentes e concluir agendamentos confirmados
+  - possui estados de carregamento, erro, vazio, refresh e abre `AppointmentDetailPage`
 - `lib/shop_pages/shop_clients.dart`
-  - lista de clientes e conversa mockada
-  - busca, cards e tela de chat usam o mesmo padrao visual do app
+  - aba de chat real do estabelecimento
+  - reutiliza `ChatPage`, lista conversas reais da API e abre `ChatDetailPage` para responder clientes
 - `lib/shop_pages/shop_profile.dart`
   - hub de configuracoes do estabelecimento
   - header usa nome/e-mail reais da sessao/API
-  - acessa dados do estabelecimento, galeria, horarios, servicos, notificacoes, privacidade, ajuda e sobre
+  - exibe apenas entradas principais ja conectadas ao fluxo real: dados do estabelecimento, servicos/precos e logout
+  - telas locais/demo de galeria, horarios, notificacoes, privacidade, ajuda e sobre nao ficam mais expostas no menu principal
 - `lib/shop_pages/shop_establishment_data.dart`
   - formulario real de dados do estabelecimento
   - carrega dados via `GET /api/me`
-  - salva nome, telefone, e-mail, CNPJ, responsavel e endereco via `PUT /api/me`
+  - salva nome, telefone, e-mail, CNPJ, responsavel, endereco, descricao, horario de atendimento e banner em Base64 via `PUT /api/me`
+  - a pre-visualizacao publica usa os dados carregados do estabelecimento vinculado
   - usa a mesma validacao de perfil para e-mail, telefone com DDD e endereco com rua/numero
 - `lib/shop_pages/shop_gallery.dart`
   - galeria mockada de fotos com estado local
+  - nao fica exposta no menu principal do estabelecimento enquanto nao houver persistencia real
 - `lib/shop_pages/shop_work_days.dart`
   - configuracao mockada de dias de funcionamento
+  - nao fica exposta no menu principal do estabelecimento enquanto disponibilidade real continuar centralizada no backend
 - `lib/shop_pages/shop_work_hours.dart`
   - configuracao mockada de horarios de atendimento
+  - nao fica exposta no menu principal do estabelecimento enquanto disponibilidade real continuar centralizada no backend
 - `lib/shop_pages/shop_service_duration.dart`
-  - configuracao mockada de servicos, duracao e preco
+  - editor real de servicos do prestador autenticado
+  - carrega `GET /api/servicos`, cria servicos com `POST /api/servicos` e atualiza nome/descricao/duracao/preco/status com `PUT /api/servicos/{id}`
+  - permite pausar servico existente para remover do catalogo publico sem apagar historico de agendamentos
 - `lib/shop_pages/shop_notifications.dart`
   - preferencias mockadas de notificacao
+  - nao fica exposta no menu principal do estabelecimento enquanto nao consumir preferencias reais do prestador
 - `lib/shop_pages/shop_privacy.dart`
   - preferencias mockadas de privacidade e seguranca
+  - nao fica exposta no menu principal do estabelecimento enquanto nao houver integracao real
 - `lib/shop_pages/shop_help.dart`
   - ajuda mockada do estabelecimento
+  - nao fica exposta no menu principal do estabelecimento nesta fase
 - `lib/shop_pages/shop_about.dart`
   - informacoes mockadas sobre a experiencia de estabelecimento
+  - nao fica exposta no menu principal do estabelecimento nesta fase
 
 ## Modelos
 
 - `lib/models/agendamento.dart`
   - modelo consumido pela agenda e detalhe do agendamento
+- `lib/models/avaliacao.dart`
+  - modelo de avaliacao real persistida em `/api/avaliacoes`
 - `lib/models/servico_catalogo.dart`
   - modelo de servicos vindos do catalogo/API
+- `lib/models/estabelecimento_catalogo.dart`
+  - modelo do catalogo publico de estabelecimentos, com categoria, dados de vitrine, preco inicial e servicos ativos
+- `lib/models/establishment_category.dart`
+  - catalogo compartilhado no Flutter para categorias de estabelecimento, icones e palavras-chave usadas no cadastro e nas sugestoes de busca
 - `lib/models/disponibilidade_catalogo.dart`
   - disponibilidade publica do prestador
 - `lib/models/ocupacao_prestador.dart`
@@ -283,7 +325,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - login JWT
   - recuperacao de senha: solicitar codigo e redefinir senha
 - `backend/src/main/java/com/duckhat/api/controller/CatalogoController.java`
-  - endpoints publicos de catalogo, disponibilidade e ocupacao
+  - endpoints publicos de estabelecimentos, servicos, disponibilidade e ocupacao
 - `backend/src/main/java/com/duckhat/api/controller/AgendamentoController.java`
   - criacao, listagem, cancelamento, confirmacao e conclusao de agendamentos
 - `backend/src/main/java/com/duckhat/api/controller/ServicoController.java`
@@ -294,7 +336,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - criacao e leitura de usuarios
 - `backend/src/main/java/com/duckhat/api/controller/MeController.java`
   - retorno completo do usuario autenticado
-  - atualizacao real do proprio perfil autenticado via `PUT /api/me`
+  - para prestadores, junta `usuarios` com o registro vinculado em `estabelecimentos`
+  - atualizacao real do proprio perfil autenticado via `PUT /api/me`, incluindo dados publicos do estabelecimento quando o usuario e `PRESTADOR`
 - `backend/src/main/java/com/duckhat/api/controller/AvaliacaoController.java`
   - endpoints de avaliacoes
 - `backend/src/main/java/com/duckhat/api/controller/NotificacaoEventoController.java`
@@ -311,7 +354,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - aplica limite de tentativas invalidas e bloqueio temporario por token
 - `backend/src/main/java/com/duckhat/api/service/ChatService.java`
   - cria/busca conversa entre cliente e prestador
-  - lista conversas e mensagens autorizadas por participante
+  - lista conversas e mensagens autorizadas por participante, com ultima mensagem carregada em lote
   - envia mensagens e atualiza `ultima_mensagem_em`
   - gera notificacao real para o outro participante quando uma mensagem e enviada
   - limpa mensagens expiradas diariamente preservando a ultima mensagem por conversa e aplicando graca de 5 dias pela ultima atividade
@@ -320,6 +363,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - aplica owner-check por usuario autenticado
   - gerencia preferencias persistidas de notificacoes
   - gera notificacoes automaticas de agenda e chat respeitando preferencias
+- `backend/src/main/java/com/duckhat/api/service/EstabelecimentoCategoriaCatalog.java`
+  - define categorias publicas de estabelecimento, labels e palavras-chave normalizadas para cadastro e busca do catalogo
 - `backend/src/main/resources/application.properties`
   - configuracao com fallback local e override por variaveis de ambiente
 
@@ -341,6 +386,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cria `chat_conversas`, `chat_mensagens` e indices do chat real
 - `database/migrations/V6__notification_feed_and_preferences.sql`
   - evolui `notificacao_eventos` para feed por usuario e cria `notificacao_preferencias`
+- `database/migrations/V11__establishment_category.sql`
+  - adiciona `estabelecimentos.categoria` e preenche categorias para registros existentes
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`
@@ -360,13 +407,13 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - disponibilidade e ocupacao do prestador
   - chat entre cliente e prestador
   - notificacoes in-app e preferencias persistidas
+  - avaliacao de agendamento concluido pelo cliente
+  - categoria de estabelecimento no cadastro e na busca do catalogo publico
 - Mockados ou locais
-  - busca textual e filtros da busca
-  - resultados e mapa da busca
-  - reviews e FAQ do estabelecimento
+  - reviews e FAQ da pagina publica do estabelecimento
   - parte das subpaginas de perfil
   - minhas localizacoes no perfil
-  - banner promocional e boa parte da home
+  - banner/promocoes como curadoria local sem backend dedicado
 
 ## Regra de manutencao
 

@@ -48,12 +48,51 @@ void main() {
     await tester.tap(find.text('Sou estabelecimento'));
     await tester.pumpAndSettle();
 
+    expect(find.text('Categoria do estabelecimento'), findsOneWidget);
+    expect(find.text('Buscar categoria'), findsOneWidget);
+    expect(find.text('Barbearia'), findsOneWidget);
+
+    await tester.tap(find.text('Barbearia'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Dados do estabelecimento'), findsOneWidget);
+    expect(find.text('Adicionar banner'), findsOneWidget);
     expect(find.text('Nome do estabelecimento'), findsOneWidget);
 
     await tester.enterText(
       find.widgetWithText(TextFormField, 'Nome do estabelecimento'),
       'DuckHat Studio',
+    );
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Descricao da vitrine'), findsOneWidget);
+    expect(find.text('Descricao do estabelecimento'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Descricao do estabelecimento'),
+      'Atendimento profissional com horario marcado.',
+    );
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Servicos iniciais'), findsOneWidget);
+    expect(find.text('Nome do serviço'), findsOneWidget);
+    expect(find.text('Preço'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Nome do serviço'),
+      'Corte premium',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Descricao do serviço'),
+      'Corte completo com finalizacao.',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Preço'),
+      '45,00',
     );
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();

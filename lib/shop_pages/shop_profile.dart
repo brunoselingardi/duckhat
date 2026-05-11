@@ -3,15 +3,9 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/login.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
+import '../shop_components/shop_ui.dart';
 import 'shop_establishment_data.dart';
-import 'shop_gallery.dart';
-import 'shop_work_days.dart';
-import 'shop_work_hours.dart';
 import 'shop_service_duration.dart';
-import 'shop_notifications.dart';
-import 'shop_privacy.dart';
-import 'shop_help.dart';
-import 'shop_about.dart';
 
 class ShopProfilePage extends StatefulWidget {
   const ShopProfilePage({super.key});
@@ -230,7 +224,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Atualize sua vitrine, agenda, servicos e preferencias do estabelecimento.',
+                      'Atualize sua vitrine publica e os servicos oferecidos pelo estabelecimento.',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -261,7 +255,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             onTap: () async {
               final updated = await Navigator.push<bool>(
                 context,
-                AppRoute(
+                MaterialPageRoute(
                   builder: (_) => const ShopEstablishmentDataPage(),
                 ),
               );
@@ -272,90 +266,14 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
           ),
           _buildDivider(),
           _buildMenuItem(
-            icon: Icons.photo_library,
-            title: 'Galeria de Fotos',
-            subtitle: '5 fotos cadastradas',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopGalleryPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.calendar_month,
-            title: 'Dias de Funcionamento',
-            subtitle: 'Seg a Sex (Sáb e Dom fechado)',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopWorkDaysPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.schedule,
-            title: 'Horários de Serviço',
-            subtitle: '08:00 às 18:00',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopWorkHoursPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
             icon: Icons.timer,
             title: 'Serviços e Preços',
             subtitle: 'Tempo e valor de cada serviço',
             onTap: () => Navigator.push(
               context,
-              AppRoute(
+              MaterialPageRoute(
                 builder: (_) => const ShopServiceDurationPage(),
               ),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _buildSectionTitle('CONTA E PREFERENCIAS'),
-_buildMenuCard([
-          _buildMenuItem(
-            icon: Icons.notifications,
-            title: 'Notificações',
-            subtitle: 'Preferencias de alertas e mensagens',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopNotificationsPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.lock,
-            title: 'Privacidade e Segurança',
-            subtitle: 'Protecao, dados e acesso da empresa',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopPrivacyPage()),
-            ),
-          ),
-        ]),
-        const SizedBox(height: 16),
-        _buildSectionTitle('SUPORTE E SOBRE'),
-        _buildMenuCard([
-          _buildMenuItem(
-            icon: Icons.help,
-            title: 'Ajuda',
-            subtitle: 'Duvidas e canais de atendimento',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopHelpPage()),
-            ),
-          ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.info,
-            title: 'Sobre o App',
-            subtitle: 'Versao e informacoes do DuckHat',
-            onTap: () => Navigator.push(
-              context,
-              AppRoute(builder: (_) => const ShopAboutPage()),
             ),
           ),
         ]),
@@ -396,15 +314,9 @@ _buildMenuCard([
   Widget _buildMenuCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 16,
-            offset: Offset(0, 8),
-          ),
-        ],
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
       ),
       child: Column(children: children),
     );
@@ -474,7 +386,7 @@ _buildMenuCard([
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.textMuted.withValues(alpha: 0.22),
+      color: AppColors.textMuted.withValues(alpha: 0.45),
     );
   }
 
@@ -516,6 +428,18 @@ class _ShopQuickStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = session?.nome.trim() ?? '';
     final initial = name.isEmpty ? 'D' : name.characters.first.toUpperCase();
+    final horario = session?.horarioAtendimento?.trim();
+    final endereco = session?.endereco?.trim();
+    final descricao = session?.descricao?.trim();
+    final resumo = [
+      if (horario != null && horario.isNotEmpty) horario,
+      if (endereco != null && endereco.isNotEmpty) endereco,
+    ].join(' · ');
+    final subtitle = resumo.isNotEmpty
+        ? resumo
+        : (descricao != null && descricao.isNotEmpty)
+        ? descricao
+        : 'Organize dados, fotos, agenda e servicos do estabelecimento.';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -548,22 +472,26 @@ class _ShopQuickStats extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Vitrine pronta para ajustes',
-                  style: TextStyle(
+                  name.isEmpty ? 'Vitrine pronta para ajustes' : name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: AppColors.textBold,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
-                  'Organize dados, fotos, agenda e servicos do estabelecimento.',
-                  style: TextStyle(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     color: AppColors.textRegular,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,

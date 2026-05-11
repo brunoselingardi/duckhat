@@ -62,6 +62,11 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         responsavelNome: session.responsavelNome,
         dataNascimento: session.dataNascimento,
         endereco: session.endereco,
+        categoria: session.categoria,
+        categoriaLabel: session.categoriaLabel,
+        descricao: session.descricao,
+        horarioAtendimento: session.horarioAtendimento,
+        bannerImagemBase64: session.bannerImagemBase64,
         tipo: session.tipo,
       ),
     );
@@ -129,6 +134,11 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
             _dataNascimentoController.text,
           ),
           endereco: _enderecoController.text,
+          categoria: current.categoria,
+          categoriaLabel: current.categoriaLabel,
+          descricao: current.descricao,
+          horarioAtendimento: current.horarioAtendimento,
+          bannerImagemBase64: current.bannerImagemBase64,
           tipo: current.tipo,
         ),
       );

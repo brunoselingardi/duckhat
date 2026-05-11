@@ -5,7 +5,10 @@ import 'package:duckhat/theme.dart' show AppColors;
 class EmptyRebookState extends StatelessWidget {
   final String message;
 
-  const EmptyRebookState({super.key, this.message = 'Você ainda não possui serviços recentes'});
+  const EmptyRebookState({
+    super.key,
+    this.message = 'Você ainda não possui serviços recentes',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -76,6 +79,7 @@ class RebookSection extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: RebookCard(
                       name: service["name"],
+                      prestadorId: service["prestadorId"],
                       image: service["image"],
                       rating: (service["rating"] ?? 0).toDouble(),
                       reviews: service["reviews"] ?? 0,

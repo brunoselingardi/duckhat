@@ -2,6 +2,7 @@ import 'package:duckhat/components/service/service_experience_section.dart';
 import 'package:duckhat/components/service/service_faq_section.dart';
 import 'package:duckhat/components/service/service_gallery_section.dart';
 import 'package:duckhat/components/service/service_models.dart';
+import 'package:duckhat/components/service/service_profile_fallbacks.dart';
 import 'package:duckhat/components/service/service_reviews_section.dart';
 import 'package:duckhat/components/service/service_services_section.dart';
 import 'package:flutter/material.dart';
@@ -9,9 +10,12 @@ import 'package:flutter/material.dart';
 class ServiceSections extends StatelessWidget {
   final List<GlobalKey> sectionKeys;
   final List<ServiceOffer> offers;
+  final String establishmentName;
+  final String experienceDescription;
   final bool isServicesLoading;
   final String? servicesError;
   final VoidCallback? onServicesRetry;
+  final ValueChanged<ServiceOffer>? onBookOffer;
   final List<ServiceReview> reviews;
   final List<ServiceFaq> faqs;
   final List<String> galleryImages;
@@ -20,14 +24,18 @@ class ServiceSections extends StatelessWidget {
   final ValueChanged<int> onGalleryChanged;
   final ValueChanged<int> onGallerySelected;
   final VoidCallback onOpenGallery;
+  final ServiceExperienceData experience;
 
   const ServiceSections({
     super.key,
     required this.sectionKeys,
     required this.offers,
+    required this.establishmentName,
+    required this.experienceDescription,
     this.isServicesLoading = false,
     this.servicesError,
     this.onServicesRetry,
+    this.onBookOffer,
     required this.reviews,
     required this.faqs,
     required this.galleryImages,
@@ -36,6 +44,7 @@ class ServiceSections extends StatelessWidget {
     required this.onGalleryChanged,
     required this.onGallerySelected,
     required this.onOpenGallery,
+    required this.experience,
   });
 
   @override
@@ -48,7 +57,11 @@ class ServiceSections extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ServiceExperienceSection(key: sectionKeys[0]),
+          ServiceExperienceSection(
+            key: sectionKeys[0],
+            summary: experience.summary,
+            highlights: experience.highlights,
+          ),
           const Divider(height: 1, color: Color(0xFFE8EDF6)),
           ServiceServicesSection(
             key: sectionKeys[1],
@@ -56,6 +69,7 @@ class ServiceSections extends StatelessWidget {
             isLoading: isServicesLoading,
             error: servicesError,
             onRetry: onServicesRetry,
+            onBookOffer: onBookOffer,
           ),
           const Divider(height: 1, color: Color(0xFFE8EDF6)),
           ServiceGallerySection(

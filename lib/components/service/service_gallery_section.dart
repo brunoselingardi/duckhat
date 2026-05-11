@@ -1,6 +1,8 @@
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
+import 'service_image.dart';
+
 class ServiceGallerySection extends StatelessWidget {
   final List<String> images;
   final int selectedIndex;
@@ -21,6 +23,33 @@ class ServiceGallerySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (images.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Galeria',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textBold,
+              ),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Nenhuma imagem disponivel no momento.',
+              style: TextStyle(color: AppColors.textRegular),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final safeSelectedIndex = selectedIndex < images.length ? selectedIndex : 0;
+
     return RepaintBoundary(
       child: Container(
         width: double.infinity,
@@ -44,7 +73,7 @@ class ServiceGallerySection extends StatelessWidget {
                 child: AspectRatio(
                   aspectRatio: 1.35,
                   child: _AssetGalleryImage(
-                    imagePath: images[selectedIndex],
+                    imagePath: images[safeSelectedIndex],
                     cacheWidth: 1200,
                   ),
                 ),
@@ -100,12 +129,11 @@ class _AssetGalleryImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.asset(
-      imagePath,
+    return ServiceImage(
+      source: imagePath,
       fit: BoxFit.cover,
-      filterQuality: FilterQuality.low,
       cacheWidth: cacheWidth,
-      gaplessPlayback: true,
+      filterQuality: FilterQuality.low,
     );
   }
 }

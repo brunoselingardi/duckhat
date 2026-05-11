@@ -12,6 +12,9 @@ public record LoginResponse(
     String responsavelNome,
     LocalDate dataNascimento,
     String endereco,
+    String descricao,
+    String horarioAtendimento,
+    String bannerImagemBase64,
     TipoUsuario tipo,
     String token,
     String mensagem) {

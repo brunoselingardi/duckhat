@@ -59,7 +59,7 @@ public class AvaliacaoService {
     Avaliacao avaliacao = new Avaliacao();
     avaliacao.setAgendamento(agendamento);
     avaliacao.setNota(request.nota());
-    avaliacao.setComentario(request.comentario());
+    avaliacao.setComentario(normalizarComentario(request.comentario()));
 
     Avaliacao salva = avaliacaoRepository.save(avaliacao);
     return AvaliacaoResponse.fromEntity(salva);
@@ -119,5 +119,12 @@ public class AvaliacaoService {
     }
 
     return AvaliacaoResponse.fromEntity(avaliacao);
+  }
+
+  private String normalizarComentario(String comentario) {
+    if (comentario == null || comentario.isBlank()) {
+      return null;
+    }
+    return comentario.trim().replaceAll("\\s+", " ");
   }
 }

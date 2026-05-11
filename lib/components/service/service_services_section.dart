@@ -7,6 +7,7 @@ class ServiceServicesSection extends StatelessWidget {
   final bool isLoading;
   final String? error;
   final VoidCallback? onRetry;
+  final ValueChanged<ServiceOffer>? onBookOffer;
 
   const ServiceServicesSection({
     super.key,
@@ -14,6 +15,7 @@ class ServiceServicesSection extends StatelessWidget {
     this.isLoading = false,
     this.error,
     this.onRetry,
+    this.onBookOffer,
   });
 
   @override
@@ -25,7 +27,7 @@ class ServiceServicesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Servicos e precos',
+            'Serviços e preços',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -52,7 +54,12 @@ class ServiceServicesSection extends StatelessWidget {
             Column(
               children: [
                 for (var index = 0; index < offers.length; index++) ...[
-                  _ServiceRow(offer: offers[index]),
+                  _ServiceRow(
+                    offer: offers[index],
+                    onBookTap: onBookOffer == null
+                        ? null
+                        : () => onBookOffer!(offers[index]),
+                  ),
                   if (index != offers.length - 1)
                     const Divider(height: 28, color: Color(0xFFE8EDF6)),
                 ],
@@ -94,8 +101,9 @@ class _ServiceError extends StatelessWidget {
 
 class _ServiceRow extends StatelessWidget {
   final ServiceOffer offer;
+  final VoidCallback? onBookTap;
 
-  const _ServiceRow({required this.offer});
+  const _ServiceRow({required this.offer, this.onBookTap});
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +147,25 @@ class _ServiceRow extends StatelessWidget {
               color: AppColors.accent,
             ),
           ),
+          if (onBookTap != null) ...[
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.icon(
+                onPressed: onBookTap,
+                icon: const Icon(Icons.calendar_today_rounded, size: 16),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                ),
+                label: const Text('Agendar este servico'),
+              ),
+            ),
+          ],
         ],
       ),
     );

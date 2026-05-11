@@ -1,6 +1,7 @@
 package com.duckhat.api.dto;
 
 import com.duckhat.api.entity.Usuario;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.enums.TipoUsuario;
 
 import java.time.LocalDate;
@@ -15,6 +16,11 @@ public record UsuarioResponse(
         String responsavelNome,
         LocalDate dataNascimento,
         String endereco,
+        String categoria,
+        String categoriaLabel,
+        String descricao,
+        String horarioAtendimento,
+        String bannerImagemBase64,
         TipoUsuario tipo,
         LocalDateTime criadoEm
 ) {
@@ -28,6 +34,35 @@ public record UsuarioResponse(
                 usuario.getResponsavelNome(),
                 usuario.getDataNascimento(),
                 usuario.getEndereco(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                usuario.getTipo(),
+                usuario.getCriadoEm()
+        );
+    }
+
+    public static UsuarioResponse fromEntity(Usuario usuario, Estabelecimento estabelecimento) {
+        if (estabelecimento == null) {
+            return fromEntity(usuario);
+        }
+
+        return new UsuarioResponse(
+                usuario.getId(),
+                estabelecimento.getNome() == null ? usuario.getNome() : estabelecimento.getNome(),
+                usuario.getEmail(),
+                estabelecimento.getTelefone() == null ? usuario.getTelefone() : estabelecimento.getTelefone(),
+                estabelecimento.getCnpj() == null ? usuario.getCnpj() : estabelecimento.getCnpj(),
+                estabelecimento.getResponsavelNome() == null ? usuario.getResponsavelNome() : estabelecimento.getResponsavelNome(),
+                usuario.getDataNascimento(),
+                estabelecimento.getEndereco() == null ? usuario.getEndereco() : estabelecimento.getEndereco(),
+                estabelecimento.getCategoria(),
+                com.duckhat.api.service.EstabelecimentoCategoriaCatalog.label(estabelecimento.getCategoria()),
+                estabelecimento.getDescricao(),
+                estabelecimento.getHorarioAtendimento(),
+                estabelecimento.getBannerImagemBase64(),
                 usuario.getTipo(),
                 usuario.getCriadoEm()
         );

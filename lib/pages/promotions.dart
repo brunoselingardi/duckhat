@@ -3,7 +3,6 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 import 'search.dart';
-import 'service.dart';
 
 class PromotionsPage extends StatefulWidget {
   const PromotionsPage({super.key});
@@ -24,56 +23,56 @@ class _PromotionsPageState extends State<PromotionsPage> {
   static const _deals = [
     _PromoDeal(
       title: 'Corte + hidratação premium',
-      place: 'Barbie\'s Salon',
+      place: 'Sugestão de busca DuckHat',
       image: 'assets/barbiesalon.jpg',
-      discountLabel: '30% OFF',
+      discountLabel: 'Cabelo',
       category: 'cabelo',
-      badge: 'Mais procurado',
+      badge: 'Curadoria local',
       description:
-          'Pacote para renovar o visual com acabamento, hidratação e finalização no mesmo atendimento.',
-      priceText: 'R\$ 84,90',
-      originalPriceText: 'R\$ 121,00',
-      expiryText: 'Expira hoje, 22:00',
+          'Use como ponto de partida para encontrar salões e barbearias cadastrados ou próximos.',
+      priceText: 'Consulte valores',
+      originalPriceText: '',
+      expiryText: 'Busque horários reais',
       highlight: true,
     ),
     _PromoDeal(
       title: 'Barba desenhada + toalha quente',
-      place: 'James Salon',
+      place: 'Sugestão de busca DuckHat',
       image: 'assets/jamessalon.jpg',
-      discountLabel: '20% OFF',
+      discountLabel: 'Barba',
       category: 'barba',
-      badge: 'Só esta semana',
+      badge: 'Serviços próximos',
       description:
-          'Atendimento rápido para alinhar barba, contorno e acabamento com toalha quente.',
-      priceText: 'R\$ 39,90',
-      originalPriceText: 'R\$ 49,90',
-      expiryText: 'Válido até sexta',
+          'Pesquise profissionais para alinhar barba, contorno e acabamento.',
+      priceText: 'Consulte valores',
+      originalPriceText: '',
+      expiryText: 'Consulte disponibilidade',
     ),
     _PromoDeal(
       title: 'Mãos e pés com esmaltação',
-      place: 'Salão Beleza',
+      place: 'Sugestão de busca DuckHat',
       image: 'assets/salao.jpg',
-      discountLabel: '25% OFF',
+      discountLabel: 'Unhas',
       category: 'unhas',
-      badge: 'Agenda livre',
+      badge: 'Busca guiada',
       description:
-          'Combo completo com cuidado das cutículas, lixamento e esmaltação tradicional.',
-      priceText: 'R\$ 59,90',
-      originalPriceText: 'R\$ 79,90',
-      expiryText: 'Últimas 4 vagas',
+          'Encontre atendimento de manicure e pedicure por termo ou localização.',
+      priceText: 'Consulte valores',
+      originalPriceText: '',
+      expiryText: 'Veja opções reais',
     ),
     _PromoDeal(
       title: 'Dia do noivo completo',
-      place: 'Barbie\'s Salon',
+      place: 'Sugestão de busca DuckHat',
       image: 'assets/niceduck.jpg',
-      discountLabel: '15% OFF',
+      discountLabel: 'Pacotes',
       category: 'pacote',
-      badge: 'Reserva antecipada',
+      badge: 'Planejamento',
       description:
-          'Pacote especial com corte, barba, limpeza facial e finalização para eventos.',
-      priceText: 'R\$ 189,90',
-      originalPriceText: 'R\$ 224,00',
-      expiryText: 'Agende com 48h',
+          'Pesquise serviços combinados para eventos e confirme detalhes com o estabelecimento.',
+      priceText: 'Consulte valores',
+      originalPriceText: '',
+      expiryText: 'Confirme no agendamento',
     ),
   ];
 
@@ -98,7 +97,7 @@ class _PromotionsPageState extends State<PromotionsPage> {
   }
 
   void _openFeaturedDeal() {
-    Navigator.of(context).push(AppRoute(builder: (_) => const ServicePage()));
+    Navigator.of(context).push(AppRoute(builder: (_) => const SearchPage()));
   }
 
   void _openAllServices() {
@@ -143,9 +142,9 @@ class _PromotionsPageState extends State<PromotionsPage> {
                     const _PromoInsightRow(),
                     const SizedBox(height: 22),
                     _SectionHeader(
-                      title: 'Ofertas em destaque',
+                      title: 'Sugestões em destaque',
                       subtitle:
-                          'Seleção rápida para encaixar seu próximo horário com desconto.',
+                          'Atalhos para buscar serviços por categoria e encontrar horários reais.',
                     ),
                   ],
                 ),
@@ -159,10 +158,7 @@ class _PromotionsPageState extends State<PromotionsPage> {
                   final deal = visibleDeals[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _PromoCard(
-                      deal: deal,
-                      onTap: _openFeaturedDeal,
-                    ),
+                    child: _PromoCard(deal: deal, onTap: _openFeaturedDeal),
                   );
                 },
               ),
@@ -174,7 +170,7 @@ class _PromotionsPageState extends State<PromotionsPage> {
                   child: _SectionHeader(
                     title: 'Vencendo em breve',
                     subtitle:
-                        'Boas opções para quem quer aproveitar agora sem perder prazo.',
+                        'Caminhos rápidos para comparar opções antes de agendar.',
                   ),
                 ),
               ),
@@ -187,10 +183,7 @@ class _PromotionsPageState extends State<PromotionsPage> {
                     final deal = expiringDeals[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _ExpiryTile(
-                        deal: deal,
-                        onTap: _openFeaturedDeal,
-                      ),
+                      child: _ExpiryTile(deal: deal, onTap: _openFeaturedDeal),
                     );
                   },
                 ),
@@ -295,7 +288,10 @@ class _PromoHero extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
@@ -348,7 +344,9 @@ class _PromoHero extends StatelessWidget {
                     ),
                     const SizedBox(height: 14),
                     Text(
-                      '${deal.priceText}  •  antes ${deal.originalPriceText}',
+                      deal.originalPriceText.isEmpty
+                          ? deal.priceText
+                          : '${deal.priceText}  •  antes ${deal.originalPriceText}',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -385,7 +383,7 @@ class _PromoHero extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                   child: const Text(
-                    'Reservar oferta',
+                    'Buscar serviços',
                     style: TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -479,16 +477,16 @@ class _PromoInsightRow extends StatelessWidget {
       children: const [
         Expanded(
           child: _InsightCard(
-            title: '12 ofertas',
-            subtitle: 'ativas hoje',
+            title: 'Curadoria',
+            subtitle: 'por categoria',
             icon: Icons.local_offer_outlined,
           ),
         ),
         SizedBox(width: 12),
         Expanded(
           child: _InsightCard(
-            title: 'Até 30%',
-            subtitle: 'de desconto',
+            title: 'Catálogo',
+            subtitle: 'interno e externo',
             icon: Icons.bolt_rounded,
           ),
         ),
@@ -622,7 +620,9 @@ class _PromoCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(24),
+              ),
               child: Image.asset(
                 deal.image,
                 width: double.infinity,
@@ -697,27 +697,32 @@ class _PromoCard extends StatelessWidget {
                   const SizedBox(height: 14),
                   Row(
                     children: [
-                      Text(
-                        deal.priceText,
-                        style: const TextStyle(
-                          color: AppColors.textBold,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w800,
+                      Flexible(
+                        child: Text(
+                          deal.priceText,
+                          style: const TextStyle(
+                            color: AppColors.textBold,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        deal.originalPriceText,
-                        style: const TextStyle(
-                          color: AppColors.textMuted,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          decoration: TextDecoration.lineThrough,
+                      if (deal.originalPriceText.isNotEmpty) ...[
+                        Text(
+                          deal.originalPriceText,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            decoration: TextDecoration.lineThrough,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                      ],
                       const Spacer(),
                       const Text(
-                        'Ver detalhes',
+                        'Ver busca',
                         style: TextStyle(
                           color: AppColors.accent,
                           fontSize: 12,
@@ -800,10 +805,7 @@ class _ExpiryTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.accent,
-            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.accent),
           ],
         ),
       ),

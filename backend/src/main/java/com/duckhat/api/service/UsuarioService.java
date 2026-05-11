@@ -1,10 +1,14 @@
 package com.duckhat.api.service;
 
 import com.duckhat.api.dto.CreateUsuarioRequest;
+import com.duckhat.api.dto.CatalogoPrestadorBuscaResponse;
+import com.duckhat.api.dto.PrestadorPublicoResponse;
 import com.duckhat.api.dto.UpdatePerfilRequest;
 import com.duckhat.api.dto.UsuarioResponse;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
+import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,8 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.util.regex.Pattern;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.regex.Pattern;
 
 @Service
 public class UsuarioService {
@@ -24,11 +29,20 @@ public class UsuarioService {
             Pattern.CASE_INSENSITIVE);
 
     private final UsuarioRepository usuarioRepository;
+    private final EstabelecimentoRepository estabelecimentoRepository;
     private final PasswordEncoder passwordEncoder;
+    private final DisponibilidadePadraoService disponibilidadePadraoService;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioService(
+            UsuarioRepository usuarioRepository,
+            EstabelecimentoRepository estabelecimentoRepository,
+            PasswordEncoder passwordEncoder,
+            DisponibilidadePadraoService disponibilidadePadraoService
+    ) {
         this.usuarioRepository = usuarioRepository;
+        this.estabelecimentoRepository = estabelecimentoRepository;
         this.passwordEncoder = passwordEncoder;
+        this.disponibilidadePadraoService = disponibilidadePadraoService;
     }
 
     @Transactional
@@ -37,6 +51,7 @@ public class UsuarioService {
         String telefoneNormalizado = normalizarTelefone(request.telefone());
         String cnpjNormalizado = normalizarCnpj(request.cnpj());
         String responsavelNome = normalizarTexto(request.responsavelNome());
+        String categoria = normalizarCategoria(request.categoria(), request.tipo(), true);
 
         validarCamposPrestador(request.tipo(), cnpjNormalizado, responsavelNome);
 
@@ -58,6 +73,10 @@ public class UsuarioService {
         usuario.setTipo(request.tipo());
 
         Usuario salvo = usuarioRepository.save(usuario);
+        if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
+            salvarEstabelecimento(salvo, null, categoria, null, null, null);
+            disponibilidadePadraoService.garantirDisponibilidadePadrao(salvo);
+        }
         return UsuarioResponse.fromEntity(salvo);
     }
 
@@ -77,6 +96,69 @@ public class UsuarioService {
         return UsuarioResponse.fromEntity(usuario);
     }
 
+    @Transactional(readOnly = true)
+    public PrestadorPublicoResponse buscarPrestadorPublico(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado"));
+
+        if (usuario.getTipo() != TipoUsuario.PRESTADOR) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Prestador não encontrado");
+        }
+
+        Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        return PrestadorPublicoResponse.fromEntity(usuario, estabelecimento);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CatalogoPrestadorBuscaResponse> buscarPrestadoresPublicosPorNome(
+            String nome,
+            List<Long> prestadorIdsPorServico
+    ) {
+        String termo = nome == null ? "" : nome.trim();
+        LinkedHashMap<Long, CatalogoPrestadorBuscaResponse> resultados = new LinkedHashMap<>();
+
+        if (!termo.isEmpty()) {
+            usuarioRepository.findByTipoAndNomeContainingIgnoreCase(TipoUsuario.PRESTADOR, termo)
+                    .forEach(usuario -> resultados.putIfAbsent(
+                            usuario.getId(),
+                            CatalogoPrestadorBuscaResponse.fromEntity(
+                                    usuario,
+                                    buscarEstabelecimentoDoPrestador(usuario),
+                                    "Estabelecimento")));
+        }
+
+        if (prestadorIdsPorServico != null && !prestadorIdsPorServico.isEmpty()) {
+            usuarioRepository.findAllById(prestadorIdsPorServico)
+                    .stream()
+                    .filter(usuario -> usuario.getTipo() == TipoUsuario.PRESTADOR)
+                    .forEach(usuario -> resultados.putIfAbsent(
+                            usuario.getId(),
+                            CatalogoPrestadorBuscaResponse.fromEntity(
+                                    usuario,
+                                    buscarEstabelecimentoDoPrestador(usuario),
+                                    "Servico no DuckHat")));
+        }
+
+        return List.copyOf(resultados.values());
+    }
+
+    private Estabelecimento buscarEstabelecimentoDoPrestador(Usuario usuario) {
+        return estabelecimentoRepository.findByUsuarioId(usuario.getId()).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioResponse buscarMeuPerfil(Usuario autenticado) {
+        Usuario usuario = usuarioRepository.findById(autenticado.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado"));
+
+        Estabelecimento estabelecimento = null;
+        if (usuario.getTipo() == TipoUsuario.PRESTADOR) {
+            estabelecimento = estabelecimentoRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        }
+
+        return UsuarioResponse.fromEntity(usuario, estabelecimento);
+    }
+
     @Transactional
     public UsuarioResponse atualizarPerfil(Usuario autenticado, UpdatePerfilRequest request) {
         Usuario usuario = usuarioRepository.findById(autenticado.getId())
@@ -87,6 +169,13 @@ public class UsuarioService {
         String cnpjNormalizado = normalizarCnpj(request.cnpj());
         String responsavelNome = normalizarTexto(request.responsavelNome());
         String endereco = normalizarEndereco(request.endereco());
+        String categoria = normalizarCategoria(request.categoria(), usuario.getTipo(), false);
+        String descricao = normalizarTextoLimitado(request.descricao(), 500, "Descrição deve ter no máximo 500 caracteres");
+        String horarioAtendimento = normalizarTextoLimitado(
+                request.horarioAtendimento(),
+                160,
+                "Horário de atendimento deve ter no máximo 160 caracteres");
+        String bannerImagemBase64 = normalizarImagemBase64(request.bannerImagemBase64());
         validarDataNascimento(request.dataNascimento());
 
         if (!emailNormalizado.equals(usuario.getEmail()) && usuarioRepository.existsByEmail(emailNormalizado)) {
@@ -113,7 +202,46 @@ public class UsuarioService {
         usuario.setDataNascimento(request.dataNascimento());
         usuario.setEndereco(endereco);
 
-        return UsuarioResponse.fromEntity(usuarioRepository.save(usuario));
+        Usuario salvo = usuarioRepository.save(usuario);
+        Estabelecimento estabelecimento = null;
+        if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
+            estabelecimento = salvarEstabelecimento(salvo, endereco, categoria, descricao, horarioAtendimento, bannerImagemBase64);
+        }
+
+        return UsuarioResponse.fromEntity(salvo, estabelecimento);
+    }
+
+    private Estabelecimento salvarEstabelecimento(Usuario prestador, String endereco) {
+        return salvarEstabelecimento(prestador, endereco, null, null, null, null);
+    }
+
+    private Estabelecimento salvarEstabelecimento(
+            Usuario prestador,
+            String endereco,
+            String categoria,
+            String descricao,
+            String horarioAtendimento,
+            String bannerImagemBase64
+    ) {
+        Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(prestador.getId())
+                .orElseGet(Estabelecimento::new);
+
+        estabelecimento.setUsuario(prestador);
+        estabelecimento.setNome(prestador.getNome());
+        estabelecimento.setTelefone(prestador.getTelefone());
+        estabelecimento.setCnpj(prestador.getCnpj());
+        estabelecimento.setResponsavelNome(prestador.getResponsavelNome());
+        estabelecimento.setEndereco(endereco);
+        if (categoria != null) {
+            estabelecimento.setCategoria(categoria);
+        }
+        estabelecimento.setDescricao(descricao);
+        estabelecimento.setHorarioAtendimento(horarioAtendimento);
+        if (bannerImagemBase64 != null) {
+            estabelecimento.setBannerImagemBase64(bannerImagemBase64);
+        }
+
+        return estabelecimentoRepository.save(estabelecimento);
     }
 
     private void validarCamposPrestador(
@@ -136,6 +264,26 @@ public class UsuarioService {
                     HttpStatus.BAD_REQUEST,
                     "Prestadores precisam informar o nome do responsável");
         }
+    }
+
+    private String normalizarCategoria(String categoria, TipoUsuario tipo, boolean obrigatoria) {
+        String normalizada = normalizarTexto(categoria);
+        if (tipo != TipoUsuario.PRESTADOR) {
+            return null;
+        }
+        if (normalizada == null) {
+            if (!obrigatoria) {
+                return null;
+            }
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Prestadores precisam escolher uma categoria de estabelecimento");
+        }
+        normalizada = normalizada.toLowerCase();
+        if (!EstabelecimentoCategoriaCatalog.existe(normalizada)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Categoria de estabelecimento inválida");
+        }
+        return normalizada;
     }
 
     private String normalizarEmail(String email) {
@@ -170,6 +318,31 @@ public class UsuarioService {
             return null;
         }
         return valor.trim();
+    }
+
+    private String normalizarTextoLimitado(String valor, int maxLength, String mensagemErro) {
+        String normalizado = normalizarTexto(valor);
+        if (normalizado == null) {
+            return null;
+        }
+        String colapsado = normalizado.replaceAll("\\s+", " ");
+        if (colapsado.length() > maxLength) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, mensagemErro);
+        }
+        return colapsado;
+    }
+
+    private String normalizarImagemBase64(String valor) {
+        String normalizado = normalizarTexto(valor);
+        if (normalizado == null) {
+            return null;
+        }
+        if (normalizado.length() > 1_200_000) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Imagem de banner deve ter no máximo 1.200.000 caracteres em Base64");
+        }
+        return normalizado;
     }
 
     private String normalizarEndereco(String endereco) {

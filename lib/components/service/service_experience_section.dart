@@ -2,7 +2,16 @@ import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceExperienceSection extends StatelessWidget {
-  const ServiceExperienceSection({super.key});
+  final String summary;
+  final List<String> highlights;
+  final VoidCallback? onShowMore;
+
+  const ServiceExperienceSection({
+    super.key,
+    required this.summary,
+    required this.highlights,
+    this.onShowMore,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +30,9 @@ class ServiceExperienceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'Um espaco criativo com energia pop e atendimento premium para quem quer um visual impecavel, moderno e cheio de presenca.',
-            style: TextStyle(
+          Text(
+            summary,
+            style: const TextStyle(
               fontSize: 15,
               height: 1.6,
               color: AppColors.textBold,
@@ -39,11 +48,7 @@ class ServiceExperienceSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const _BulletLine(
-            'Visual Barbiecore reinterpretado para o universo masculino',
-          ),
-          const _BulletLine('Equipe focada em imagem, acabamento e identidade'),
-          const _BulletLine('Ambiente instagramavel com experiencia premium'),
+          for (final item in highlights) _BulletLine(item),
           const SizedBox(height: 22),
           const Text(
             'Formatos de atendimento',
@@ -66,26 +71,28 @@ class ServiceExperienceSection extends StatelessWidget {
             subtitle:
                 'Converse antes e alinhe o look ideal para o seu horario.',
           ),
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () {},
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFF3EFE8),
-                foregroundColor: AppColors.textBold,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
+          if (onShowMore != null) ...[
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onShowMore,
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFF3EFE8),
+                  foregroundColor: AppColors.textBold,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  elevation: 0,
                 ),
-                elevation: 0,
-              ),
-              child: const Text(
-                'Mostrar mais detalhes',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                child: const Text(
+                  'Mostrar mais detalhes',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

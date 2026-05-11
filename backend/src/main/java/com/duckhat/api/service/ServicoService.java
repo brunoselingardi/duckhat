@@ -13,44 +13,57 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ServicoService {
 
   private final ServicoRepository servicoRepository;
   private final UsuarioRepository usuarioRepository;
+  private final DisponibilidadePadraoService disponibilidadePadraoService;
 
-  public ServicoService(ServicoRepository servicoRepository, UsuarioRepository usuarioRepository) {
+  public ServicoService(ServicoRepository servicoRepository,
+      UsuarioRepository usuarioRepository,
+      DisponibilidadePadraoService disponibilidadePadraoService) {
     this.servicoRepository = servicoRepository;
     this.usuarioRepository = usuarioRepository;
+    this.disponibilidadePadraoService = disponibilidadePadraoService;
   }
 
   @Transactional
   public ServicoResponse criar(CreateServicoRequest request, Usuario prestador) {
-    if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um prestador");
-    }
+    validarPrestador(prestador);
+    disponibilidadePadraoService.garantirDisponibilidadePadrao(prestador);
+
     Servico servico = new Servico();
     servico.setPrestador(prestador);
-    servico.setNome(request.nome());
-    servico.setDescricao(request.descricao());
-    servico.setDuracaoMin(request.duracaoMin());
-    servico.setPreco(request.preco());
-    servico.setAtivo(request.ativo());
+    aplicarDados(servico, request);
 
     Servico salvo = servicoRepository.save(servico);
     return ServicoResponse.fromEntity(salvo);
   }
 
+  @Transactional
+  public ServicoResponse atualizar(Long id, CreateServicoRequest request, Usuario prestador) {
+    validarPrestador(prestador);
+
+    Servico servico = servicoRepository.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Serviço não encontrado"));
+
+    if (!servico.getPrestador().getId().equals(prestador.getId())) {
+      throw new ResponseStatusException(
+          HttpStatus.FORBIDDEN,
+          "Você não pode editar um serviço que não é seu");
+    }
+
+    aplicarDados(servico, request);
+    return ServicoResponse.fromEntity(servicoRepository.save(servico));
+  }
+
   @Transactional(readOnly = true)
   public List<ServicoResponse> listarTodos(Usuario prestador) {
-    if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um prestador");
-    }
+    validarPrestador(prestador);
 
     return servicoRepository.findByPrestadorId(prestador.getId())
         .stream()
@@ -68,11 +81,7 @@ public class ServicoService {
 
   @Transactional(readOnly = true)
   public List<ServicoResponse> listarPorPrestador(Long prestadorId, Usuario usuario) {
-    if (usuario.getTipo() != TipoUsuario.PRESTADOR) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um prestador");
-    }
+    validarPrestador(usuario);
 
     if (!prestadorId.equals(usuario.getId())) {
       throw new ResponseStatusException(
@@ -96,11 +105,7 @@ public class ServicoService {
 
   @Transactional(readOnly = true)
   public ServicoResponse buscarPorId(Long id, Usuario prestador) {
-    if (prestador.getTipo() != TipoUsuario.PRESTADOR) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um prestador");
-    }
+    validarPrestador(prestador);
 
     Servico servico = servicoRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(
@@ -113,6 +118,29 @@ public class ServicoService {
     }
 
     return ServicoResponse.fromEntity(servico);
+  }
+
+  private void validarPrestador(Usuario usuario) {
+    if (usuario.getTipo() != TipoUsuario.PRESTADOR) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O usuário autenticado não é um prestador");
+    }
+  }
+
+  private void aplicarDados(Servico servico, CreateServicoRequest request) {
+    servico.setNome(request.nome().trim());
+    servico.setDescricao(normalizarTexto(request.descricao()));
+    servico.setDuracaoMin(request.duracaoMin());
+    servico.setPreco(request.preco());
+    servico.setAtivo(request.ativo());
+  }
+
+  private String normalizarTexto(String valor) {
+    if (valor == null || valor.isBlank()) {
+      return null;
+    }
+    return valor.trim().replaceAll("\\s+", " ");
   }
 
   @Transactional(readOnly = true)
@@ -135,5 +163,14 @@ public class ServicoService {
         .stream()
         .map(ServicoResponse::fromEntity)
         .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<Long> buscarPrestadorIdsPorNomeDeServicoPublico(String nome) {
+    return servicoRepository.findByAtivoTrueAndNomeContainingIgnoreCase(nome)
+        .stream()
+        .map(servico -> servico.getPrestador().getId())
+        .distinct()
+        .collect(Collectors.toList());
   }
 }

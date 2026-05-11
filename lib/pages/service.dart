@@ -1,10 +1,13 @@
-import 'package:duckhat/components/service/service_data.dart';
 import 'package:duckhat/components/service/service_hero.dart';
 import 'package:duckhat/components/service/service_info_card.dart';
+import 'package:duckhat/components/service/service_image.dart';
 import 'package:duckhat/components/service/service_models.dart';
+import 'package:duckhat/components/service/service_profile_fallbacks.dart';
 import 'package:duckhat/components/service/service_sections.dart';
 import 'package:duckhat/components/service/service_tab_menu.dart';
 import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/models/estabelecimento_catalogo.dart';
+import 'package:duckhat/models/estabelecimento_publico.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
 import 'package:duckhat/pages/avaliar.dart';
 import 'package:duckhat/pages/chat_detail.dart';
@@ -12,8 +15,24 @@ import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
+typedef ServiceProfileLoader =
+    Future<EstabelecimentoPublico> Function(int prestadorId);
+typedef ServiceOffersLoader =
+    Future<List<ServicoCatalogo>> Function(int prestadorId);
+
 class ServicePage extends StatefulWidget {
-  const ServicePage({super.key});
+  final int prestadorId;
+  final EstabelecimentoCatalogo? estabelecimento;
+  final ServiceProfileLoader? profileLoader;
+  final ServiceOffersLoader? servicesLoader;
+
+  const ServicePage({
+    super.key,
+    required this.prestadorId,
+    this.estabelecimento,
+    this.profileLoader,
+    this.servicesLoader,
+  });
 
   @override
   State<ServicePage> createState() => _ServicePageState();
@@ -29,21 +48,20 @@ class _ServicePageState extends State<ServicePage> {
   int _selectedTabIndex = 0;
   int _selectedGalleryIndex = 0;
   bool _isAutoScrolling = false;
+  bool _loadingProfile = true;
   bool _loadingServices = true;
+  String? _profileError;
   String? _servicesError;
+  EstabelecimentoCatalogo? _catalog;
+  EstabelecimentoPublico? _profile;
+  ServicePublicPageFallback? _fallback;
   List<ServiceOffer> _offers = const [];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
-    Future.microtask(() {
-      if (!mounted) return;
-      for (final image in serviceGalleryImages) {
-        precacheImage(AssetImage(image), context);
-      }
-    });
-    _loadServices();
+    _loadPageData();
   }
 
   @override
@@ -108,6 +126,47 @@ class _ServicePageState extends State<ServicePage> {
     }
   }
 
+  Future<void> _loadPageData() async {
+    final fallback = fallbackForPrestador(widget.prestadorId);
+    setState(() {
+      _fallback = fallback;
+      _catalog = widget.estabelecimento;
+      _loadingProfile = true;
+      _loadingServices = true;
+      _profileError = null;
+      _servicesError = null;
+    });
+
+    await Future.wait([_loadProfile(fallback), _loadServices()]);
+  }
+
+  Future<void> _loadProfile(ServicePublicPageFallback? fallback) async {
+    try {
+      final loader =
+          widget.profileLoader ??
+          DuckHatApi.instance.carregarEstabelecimentoPublico;
+      final loaded = await loader(widget.prestadorId);
+      if (!mounted) return;
+
+      setState(() {
+        _profile = fallback == null
+            ? loaded
+            : loaded.mergeFallback(fallback.profile);
+        _loadingProfile = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+
+      setState(() {
+        _loadingProfile = false;
+        _profile = _profileFromCatalog(_catalog) ?? fallback?.profile;
+        _profileError = fallback == null && _profile == null
+            ? error.toString().replaceFirst('Exception: ', '')
+            : null;
+      });
+    }
+  }
+
   Future<void> _loadServices() async {
     setState(() {
       _loadingServices = true;
@@ -115,23 +174,89 @@ class _ServicePageState extends State<ServicePage> {
     });
 
     try {
-      final services = await DuckHatApi.instance.listarServicosPorPrestador(
-        servicePrestadorId,
-      );
+      final catalog =
+          widget.estabelecimento ??
+          await DuckHatApi.instance.buscarEstabelecimentoCatalogo(
+            widget.prestadorId,
+          );
       if (!mounted) return;
 
       setState(() {
-        _offers = services.map(_offerFromServico).toList();
+        _catalog = catalog;
+        _profile ??= _profileFromCatalog(catalog);
+        _offers = catalog.servicos.map(_offerFromServico).toList();
         _loadingServices = false;
       });
-    } catch (error) {
-      if (!mounted) return;
+    } catch (catalogError) {
+      try {
+        final loader =
+            widget.servicesLoader ??
+            DuckHatApi.instance.listarServicosPorPrestador;
+        final services = await loader(widget.prestadorId);
+        if (!mounted) return;
 
-      setState(() {
-        _loadingServices = false;
-        _servicesError = error.toString().replaceFirst('Exception: ', '');
-      });
+        setState(() {
+          _offers = services.map(_offerFromServico).toList();
+          _loadingServices = false;
+        });
+      } catch (error) {
+        if (!mounted) return;
+
+        setState(() {
+          _loadingServices = false;
+          _servicesError = error.toString().replaceFirst('Exception: ', '');
+        });
+      }
     }
+  }
+
+  EstabelecimentoPublico? get _effectiveProfile =>
+      _profile ?? _profileFromCatalog(_catalog) ?? _fallback?.profile;
+
+  int get _prestadorId =>
+      _catalog?.prestadorId ?? _effectiveProfile?.id ?? widget.prestadorId;
+
+  List<String> get _galleryImages => _fallback?.galleryImages ?? const [];
+
+  List<ServiceReview> get _reviews => _fallback?.reviews ?? const [];
+
+  List<ServiceFaq> get _faqs => _fallback?.faqs ?? const [];
+
+  ServiceExperienceData get _experience =>
+      _fallback?.experience ??
+      ServiceExperienceData(
+        summary:
+            _effectiveProfile?.descricaoPublica ??
+            'Este estabelecimento ainda esta ajustando sua experiencia publica.',
+        highlights: const [
+          'Servicos, precos e duracao visiveis antes do agendamento',
+          'Agenda conectada aos horarios disponiveis do estabelecimento',
+          'Contato direto por mensagem dentro do DuckHat',
+        ],
+      );
+
+  double get _averageRating {
+    if (_reviews.isEmpty) return 0;
+    final total = _reviews.fold<int>(0, (sum, item) => sum + item.rating);
+    return total / _reviews.length;
+  }
+
+  EstabelecimentoPublico? _profileFromCatalog(
+    EstabelecimentoCatalogo? catalog,
+  ) {
+    if (catalog == null) return null;
+    final fallback = fallbackForPrestador(catalog.prestadorId)?.profile;
+
+    return EstabelecimentoPublico(
+      id: catalog.prestadorId,
+      nome: catalog.nome,
+      telefone: catalog.telefone,
+      endereco: catalog.endereco,
+      descricaoPublica: catalog.descricao,
+      horarioAtendimento: catalog.horarioAtendimento,
+      imagemCapa: fallback?.imagemCapa,
+      imagemLogo: fallback?.imagemLogo,
+    );
   }
 
   ServiceOffer _offerFromServico(ServicoCatalogo service) {
@@ -155,6 +280,10 @@ class _ServicePageState extends State<ServicePage> {
   }
 
   void _openGalleryFullscreen() {
+    if (_galleryImages.isEmpty) return;
+    final safeIndex = _selectedGalleryIndex < _galleryImages.length
+        ? _selectedGalleryIndex
+        : 0;
     showDialog<void>(
       context: context,
       barrierColor: Colors.black,
@@ -167,8 +296,8 @@ class _ServicePageState extends State<ServicePage> {
                 child: InteractiveViewer(
                   minScale: 0.8,
                   maxScale: 4,
-                  child: Image.asset(
-                    serviceGalleryImages[_selectedGalleryIndex],
+                  child: ServiceImage(
+                    source: _galleryImages[safeIndex],
                     fit: BoxFit.contain,
                   ),
                 ),
@@ -188,14 +317,16 @@ class _ServicePageState extends State<ServicePage> {
     );
   }
 
-  Future<void> _openBookingFlow() async {
+  Future<void> _openBookingFlow({int? initialServiceId}) async {
+    final profile = _effectiveProfile;
     final created = await Navigator.pushNamed(
       context,
       '/schedule-date',
       arguments: {
-        'prestadorId': servicePrestadorId,
-        'establishmentName': serviceEstablishmentName,
+        'prestadorId': _prestadorId,
+        'establishmentName': profile?.nome ?? '',
         'serviceOffers': _offers,
+        'initialServiceId': initialServiceId,
       },
     );
 
@@ -212,7 +343,7 @@ class _ServicePageState extends State<ServicePage> {
   Future<void> _openChat() async {
     try {
       final conversa = await DuckHatApi.instance.criarOuBuscarConversaChat(
-        servicePrestadorId,
+        _prestadorId,
       );
       if (!mounted) return;
 
@@ -237,12 +368,13 @@ class _ServicePageState extends State<ServicePage> {
   }
 
   Future<void> _avaliar() async {
+    final profile = _effectiveProfile;
     await Navigator.push(
       context,
       AppRoute(
         builder: (context) => AvaliarPage(
-          prestadorId: servicePrestadorId,
-          prestadorNome: serviceEstablishmentName,
+          prestadorId: _prestadorId,
+          prestadorNome: profile?.nome ?? 'Estabelecimento',
         ),
       ),
     );
@@ -250,52 +382,96 @@ class _ServicePageState extends State<ServicePage> {
 
   @override
   Widget build(BuildContext context) {
+    final profile = _effectiveProfile;
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SingleChildScrollView(
-        key: const PageStorageKey('service-scroll'),
-        controller: _scrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ServiceHero(onBack: () => Navigator.pop(context)),
-            Container(
-              transform: Matrix4.translationValues(0, -28, 0),
+      body: _loadingProfile && profile == null
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.accent),
+            )
+          : profile == null
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _profileError ?? 'Nao foi possivel carregar a pagina.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: _loadPageData,
+                      child: const Text('Tentar novamente'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : SingleChildScrollView(
+              key: const PageStorageKey('service-scroll'),
+              controller: _scrollController,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ServiceInfoCard(
-                    onMessageTap: _openChat,
-                    onAvaliarTap: _avaliar,
+                  ServiceHero(
+                    onBack: () => Navigator.pop(context),
+                    imageSource: profile.imagemCapa,
+                    bannerImagemBase64: _catalog?.bannerImagemBase64,
                   ),
-                  const SizedBox(height: 8),
-                  ServiceTabMenu(
-                    tabs: serviceTabs,
-                    selectedIndex: _selectedTabIndex,
-                    onTap: _scrollToSection,
-                  ),
-                  ServiceSections(
-                    sectionKeys: _sectionKeys,
-                    offers: _offers,
-                    isServicesLoading: _loadingServices,
-                    servicesError: _servicesError,
-                    onServicesRetry: _loadServices,
-                    reviews: serviceReviews,
-                    faqs: serviceFaqs,
-                    galleryImages: serviceGalleryImages,
-                    selectedGalleryIndex: _selectedGalleryIndex,
-                    galleryController: _galleryController,
-                    onGalleryChanged: _onGalleryPageChanged,
-                    onGallerySelected: _selectGalleryImage,
-                    onOpenGallery: _openGalleryFullscreen,
+                  Transform.translate(
+                    offset: const Offset(0, -28),
+                    child: Column(
+                      children: [
+                        ServiceInfoCard(
+                          onMessageTap: _openChat,
+                          onAvaliarTap: _avaliar,
+                          name: profile.nome,
+                          ratingValue: _averageRating,
+                          reviewCount: _reviews.length,
+                          logoSource: profile.imagemLogo,
+                          address: profile.endereco,
+                          schedule: profile.horarioAtendimento,
+                          description: profile.descricaoPublica,
+                        ),
+                        const SizedBox(height: 8),
+                        ServiceTabMenu(
+                          tabs: serviceTabs,
+                          selectedIndex: _selectedTabIndex,
+                          onTap: _scrollToSection,
+                        ),
+                        ServiceSections(
+                          sectionKeys: _sectionKeys,
+                          offers: _offers,
+                          establishmentName: profile.nome,
+                          experienceDescription:
+                              profile.descricaoPublica ?? _experience.summary,
+                          isServicesLoading: _loadingServices,
+                          servicesError: _servicesError,
+                          onServicesRetry: _loadPageData,
+                          onBookOffer: (offer) => _openBookingFlow(
+                            initialServiceId: offer.serviceId,
+                          ),
+                          reviews: _reviews,
+                          faqs: _faqs,
+                          galleryImages: _galleryImages,
+                          selectedGalleryIndex: _selectedGalleryIndex,
+                          galleryController: _galleryController,
+                          onGalleryChanged: _onGalleryPageChanged,
+                          onGallerySelected: _selectGalleryImage,
+                          onOpenGallery: _openGalleryFullscreen,
+                          experience: _experience,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _offers.isEmpty ? null : _openBookingFlow,
+        onPressed: _offers.isEmpty ? null : () => _openBookingFlow(),
         backgroundColor: AppColors.accent,
         foregroundColor: AppColors.primary,
         icon: const Icon(Icons.calendar_today),

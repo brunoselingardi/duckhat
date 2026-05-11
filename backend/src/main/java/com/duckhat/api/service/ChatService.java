@@ -12,7 +12,11 @@ import com.duckhat.api.repository.ChatConversaRepository;
 import com.duckhat.api.repository.ChatMensagemRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -62,7 +66,7 @@ public class ChatService {
             prestador(usuario, participante).getId())
         .orElseGet(() -> criarConversa(usuario, participante));
 
-    return toConversaResponse(conversa, usuario);
+    return toConversaResponse(conversa, usuario, buscarUltimaMensagem(conversa));
   }
 
   @Transactional(readOnly = true)
@@ -72,8 +76,13 @@ public class ChatService {
       case PRESTADOR -> conversaRepository.findByPrestadorIdOrderByUltimaMensagemEmDescIdDesc(usuario.getId());
     };
 
+    Map<Long, ChatMensagem> ultimasMensagens = buscarUltimasMensagens(conversas);
+
     return conversas.stream()
-        .map(conversa -> toConversaResponse(conversa, usuario))
+        .map(conversa -> toConversaResponse(
+            conversa,
+            usuario,
+            ultimasMensagens.get(conversa.getId())))
         .toList();
   }
 
@@ -158,10 +167,32 @@ public class ChatService {
         "O chat deve ser entre um cliente e um prestador");
   }
 
-  private ChatConversaResponse toConversaResponse(ChatConversa conversa, Usuario usuario) {
-    ChatMensagem ultimaMensagem = mensagemRepository
+  private ChatConversaResponse toConversaResponse(
+      ChatConversa conversa,
+      Usuario usuario,
+      ChatMensagem ultimaMensagem) {
+    return ChatConversaResponse.fromEntity(conversa, usuario, ultimaMensagem);
+  }
+
+  private ChatMensagem buscarUltimaMensagem(ChatConversa conversa) {
+    return mensagemRepository
         .findFirstByConversaIdOrderByCriadoEmDescIdDesc(conversa.getId())
         .orElse(null);
-    return ChatConversaResponse.fromEntity(conversa, usuario, ultimaMensagem);
+  }
+
+  private Map<Long, ChatMensagem> buscarUltimasMensagens(List<ChatConversa> conversas) {
+    if (conversas.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    List<Long> conversaIds = conversas.stream()
+        .map(ChatConversa::getId)
+        .toList();
+
+    return mensagemRepository.findUltimasMensagensByConversaIds(conversaIds)
+        .stream()
+        .collect(Collectors.toMap(
+            mensagem -> mensagem.getConversa().getId(),
+            Function.identity()));
   }
 }

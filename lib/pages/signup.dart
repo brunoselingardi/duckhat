@@ -3,9 +3,13 @@ import 'dart:io';
 
 import 'package:duckhat/pages/app_shell.dart';
 import 'package:duckhat/pages/post_login_transition_page.dart';
+import 'package:duckhat/models/establishment_category.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/shop_main.dart';
 import 'package:duckhat/theme.dart';
+import 'package:duckhat/models/usuario_perfil.dart';
+import 'package:duckhat/utils/image_base64.dart';
+import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -286,16 +290,26 @@ class BusinessSignupPage extends StatefulWidget {
 class _BusinessSignupPageState extends State<BusinessSignupPage> {
   final _pageController = PageController();
   final _businessFormKey = GlobalKey<FormState>();
+  final _profileFormKey = GlobalKey<FormState>();
+  final _servicesFormKey = GlobalKey<FormState>();
   final _responsibleFormKey = GlobalKey<FormState>();
   final _accessFormKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _hoursController = TextEditingController(
+    text: 'Segunda a sexta 9h - 20h',
+  );
   final _responsavelController = TextEditingController();
   final _cnpjController = TextEditingController();
   final _telefoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
-  final _imageController = _SignupImageController();
+  final _categoryQueryController = TextEditingController();
+  final _bannerController = _SignupImageController();
+  final List<_SignupServiceDraft> _services = [_SignupServiceDraft()];
+  EstablishmentCategory? _selectedCategory;
 
   int _step = 0;
   bool _hidePassword = true;
@@ -307,30 +321,43 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
   void dispose() {
     _pageController.dispose();
     _nomeController.dispose();
+    _addressController.dispose();
+    _descriptionController.dispose();
+    _hoursController.dispose();
     _responsavelController.dispose();
     _cnpjController.dispose();
     _telefoneController.dispose();
     _emailController.dispose();
     _senhaController.dispose();
     _confirmarSenhaController.dispose();
+    _categoryQueryController.dispose();
+    for (final service in _services) {
+      service.dispose();
+    }
     super.dispose();
   }
 
-  Future<void> _pickProfileImage() async {
-    final result = await _imageController.pick();
+  Future<void> _pickBannerImage() async {
+    final result = await _bannerController.pick();
     if (!mounted || result == null) return;
     if (result.error != null) {
       setState(() => _error = result.error);
       return;
     }
-    setState(() => _imageController.image = result.image);
+    setState(() => _bannerController.image = result.image);
   }
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
-    if (_step == 0 && !_businessFormKey.currentState!.validate()) return;
-    if (_step == 1 && !_responsibleFormKey.currentState!.validate()) return;
-    if (_step < 2) {
+    if (_step == 0 && _selectedCategory == null) {
+      setState(() => _error = 'Escolha a categoria do estabelecimento.');
+      return;
+    }
+    if (_step == 1 && !_businessFormKey.currentState!.validate()) return;
+    if (_step == 2 && !_profileFormKey.currentState!.validate()) return;
+    if (_step == 3 && !_servicesFormKey.currentState!.validate()) return;
+    if (_step == 4 && !_responsibleFormKey.currentState!.validate()) return;
+    if (_step < 5) {
       setState(() {
         _step += 1;
         _error = null;
@@ -370,6 +397,9 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
     });
 
     try {
+      final bannerBase64 = await encodeImageFileAsBase64(
+        _bannerController.image,
+      );
       await DuckHatApi.instance.criarUsuario(
         nome: _nomeController.text,
         email: _emailController.text,
@@ -378,19 +408,59 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
         tipo: 'PRESTADOR',
         cnpj: _cnpjController.text,
         responsavelNome: _responsavelController.text,
+        categoria: _selectedCategory!.code,
       );
       await DuckHatApi.instance.login(
         email: _emailController.text.trim(),
         password: _senhaController.text,
       );
 
+      var vitrineCompleta = true;
+      try {
+        final session = DuckHatApi.instance.currentSession;
+        if (session != null) {
+          await DuckHatApi.instance.atualizarMeuPerfil(
+            UsuarioPerfil(
+              id: session.id,
+              nome: _nomeController.text,
+              email: _emailController.text,
+              telefone: _telefoneController.text,
+              cnpj: ProfileValidators.digitsOnly(_cnpjController.text),
+              responsavelNome: _responsavelController.text,
+              dataNascimento: null,
+              endereco: _addressController.text,
+              categoria: _selectedCategory!.code,
+              categoriaLabel: _selectedCategory!.label,
+              descricao: _descriptionController.text,
+              horarioAtendimento: _hoursController.text,
+              bannerImagemBase64: bannerBase64,
+              tipo: 'PRESTADOR',
+            ),
+          );
+        }
+
+        for (final service in _services) {
+          await DuckHatApi.instance.criarServico(
+            nome: service.nameController.text,
+            descricao: service.descriptionController.text,
+            duracaoMin: service.durationMin,
+            preco: service.priceValue!,
+            ativo: true,
+          );
+        }
+      } catch (_) {
+        vitrineCompleta = false;
+      }
+
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         InstantPageRoute(
-          child: const PostLoginTransitionPage(
-            destination: ShopMainNavigator(),
+          child: PostLoginTransitionPage(
+            destination: const ShopMainNavigator(),
             title: 'Estabelecimento criado',
-            subtitle: 'Sua area de empresa ja esta pronta.',
+            subtitle: vitrineCompleta
+                ? 'Sua vitrine e seus servicos iniciais ja estao prontos.'
+                : 'Sua conta foi criada. Revise a vitrine e os servicos no perfil.',
           ),
         ),
         (_) => false,
@@ -417,20 +487,53 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
             onBack: _backStep,
           ),
           const SizedBox(height: 20),
-          _StepIndicator(current: _step, total: 3),
+          _StepIndicator(current: _step, total: 6),
           const SizedBox(height: 20),
           Expanded(
             child: PageView(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
+                _BusinessCategoryStep(
+                  queryController: _categoryQueryController,
+                  selected: _selectedCategory,
+                  onQueryChanged: (_) => setState(() {}),
+                  onSelected: (category) {
+                    setState(() {
+                      _selectedCategory = category;
+                      _error = null;
+                    });
+                  },
+                ),
                 Form(
                   key: _businessFormKey,
                   child: _BusinessDataStep(
-                    image: _imageController.image,
+                    image: _bannerController.image,
                     enabled: !_loading,
-                    onPickImage: _pickProfileImage,
+                    onPickImage: _pickBannerImage,
                     nameController: _nomeController,
+                  ),
+                ),
+                Form(
+                  key: _profileFormKey,
+                  child: _BusinessProfileStep(
+                    addressController: _addressController,
+                    descriptionController: _descriptionController,
+                    hoursController: _hoursController,
+                  ),
+                ),
+                Form(
+                  key: _servicesFormKey,
+                  child: _BusinessServicesStep(
+                    services: _services,
+                    onAddService: () {
+                      setState(() => _services.add(_SignupServiceDraft()));
+                    },
+                    onRemoveService: (index) {
+                      if (_services.length == 1) return;
+                      setState(() => _services.removeAt(index).dispose());
+                    },
+                    onChanged: () => setState(() {}),
                   ),
                 ),
                 Form(
@@ -484,7 +587,7 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
               Expanded(
                 flex: 2,
                 child: _PrimaryButton(
-                  label: _step == 2 ? 'Criar estabelecimento' : 'Next',
+                  label: _step == 5 ? 'Criar estabelecimento' : 'Next',
                   loading: _loading,
                   onPressed: _next,
                 ),
@@ -492,6 +595,179 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BusinessCategoryStep extends StatelessWidget {
+  final TextEditingController queryController;
+  final EstablishmentCategory? selected;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<EstablishmentCategory> onSelected;
+
+  const _BusinessCategoryStep({
+    required this.queryController,
+    required this.selected,
+    required this.onQueryChanged,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final categories = EstablishmentCategory.categories
+        .where((category) => category.matches(queryController.text))
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const _StepTitle(
+          title: 'Categoria do estabelecimento',
+          subtitle: 'Escolha como seu negócio será encontrado pelos clientes.',
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: queryController,
+          onChanged: onQueryChanged,
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            hintText: 'Buscar categoria',
+            prefixIcon: const Icon(Icons.search, color: AppColors.accent),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.accent, width: 2),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        Expanded(
+          child: categories.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Nenhuma categoria encontrada.',
+                    style: TextStyle(
+                      color: AppColors.textRegular,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                )
+              : GridView.builder(
+                  key: const PageStorageKey('business-category-grid'),
+                  itemCount: categories.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.02,
+                  ),
+                  itemBuilder: (context, index) {
+                    final category = categories[index];
+                    return _CategoryButton(
+                      category: category,
+                      selected: selected?.code == category.code,
+                      onTap: () => onSelected(category),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CategoryButton extends StatelessWidget {
+  final EstablishmentCategory category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CategoryButton({
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.accent : Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? AppColors.accent : AppColors.border,
+              width: selected ? 2 : 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x10000000),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? Colors.white.withValues(alpha: 0.18)
+                      : AppColors.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  category.icon,
+                  color: selected ? Colors.white : AppColors.accent,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                category.label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected ? Colors.white : AppColors.textBold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                category.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: selected
+                      ? Colors.white.withValues(alpha: 0.86)
+                      : AppColors.textRegular,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -518,15 +794,14 @@ class _BusinessDataStep extends StatelessWidget {
         children: [
           const _StepTitle(
             title: 'Dados do estabelecimento',
-            subtitle: 'Comece pela identidade publica da sua empresa.',
+            subtitle:
+                'Comece pela identidade publica e pelo banner da vitrine.',
           ),
           const SizedBox(height: 20),
-          Center(
-            child: _AvatarPickerButton(
-              image: image,
-              enabled: enabled,
-              onPressed: onPickImage,
-            ),
+          _BannerPickerButton(
+            image: image,
+            enabled: enabled,
+            onPressed: onPickImage,
           ),
           const SizedBox(height: 24),
           _SignupTextField(
@@ -536,6 +811,288 @@ class _BusinessDataStep extends StatelessWidget {
             icon: Icons.storefront_outlined,
             textInputAction: TextInputAction.done,
             validator: _validateRequired,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BusinessProfileStep extends StatelessWidget {
+  final TextEditingController addressController;
+  final TextEditingController descriptionController;
+  final TextEditingController hoursController;
+
+  const _BusinessProfileStep({
+    required this.addressController,
+    required this.descriptionController,
+    required this.hoursController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _StepTitle(
+            title: 'Descricao da vitrine',
+            subtitle:
+                'Escreva como o cliente vai entender seu estabelecimento.',
+          ),
+          const SizedBox(height: 20),
+          _SignupTextField(
+            controller: descriptionController,
+            label: 'Descricao do estabelecimento',
+            hint: 'Ambiente, especialidade e diferenciais',
+            icon: Icons.notes_rounded,
+            textInputAction: TextInputAction.next,
+            maxLines: 4,
+            validator: _validateBusinessDescription,
+          ),
+          const SizedBox(height: 14),
+          _SignupTextField(
+            controller: addressController,
+            label: 'Endereço',
+            hint: 'Rua, numero, bairro',
+            icon: Icons.location_on_outlined,
+            textInputAction: TextInputAction.next,
+            validator: ProfileValidators.address,
+          ),
+          const SizedBox(height: 14),
+          _SignupTextField(
+            controller: hoursController,
+            label: 'Horario de atendimento',
+            hint: 'Segunda a sexta 9h - 20h',
+            icon: Icons.access_time_rounded,
+            textInputAction: TextInputAction.done,
+            validator: _validateOptionalShortText,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BusinessServicesStep extends StatelessWidget {
+  final List<_SignupServiceDraft> services;
+  final VoidCallback onAddService;
+  final ValueChanged<int> onRemoveService;
+  final VoidCallback onChanged;
+
+  const _BusinessServicesStep({
+    required this.services,
+    required this.onAddService,
+    required this.onRemoveService,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _StepTitle(
+            title: 'Servicos iniciais',
+            subtitle:
+                'Cadastre os servicos que ja podem aparecer na sua vitrine.',
+          ),
+          const SizedBox(height: 18),
+          for (var index = 0; index < services.length; index++) ...[
+            _SignupServiceCard(
+              draft: services[index],
+              index: index,
+              canRemove: services.length > 1,
+              onRemove: () => onRemoveService(index),
+              onChanged: onChanged,
+            ),
+            const SizedBox(height: 12),
+          ],
+          OutlinedButton.icon(
+            onPressed: services.length >= 5 ? null : onAddService,
+            icon: const Icon(Icons.add_circle_outline),
+            label: const Text('Adicionar serviço'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.accent,
+              minimumSize: const Size.fromHeight(48),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SignupServiceCard extends StatelessWidget {
+  final _SignupServiceDraft draft;
+  final int index;
+  final bool canRemove;
+  final VoidCallback onRemove;
+  final VoidCallback onChanged;
+
+  const _SignupServiceCard({
+    required this.draft,
+    required this.index,
+    required this.canRemove,
+    required this.onRemove,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 18,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Serviço ${index + 1}',
+                  style: const TextStyle(
+                    color: AppColors.textBold,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: canRemove ? onRemove : null,
+                tooltip: 'Remover serviço',
+                icon: const Icon(Icons.delete_outline),
+                color: AppColors.error,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _SignupTextField(
+            controller: draft.nameController,
+            label: 'Nome do serviço',
+            hint: 'Ex: Corte masculino',
+            icon: Icons.design_services_outlined,
+            textInputAction: TextInputAction.next,
+            validator: _validateRequired,
+          ),
+          const SizedBox(height: 12),
+          _SignupTextField(
+            controller: draft.descriptionController,
+            label: 'Descricao do serviço',
+            hint: 'Explique o que esta incluso',
+            icon: Icons.short_text_rounded,
+            textInputAction: TextInputAction.next,
+            maxLines: 3,
+            validator: _validateServiceDescription,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _DurationStepper(
+                  durationMin: draft.durationMin,
+                  onChanged: (value) {
+                    draft.durationMin = value;
+                    onChanged();
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SignupTextField(
+                  controller: draft.priceController,
+                  label: 'Preço',
+                  hint: '0,00',
+                  icon: Icons.payments_outlined,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                    LengthLimitingTextInputFormatter(9),
+                  ],
+                  validator: _validatePrice,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DurationStepper extends StatelessWidget {
+  final int durationMin;
+  final ValueChanged<int> onChanged;
+
+  const _DurationStepper({required this.durationMin, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 64,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: durationMin <= 10
+                ? null
+                : () => onChanged(durationMin - 5),
+            icon: const Icon(Icons.remove_circle_outline),
+            color: AppColors.accent,
+            tooltip: 'Reduzir duração',
+          ),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '$durationMin min',
+                  style: const TextStyle(
+                    color: AppColors.textBold,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Text(
+                  'Duração',
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: durationMin >= 240
+                ? null
+                : () => onChanged(durationMin + 5),
+            icon: const Icon(Icons.add_circle_outline),
+            color: AppColors.accent,
+            tooltip: 'Aumentar duração',
           ),
         ],
       ),
@@ -940,6 +1497,98 @@ class _AvatarPickerButton extends StatelessWidget {
   }
 }
 
+class _BannerPickerButton extends StatelessWidget {
+  final File? image;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  const _BannerPickerButton({
+    required this.image,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        onTap: enabled ? onPressed : null,
+        borderRadius: BorderRadius.circular(22),
+        child: Ink(
+          height: 166,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.border, width: 1.5),
+            image: image == null
+                ? null
+                : DecorationImage(image: FileImage(image!), fit: BoxFit.cover),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x18000000),
+                blurRadius: 18,
+                offset: Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (image != null)
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.04),
+                        Colors.black.withValues(alpha: 0.34),
+                      ],
+                    ),
+                  ),
+                ),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.add_photo_alternate_outlined,
+                        color: AppColors.accent,
+                        size: 21,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        image == null ? 'Adicionar banner' : 'Trocar banner',
+                        style: const TextStyle(
+                          color: AppColors.textBold,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _StepIndicator extends StatelessWidget {
   final int current;
   final int total;
@@ -1012,6 +1661,7 @@ class _SignupTextField extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?) validator;
+  final int maxLines;
 
   const _SignupTextField({
     required this.controller,
@@ -1025,6 +1675,7 @@ class _SignupTextField extends StatelessWidget {
     this.textInputAction,
     this.onSubmitted,
     this.inputFormatters,
+    this.maxLines = 1,
   });
 
   @override
@@ -1032,6 +1683,7 @@ class _SignupTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
+      maxLines: obscureText ? 1 : maxLines,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onFieldSubmitted: onSubmitted,
@@ -1188,8 +1840,8 @@ class _SignupImageController {
     try {
       final picked = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1800,
-        imageQuality: 86,
+        maxWidth: 1400,
+        imageQuality: 78,
       );
       if (picked == null) return null;
       return _ImagePickResult(image: File(picked.path));
@@ -1273,6 +1925,21 @@ class SignupSuccessResult {
   });
 }
 
+class _SignupServiceDraft {
+  final nameController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final priceController = TextEditingController();
+  int durationMin = 30;
+
+  double? get priceValue => _parsePrice(priceController.text);
+
+  void dispose() {
+    nameController.dispose();
+    descriptionController.dispose();
+    priceController.dispose();
+  }
+}
+
 String? _validateRequired(String? value) {
   if ((value ?? '').trim().isEmpty) return 'Preencha este campo.';
   return null;
@@ -1309,9 +1976,42 @@ String? _validateCnpj(String? value) {
 }
 
 String? _validateOptionalPhone(String? value) {
-  final digits = (value ?? '').replaceAll(RegExp(r'\D'), '');
-  if (digits.isNotEmpty && digits.length < 10) {
-    return 'Informe um telefone valido.';
-  }
+  return ProfileValidators.phone(value);
+}
+
+String? _validateBusinessDescription(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.isEmpty) return 'Descreva seu estabelecimento.';
+  if (text.length > 500) return 'Use ate 500 caracteres.';
   return null;
+}
+
+String? _validateServiceDescription(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.isEmpty) return 'Descreva o serviço.';
+  if (text.length > 1000) return 'Use ate 1000 caracteres.';
+  return null;
+}
+
+String? _validateOptionalShortText(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.length > 160) return 'Use ate 160 caracteres.';
+  return null;
+}
+
+String? _validatePrice(String? value) {
+  final price = _parsePrice(value ?? '');
+  if (price == null) return 'Informe um preço valido.';
+  if (price <= 0) return 'O preço precisa ser maior que zero.';
+  if (price > 99999.99) return 'Use um preço menor.';
+  return null;
+}
+
+double? _parsePrice(String value) {
+  final trimmed = value.trim();
+  final normalized = trimmed.contains(',')
+      ? trimmed.replaceAll('.', '').replaceAll(',', '.')
+      : trimmed;
+  if (normalized.isEmpty) return null;
+  return double.tryParse(normalized);
 }

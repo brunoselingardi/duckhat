@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:duckhat/models/usuario_perfil.dart';
 import 'package:duckhat/services/duckhat_api.dart';
+import 'package:duckhat/utils/image_base64.dart';
 import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,6 +61,11 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
         responsavelNome: session.responsavelNome,
         dataNascimento: session.dataNascimento,
         endereco: session.endereco,
+        categoria: session.categoria,
+        categoriaLabel: session.categoriaLabel,
+        descricao: session.descricao,
+        horarioAtendimento: session.horarioAtendimento,
+        bannerImagemBase64: session.bannerImagemBase64,
         tipo: session.tipo,
       ),
     );
@@ -94,6 +101,10 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     _cnpjController.text = perfil.cnpj ?? '';
     _responsavelController.text = perfil.responsavelNome ?? '';
     _addressController.text = perfil.endereco ?? '';
+    _descriptionController.text = perfil.descricao ?? '';
+    _hoursController.text =
+        perfil.horarioAtendimento ??
+        'Segunda a sexta 9h - 20h | Sabado 9h - 18h';
   }
 
   @override
@@ -107,6 +118,68 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     _descriptionController.dispose();
     _hoursController.dispose();
     super.dispose();
+  }
+
+  String? _validateRequired(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Campo obrigatório';
+    }
+
+    return null;
+  }
+
+  String? _validateOptionalLongText(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    if (value.trim().length > 500) {
+      return 'O texto deve ter no máximo 500 caracteres';
+    }
+
+    return null;
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Telefone obrigatório';
+    }
+
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+
+    if (digits.length < 10 || digits.length > 11) {
+      return 'Telefone inválido';
+    }
+
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'E-mail obrigatório';
+    }
+
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+
+    if (!emailRegex.hasMatch(value.trim())) {
+      return 'E-mail inválido';
+    }
+
+    return null;
+  }
+
+  String? _validateCnpj(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'CNPJ obrigatório';
+    }
+
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+
+    if (digits.length != 14) {
+      return 'CNPJ inválido';
+    }
+
+    return null;
   }
 
   @override
@@ -152,6 +225,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                       ],
                       _PublicProfilePreview(
                         coverImage: _coverImage,
+                        coverImageBase64: _perfil?.bannerImagemBase64,
                         logoImage: _logoImage,
                         name: _nameController.text.trim().isEmpty
                             ? 'Nome do estabelecimento'
@@ -333,6 +407,10 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     });
 
     try {
+      final bannerBase64 = _coverImage == null
+          ? current.bannerImagemBase64
+          : await encodeImageFileAsBase64(_coverImage);
+
       await DuckHatApi.instance.atualizarMeuPerfil(
         UsuarioPerfil(
           id: current.id,
@@ -343,6 +421,11 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           responsavelNome: _responsavelController.text,
           dataNascimento: current.dataNascimento,
           endereco: _addressController.text,
+          categoria: current.categoria,
+          categoriaLabel: current.categoriaLabel,
+          descricao: _descriptionController.text,
+          horarioAtendimento: _hoursController.text,
+          bannerImagemBase64: bannerBase64,
           tipo: current.tipo,
         ),
       );
@@ -369,6 +452,7 @@ enum _EstablishmentImageSlot { cover, logo }
 
 class _PublicProfilePreview extends StatelessWidget {
   final File? coverImage;
+  final String? coverImageBase64;
   final File? logoImage;
   final String name;
   final String address;
@@ -379,6 +463,7 @@ class _PublicProfilePreview extends StatelessWidget {
 
   const _PublicProfilePreview({
     required this.coverImage,
+    required this.coverImageBase64,
     required this.logoImage,
     required this.name,
     required this.address,
@@ -401,7 +486,7 @@ class _PublicProfilePreview extends StatelessWidget {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                _CoverImage(image: coverImage),
+                _CoverImage(image: coverImage, imageBase64: coverImageBase64),
                 DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -505,13 +590,22 @@ class _PublicProfilePreview extends StatelessWidget {
 
 class _CoverImage extends StatelessWidget {
   final File? image;
+  final String? imageBase64;
 
-  const _CoverImage({required this.image});
+  const _CoverImage({required this.image, required this.imageBase64});
 
   @override
   Widget build(BuildContext context) {
     if (image != null) {
       return Image.file(image!, fit: BoxFit.cover);
+    }
+    final savedImage = imageBase64?.trim();
+    if (savedImage != null && savedImage.isNotEmpty) {
+      return Image.memory(
+        base64Decode(savedImage),
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+      );
     }
     return Image.asset(
       'assets/barbie.jpg',
@@ -745,19 +839,4 @@ class _ErrorBanner extends StatelessWidget {
       ),
     );
   }
-}
-
-String? _validateRequired(String? value) =>
-    ProfileValidators.requiredText(value);
-
-String? _validateEmail(String? value) => ProfileValidators.email(value);
-
-String? _validatePhone(String? value) => ProfileValidators.phone(value);
-
-String? _validateCnpj(String? value) => ProfileValidators.cnpj(value);
-
-String? _validateOptionalLongText(String? value) {
-  final text = value?.trim() ?? '';
-  if (text.length > 255) return 'Use ate 255 caracteres.';
-  return null;
 }

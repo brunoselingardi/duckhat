@@ -1,9 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+
+import 'service_image.dart';
 
 class ServiceHero extends StatelessWidget {
   final VoidCallback onBack;
+  final String? imageSource;
+  final String? bannerImagemBase64;
+  final String fallbackAsset;
 
-  const ServiceHero({super.key, required this.onBack});
+  const ServiceHero({
+    super.key,
+    required this.onBack,
+    this.imageSource,
+    this.bannerImagemBase64,
+    this.fallbackAsset = 'assets/barbie.jpg',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,11 +25,10 @@ class ServiceHero extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset(
-            'assets/barbie.jpg',
-            fit: BoxFit.cover,
-            cacheWidth: 800,
-            filterQuality: FilterQuality.medium,
+          _HeroImage(
+            bannerImagemBase64: bannerImagemBase64,
+            imageSource: imageSource,
+            fallbackAsset: fallbackAsset,
           ),
           DecoratedBox(
             decoration: BoxDecoration(
@@ -55,6 +67,46 @@ class ServiceHero extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _HeroImage extends StatelessWidget {
+  final String? bannerImagemBase64;
+  final String? imageSource;
+  final String fallbackAsset;
+
+  const _HeroImage({
+    required this.bannerImagemBase64,
+    required this.imageSource,
+    required this.fallbackAsset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final value = bannerImagemBase64;
+    if (value != null && value.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(value),
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.medium,
+        );
+      } catch (_) {
+        return Image.asset(
+          fallbackAsset,
+          fit: BoxFit.cover,
+          cacheWidth: 800,
+          filterQuality: FilterQuality.medium,
+        );
+      }
+    }
+
+    return ServiceImage(
+      source: imageSource ?? fallbackAsset,
+      fit: BoxFit.cover,
+      cacheWidth: 800,
+      filterQuality: FilterQuality.medium,
     );
   }
 }

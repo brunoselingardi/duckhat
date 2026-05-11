@@ -24,17 +24,45 @@ class ServiceReviewsSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 220,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: reviews.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 14),
-              itemBuilder: (context, index) =>
-                  _ReviewCard(review: reviews[index]),
+          if (reviews.isEmpty)
+            const _EmptyReviews()
+          else
+            SizedBox(
+              height: 220,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: reviews.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (context, index) =>
+                    _ReviewCard(review: reviews[index]),
+              ),
             ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+class _EmptyReviews extends StatelessWidget {
+  const _EmptyReviews();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE8EDF6)),
+      ),
+      child: const Text(
+        'Nenhuma avaliação publicada ainda.',
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.5,
+          color: AppColors.textRegular,
+        ),
       ),
     );
   }

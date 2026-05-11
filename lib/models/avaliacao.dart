@@ -7,15 +7,15 @@ class Avaliacao {
   final String? clienteNome;
   final int nota;
   final String? comentario;
-  final DateTime criadoEm;
+  final DateTime? criadoEm;
 
-  Avaliacao({
+  const Avaliacao({
     required this.id,
     required this.agendamentoId,
-    required this.servicoId,
-    required this.prestadorId,
-    required this.clienteId,
-    required this.clienteNome,
+    this.servicoId,
+    this.prestadorId,
+    this.clienteId,
+    this.clienteNome,
     required this.nota,
     required this.comentario,
     required this.criadoEm,
@@ -36,7 +36,9 @@ class Avaliacao {
       clienteNome: json['clienteNome'] as String?,
       nota: parseInt(json['nota']),
       comentario: json['comentario'] as String?,
-      criadoEm: DateTime.parse(json['criadoEm'] as String),
+      criadoEm: json['criadoEm'] == null
+          ? null
+          : DateTime.parse(json['criadoEm'] as String),
     );
   }
 }

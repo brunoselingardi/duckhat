@@ -2,18 +2,28 @@ package com.duckhat.api.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.duckhat.api.dto.CreateUsuarioRequest;
 import com.duckhat.api.dto.UpdatePerfilRequest;
+import com.duckhat.api.dto.CatalogoPrestadorBuscaResponse;
+import com.duckhat.api.dto.PrestadorPublicoResponse;
 import com.duckhat.api.dto.UsuarioResponse;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
+import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,8 +31,149 @@ import org.springframework.web.server.ResponseStatusException;
 class UsuarioServiceTest {
 
   private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+  private final EstabelecimentoRepository estabelecimentoRepository = mock(EstabelecimentoRepository.class);
   private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
-  private final UsuarioService service = new UsuarioService(usuarioRepository, passwordEncoder);
+  private final DisponibilidadePadraoService disponibilidadePadraoService =
+      mock(DisponibilidadePadraoService.class);
+  private final UsuarioService service = new UsuarioService(
+      usuarioRepository,
+      estabelecimentoRepository,
+      passwordEncoder,
+      disponibilidadePadraoService);
+
+  @Test
+  void criarPrestadorCriaUsuarioEEstabelecimentoVinculado() {
+    when(passwordEncoder.encode("123456")).thenReturn("hash");
+    when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
+      Usuario usuario = invocation.getArgument(0);
+      usuario.setId(42L);
+      return usuario;
+    });
+    when(estabelecimentoRepository.findByUsuarioId(42L)).thenReturn(Optional.empty());
+    when(estabelecimentoRepository.save(any(Estabelecimento.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    UsuarioResponse response = service.criar(new CreateUsuarioRequest(
+        "DuckHat Studio",
+        "STUDIO@DUCKHAT.COM",
+        "123456",
+        "(62) 99999-8888",
+        "11.222.333/0001-44",
+        "Ana Responsavel",
+        "barbearia",
+        TipoUsuario.PRESTADOR));
+
+    assertEquals(42L, response.id());
+    assertEquals("DuckHat Studio", response.nome());
+    assertEquals("studio@duckhat.com", response.email());
+    assertEquals("62999998888", response.telefone());
+    assertEquals("11222333000144", response.cnpj());
+    assertEquals("Ana Responsavel", response.responsavelNome());
+
+    ArgumentCaptor<Estabelecimento> captor = ArgumentCaptor.forClass(Estabelecimento.class);
+    verify(estabelecimentoRepository).save(captor.capture());
+    Estabelecimento estabelecimento = captor.getValue();
+    assertEquals(42L, estabelecimento.getUsuarioId());
+    assertEquals("DuckHat Studio", estabelecimento.getNome());
+    assertEquals("62999998888", estabelecimento.getTelefone());
+    assertEquals("11222333000144", estabelecimento.getCnpj());
+    assertEquals("Ana Responsavel", estabelecimento.getResponsavelNome());
+    assertEquals("barbearia", estabelecimento.getCategoria());
+    verify(disponibilidadePadraoService)
+        .garantirDisponibilidadePadrao(argThat(usuario -> usuario != null && usuario.getId().equals(42L)));
+  }
+
+  @Test
+  void criarClienteNaoCriaEstabelecimento() {
+    when(passwordEncoder.encode("123456")).thenReturn("hash");
+    when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.criar(new CreateUsuarioRequest(
+        "Maria Duck",
+        "maria@duckhat.com",
+        "123456",
+        "(62) 99999-8888",
+        null,
+        null,
+        null,
+        TipoUsuario.CLIENTE));
+
+    verify(estabelecimentoRepository, never()).save(any(Estabelecimento.class));
+    verify(disponibilidadePadraoService, never()).garantirDisponibilidadePadrao(any(Usuario.class));
+  }
+
+  @Test
+  void criarPrestadorRecusaCategoriaInvalida() {
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.criar(new CreateUsuarioRequest(
+            "DuckHat Studio",
+            "studio@duckhat.com",
+            "123456",
+            "(62) 99999-8888",
+            "11.222.333/0001-44",
+            "Ana Responsavel",
+            "categoria-inexistente",
+            TipoUsuario.PRESTADOR)));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("Categoria de estabelecimento inválida", error.getReason());
+  }
+
+  @Test
+  void buscarPrestadorPublicoRetornaCamposPublicosDoPrestador() {
+    Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
+    Estabelecimento estabelecimento = new Estabelecimento();
+    estabelecimento.setUsuario(usuario);
+    estabelecimento.setNome("Barbie Dream Barber");
+    estabelecimento.setTelefone("62999998888");
+    estabelecimento.setEndereco("Av. DuckHat, 120 - Setor Bueno");
+    estabelecimento.setDescricao("Cortes e cuidados para todos os estilos.");
+    estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
+
+    when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
+    when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.of(estabelecimento));
+
+    PrestadorPublicoResponse response = service.buscarPrestadorPublico(2L);
+
+    assertEquals(2L, response.id());
+    assertEquals("Barbie Dream Barber", response.nome());
+    assertEquals("62999998888", response.telefone());
+    assertEquals("Cortes e cuidados para todos os estilos.", response.descricaoPublica());
+    assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
+  }
+
+  @Test
+  void buscarPrestadorPublicoRecusaUsuarioQueNaoEhPrestador() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.buscarPrestadorPublico(7L));
+
+    assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
+  }
+
+  @Test
+  void buscarPrestadoresPublicosPorNomeCombinaPrestadorEServico() {
+    Usuario prestadorPorNome = usuario(2L, TipoUsuario.PRESTADOR);
+    prestadorPorNome.setNome("Barbie Dream Barber");
+    Usuario prestadorPorServico = usuario(5L, TipoUsuario.PRESTADOR);
+    prestadorPorServico.setNome("Ken Studio");
+
+    when(usuarioRepository.findByTipoAndNomeContainingIgnoreCase(
+        TipoUsuario.PRESTADOR,
+        "barbie")).thenReturn(List.of(prestadorPorNome));
+    when(usuarioRepository.findAllById(List.of(2L, 5L)))
+        .thenReturn(List.of(prestadorPorNome, prestadorPorServico));
+
+    List<CatalogoPrestadorBuscaResponse> response = service
+        .buscarPrestadoresPublicosPorNome("barbie", List.of(2L, 5L));
+
+    assertEquals(2, response.size());
+    assertEquals(2L, response.get(0).prestadorId());
+    assertEquals(5L, response.get(1).prestadorId());
+  }
 
   @Test
   void atualizarPerfilAtualizaDadosDoUsuarioAutenticado() {
@@ -39,7 +190,11 @@ class UsuarioServiceTest {
             null,
             null,
             LocalDate.of(1998, 5, 12),
-            "Rua das Palmas, 42"));
+            "Rua das Palmas, 42",
+            null,
+            null,
+            null,
+            null));
 
     assertEquals("Maria Duck", response.nome());
     assertEquals("maria@duckhat.com", response.email());
@@ -54,6 +209,8 @@ class UsuarioServiceTest {
     Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
     when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
     when(usuarioRepository.save(usuario)).thenReturn(usuario);
+    when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.empty());
+    when(estabelecimentoRepository.save(any(Estabelecimento.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     UsuarioResponse response = service.atualizarPerfil(
         usuario,
@@ -64,12 +221,68 @@ class UsuarioServiceTest {
             "11222333000144",
             "Ana Responsavel",
             null,
-            "Av. Central, 100"));
+            "Av. Central, 100",
+            "barbearia",
+            "Atendimento com horario marcado e ambiente profissional.",
+            "Segunda a sexta 9h - 20h",
+            "banner-base64"));
 
     assertEquals("DuckHat Studio", response.nome());
     assertEquals("11222333000144", response.cnpj());
     assertEquals("Ana Responsavel", response.responsavelNome());
     assertEquals("Av. Central, 100", response.endereco());
+    assertEquals("barbearia", response.categoria());
+    assertEquals("Barbearia", response.categoriaLabel());
+    assertEquals("Atendimento com horario marcado e ambiente profissional.", response.descricao());
+    assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
+    assertEquals("banner-base64", response.bannerImagemBase64());
+
+    ArgumentCaptor<Estabelecimento> captor = ArgumentCaptor.forClass(Estabelecimento.class);
+    verify(estabelecimentoRepository).save(captor.capture());
+    Estabelecimento estabelecimento = captor.getValue();
+    assertEquals(2L, estabelecimento.getUsuarioId());
+    assertEquals("DuckHat Studio", estabelecimento.getNome());
+    assertEquals("62988887777", estabelecimento.getTelefone());
+    assertEquals("11222333000144", estabelecimento.getCnpj());
+    assertEquals("Ana Responsavel", estabelecimento.getResponsavelNome());
+    assertEquals("Av. Central, 100", estabelecimento.getEndereco());
+    assertEquals("barbearia", estabelecimento.getCategoria());
+    assertEquals("Atendimento com horario marcado e ambiente profissional.", estabelecimento.getDescricao());
+    assertEquals("Segunda a sexta 9h - 20h", estabelecimento.getHorarioAtendimento());
+    assertEquals("banner-base64", estabelecimento.getBannerImagemBase64());
+  }
+
+  @Test
+  void buscarMeuPerfilRetornaDadosDoEstabelecimentoVinculado() {
+    Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
+    Estabelecimento estabelecimento = new Estabelecimento();
+    estabelecimento.setUsuario(usuario);
+    estabelecimento.setNome("Studio Publico");
+    estabelecimento.setTelefone("62988887777");
+    estabelecimento.setCnpj("11222333000144");
+    estabelecimento.setResponsavelNome("Ana Responsavel");
+    estabelecimento.setEndereco("Av. Central, 100");
+    estabelecimento.setCategoria("encanador");
+    estabelecimento.setDescricao("Descricao salva no estabelecimento");
+    estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
+    estabelecimento.setBannerImagemBase64("banner-salvo");
+
+    when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
+    when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.of(estabelecimento));
+
+    UsuarioResponse response = service.buscarMeuPerfil(usuario);
+
+    assertEquals("Studio Publico", response.nome());
+    assertEquals("original@duckhat.com", response.email());
+    assertEquals("62988887777", response.telefone());
+    assertEquals("11222333000144", response.cnpj());
+    assertEquals("Ana Responsavel", response.responsavelNome());
+    assertEquals("Av. Central, 100", response.endereco());
+    assertEquals("encanador", response.categoria());
+    assertEquals("Encanador", response.categoriaLabel());
+    assertEquals("Descricao salva no estabelecimento", response.descricao());
+    assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
+    assertEquals("banner-salvo", response.bannerImagemBase64());
   }
 
   @Test
@@ -85,6 +298,10 @@ class UsuarioServiceTest {
             new UpdatePerfilRequest(
                 "Maria Duck",
                 "outro@duckhat.com",
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -111,7 +328,11 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.now().minusYears(12),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe uma data de nascimento válida para maiores de 13 anos", error.getReason());
@@ -134,7 +355,11 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.now().minusYears(121),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe uma data de nascimento válida para maiores de 13 anos", error.getReason());
@@ -157,7 +382,11 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.of(1998, 5, 12),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe um telefone válido com DDD", error.getReason());
@@ -180,7 +409,11 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.of(1998, 5, 12),
-                "Rua das Palmas, 42")));
+                "Rua das Palmas, 42",
+                null,
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe um e-mail válido", error.getReason());
@@ -203,7 +436,11 @@ class UsuarioServiceTest {
                 null,
                 null,
                 LocalDate.of(1998, 5, 12),
-                "Rua das Palmas")));
+                "Rua das Palmas",
+                null,
+                null,
+                null,
+                null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("Informe um endereço válido com rua e número", error.getReason());
