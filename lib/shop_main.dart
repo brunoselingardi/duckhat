@@ -18,15 +18,8 @@ class _ShopMainNavigatorState extends State<ShopMainNavigator> {
   final Set<int> _loadedIndexes = {0};
   int _currentIndex = 0;
 
-  void _navigateToSchedule() {
-    setState(() {
-      _currentIndex = 1;
-      _loadedIndexes.add(1);
-    });
-  }
-
-  late final List<Widget> _pagesWithCallbacks = [
-    ShopHomePage(onNavigateToSchedule: _navigateToSchedule),
+  late final List<Widget> _pages = [
+    const ShopHomePage(),
     const ShopSchedulePage(),
     const ShopClientsPage(),
     const ShopProfilePage(),
@@ -39,7 +32,7 @@ class _ShopMainNavigatorState extends State<ShopMainNavigator> {
       body: PageStorage(
         bucket: _bucket,
         child: Stack(
-          children: List.generate(_pagesWithCallbacks.length, (index) {
+          children: List.generate(_pages.length, (index) {
             final isActive = index == _currentIndex;
             final isLoaded = _loadedIndexes.contains(index);
 
@@ -48,7 +41,7 @@ class _ShopMainNavigatorState extends State<ShopMainNavigator> {
               child: TickerMode(
                 enabled: isActive,
                 child: isLoaded
-                    ? RepaintBoundary(child: _pagesWithCallbacks[index])
+                    ? RepaintBoundary(child: _pages[index])
                     : const SizedBox.shrink(),
               ),
             );
