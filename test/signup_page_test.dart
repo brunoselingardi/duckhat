@@ -79,6 +79,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Servicos iniciais'), findsOneWidget);
+    expect(find.text('Serviço ativo'), findsOneWidget);
+    expect(find.text('Duração e preço'), findsOneWidget);
     expect(find.text('Nome do serviço'), findsOneWidget);
     expect(find.text('Preço'), findsOneWidget);
 
@@ -87,7 +89,7 @@ void main() {
       'Corte premium',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Descricao do serviço'),
+      find.widgetWithText(TextFormField, 'Descrição do serviço'),
       'Corte completo com finalizacao.',
     );
     await tester.enterText(
