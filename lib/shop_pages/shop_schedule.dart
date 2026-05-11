@@ -342,9 +342,9 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
       itemCount: hours.length,
       itemBuilder: (context, index) {
         final time = hours[index];
-        final appointment = dayAppointments
+        final appointments = dayAppointments
             .where((a) => a.time == time)
-            .firstOrNull;
+            .toList();
         final isBlocked = _blockedTimes.contains(
           DateTime(
             _selectedDate!.year,

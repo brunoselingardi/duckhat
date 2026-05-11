@@ -3,7 +3,6 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/login.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
-import '../shop_components/shop_ui.dart';
 import 'shop_establishment_data.dart';
 import 'shop_gallery.dart';
 import 'shop_work_days.dart';
@@ -262,7 +261,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             onTap: () async {
               final updated = await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(
+                AppRoute(
                   builder: (_) => const ShopEstablishmentDataPage(),
                 ),
               );
@@ -278,7 +277,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: '5 fotos cadastradas',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopGalleryPage()),
+              AppRoute(builder: (_) => const ShopGalleryPage()),
             ),
           ),
           _buildDivider(),
@@ -288,7 +287,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: 'Seg a Sex (Sáb e Dom fechado)',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopWorkDaysPage()),
+              AppRoute(builder: (_) => const ShopWorkDaysPage()),
             ),
           ),
           _buildDivider(),
@@ -298,7 +297,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: '08:00 às 18:00',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopWorkHoursPage()),
+              AppRoute(builder: (_) => const ShopWorkHoursPage()),
             ),
           ),
           _buildDivider(),
@@ -308,7 +307,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: 'Tempo e valor de cada serviço',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(
+              AppRoute(
                 builder: (_) => const ShopServiceDurationPage(),
               ),
             ),
@@ -316,14 +315,14 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
         ]),
         const SizedBox(height: 16),
         _buildSectionTitle('CONTA E PREFERENCIAS'),
-        _buildMenuCard([
+_buildMenuCard([
           _buildMenuItem(
             icon: Icons.notifications,
             title: 'Notificações',
             subtitle: 'Preferencias de alertas e mensagens',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopNotificationsPage()),
+              AppRoute(builder: (_) => const ShopNotificationsPage()),
             ),
           ),
           _buildDivider(),
@@ -333,7 +332,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: 'Protecao, dados e acesso da empresa',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopPrivacyPage()),
+              AppRoute(builder: (_) => const ShopPrivacyPage()),
             ),
           ),
         ]),
@@ -346,7 +345,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: 'Duvidas e canais de atendimento',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopHelpPage()),
+              AppRoute(builder: (_) => const ShopHelpPage()),
             ),
           ),
           _buildDivider(),
@@ -356,7 +355,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
             subtitle: 'Versao e informacoes do DuckHat',
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ShopAboutPage()),
+              AppRoute(builder: (_) => const ShopAboutPage()),
             ),
           ),
         ]),
@@ -397,9 +396,15 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
   Widget _buildMenuCard(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: 16,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(children: children),
     );
@@ -469,7 +474,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
     return Divider(
       height: 1,
       thickness: 1,
-      color: AppColors.textMuted.withValues(alpha: 0.45),
+      color: AppColors.textMuted.withValues(alpha: 0.22),
     );
   }
 
