@@ -342,7 +342,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
       itemCount: hours.length,
       itemBuilder: (context, index) {
         final time = hours[index];
-        final appointments = dayAppointments
+        final slotAppointments = dayAppointments
             .where((a) => a.time == time)
             .toList();
         final isBlocked = _blockedTimes.contains(
@@ -356,7 +356,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
 
         return _TimeSlotCard(
           time: time,
-          appointment: appointment,
+          appointment: slotAppointments.isEmpty ? null : slotAppointments.first,
           isBlocked: isBlocked,
           onBlockToggle: () => _toggleBlock(
             DateTime(
@@ -366,7 +366,9 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
               index + 8,
             ),
           ),
-          onReschedule: () => _showRescheduleDialog(context, appointment!),
+          onReschedule: slotAppointments.isEmpty
+              ? null
+              : () => _showRescheduleDialog(context, slotAppointments.first),
         );
       },
     );
