@@ -899,6 +899,8 @@ class _BusinessServicesStep extends StatelessWidget {
                 'Cadastre os servicos que ja podem aparecer na sua vitrine.',
           ),
           const SizedBox(height: 18),
+          _SignupServiceSummary(total: services.length),
+          const SizedBox(height: 14),
           for (var index = 0; index < services.length; index++) ...[
             _SignupServiceCard(
               draft: services[index],
@@ -927,6 +929,54 @@ class _BusinessServicesStep extends StatelessWidget {
   }
 }
 
+class _SignupServiceSummary extends StatelessWidget {
+  final int total;
+
+  const _SignupServiceSummary({required this.total});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF3FF),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.storefront_outlined,
+              color: AppColors.accent,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              total == 1
+                  ? 'Comece com o serviço principal da sua vitrine.'
+                  : '$total serviços iniciais serão publicados após criar a conta.',
+              style: const TextStyle(
+                color: AppColors.textBold,
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SignupServiceCard extends StatelessWidget {
   final _SignupServiceDraft draft;
   final int index;
@@ -945,10 +995,10 @@ class _SignupServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.border),
         boxShadow: const [
           BoxShadow(
@@ -962,15 +1012,40 @@ class _SignupServiceCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.11),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.design_services_outlined,
+                  color: AppColors.accent,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  'Serviço ${index + 1}',
-                  style: const TextStyle(
-                    color: AppColors.textBold,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Serviço ${index + 1}',
+                      style: const TextStyle(
+                        color: AppColors.textBold,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const _SignupServicePill(
+                      icon: Icons.visibility_outlined,
+                      label: 'Serviço ativo',
+                    ),
+                  ],
                 ),
               ),
               IconButton(
@@ -981,7 +1056,7 @@ class _SignupServiceCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           _SignupTextField(
             controller: draft.nameController,
             label: 'Nome do serviço',
@@ -993,14 +1068,19 @@ class _SignupServiceCard extends StatelessWidget {
           const SizedBox(height: 12),
           _SignupTextField(
             controller: draft.descriptionController,
-            label: 'Descricao do serviço',
-            hint: 'Explique o que esta incluso',
+            label: 'Descrição do serviço',
+            hint: 'Explique o que está incluso',
             icon: Icons.short_text_rounded,
             textInputAction: TextInputAction.next,
             maxLines: 3,
             validator: _validateServiceDescription,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          const _ServiceSubsectionLabel(
+            icon: Icons.tune_rounded,
+            label: 'Duração e preço',
+          ),
+          const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
@@ -1034,6 +1114,64 @@ class _SignupServiceCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _SignupServicePill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _SignupServicePill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.success.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.success),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textBold,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceSubsectionLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ServiceSubsectionLabel({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.accent, size: 17),
+        const SizedBox(width: 7),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textBold,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
     );
   }
 }

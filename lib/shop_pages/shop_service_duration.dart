@@ -15,11 +15,17 @@ class ShopServiceDurationPage extends StatefulWidget {
 
 class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
   final _formKey = GlobalKey<FormState>();
+  final _scrollController = ScrollController();
   final DuckHatApi _api = DuckHatApi.instance;
   List<_EditableShopService> _services = [];
   bool _loading = true;
   bool _saving = false;
   String? _error;
+
+  int get _activeServices =>
+      _services.where((service) => service.active).length;
+
+  int get _pausedServices => _services.length - _activeServices;
 
   @override
   void initState() {
@@ -29,6 +35,7 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     for (final service in _services) {
       service.dispose();
     }
@@ -62,6 +69,14 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
 
   void _addService() {
     setState(() => _services.add(_EditableShopService.empty()));
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   void _removeNewService(int index) {
@@ -155,6 +170,9 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
           ),
         ],
       ),
+      bottomNavigationBar: _loading
+          ? null
+          : _ServiceSaveBar(saving: _saving, onSave: () => _save(context)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -162,6 +180,7 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
               child: Form(
                 key: _formKey,
                 child: ListView(
+                  controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   children: [
@@ -169,8 +188,13 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
                       _ServiceErrorBanner(message: _error!),
                       const SizedBox(height: 14),
                     ],
-                    _ServiceIntroCard(total: _services.length),
-                    const SizedBox(height: 16),
+                    _ServicePanelCard(
+                      total: _services.length,
+                      active: _activeServices,
+                      paused: _pausedServices,
+                      onAdd: _addService,
+                    ),
+                    const SizedBox(height: 18),
                     if (_services.isEmpty)
                       _EmptyServicesCard(onAdd: _addService)
                     else
@@ -185,20 +209,7 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
                               : null,
                         ),
                       ),
-                    const SizedBox(height: 8),
-                    OutlinedButton.icon(
-                      onPressed: _saving ? null : _addService,
-                      icon: const Icon(Icons.add),
-                      label: const Text('Adicionar serviço'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.accent,
-                        padding: const EdgeInsets.all(16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 96),
                   ],
                 ),
               ),
@@ -252,6 +263,11 @@ class _EditableShopService {
 
   double? get priceValue => _parsePrice(priceController.text);
 
+  String get title {
+    final text = nameController.text.trim();
+    return text.isEmpty ? 'Novo serviço' : text;
+  }
+
   void dispose() {
     nameController.dispose();
     descriptionController.dispose();
@@ -259,60 +275,298 @@ class _EditableShopService {
   }
 }
 
-class _ServiceIntroCard extends StatelessWidget {
+class _ServicePanelCard extends StatelessWidget {
   final int total;
+  final int active;
+  final int paused;
+  final VoidCallback onAdd;
 
-  const _ServiceIntroCard({required this.total});
+  const _ServicePanelCard({
+    required this.total,
+    required this.active,
+    required this.paused,
+    required this.onAdd,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: buildShopCardDecoration(radius: 18),
+      padding: const EdgeInsets.all(18),
+      decoration: buildShopCardDecoration(radius: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.dashboard_customize_outlined,
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Painel da vitrine',
+                      style: TextStyle(
+                        color: AppColors.textBold,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      total == 0
+                          ? 'Adicione o primeiro serviço com descrição e preço.'
+                          : '$total serviços cadastrados para este estabelecimento.',
+                      style: const TextStyle(
+                        color: AppColors.textRegular,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              FilledButton.icon(
+                onPressed: onAdd,
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Adicionar'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _ServiceMetric(
+                  label: 'Total',
+                  value: total.toString(),
+                  color: AppColors.accent,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ServiceMetric(
+                  label: 'Serviços ativos',
+                  value: active.toString(),
+                  color: AppColors.success,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _ServiceMetric(
+                  label: 'Serviços pausados',
+                  value: paused.toString(),
+                  color: AppColors.warning,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _ServiceMetric({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.design_services_outlined,
-              color: AppColors.accent,
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Vitrine de serviços',
-                  style: TextStyle(
-                    color: AppColors.textBold,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  total == 0
-                      ? 'Adicione o primeiro serviço com descrição e preço.'
-                      : '$total serviços cadastrados para este estabelecimento.',
-                  style: const TextStyle(
-                    color: AppColors.textRegular,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                  ),
-                ),
-              ],
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: AppColors.textBold,
+                fontSize: 11,
+                height: 1.15,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ServiceStatusBadge extends StatelessWidget {
+  final bool active;
+
+  const _ServiceStatusBadge({required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? AppColors.success : AppColors.warning;
+    final label = active ? 'Ativo na vitrine' : 'Pausado';
+    final icon = active ? Icons.visibility_outlined : Icons.visibility_off;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textBold,
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceCardHeader extends StatelessWidget {
+  final String title;
+  final bool active;
+  final bool isNew;
+  final Widget trailing;
+
+  const _ServiceCardHeader({
+    required this.title,
+    required this.active,
+    required this.isNew,
+    required this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Icon(
+            Icons.design_services_outlined,
+            color: AppColors.accent,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isNew ? 'Novo serviço' : 'Serviço publicado',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textBold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _ServiceStatusBadge(active: active),
+            ],
+          ),
+        ),
+        trailing,
+      ],
+    );
+  }
+}
+
+class _ServiceFieldGroupLabel extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _ServiceFieldGroupLabel({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: AppColors.accent, size: 17),
+        const SizedBox(width: 7),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.textBold,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -334,75 +588,84 @@ class _ServiceEditorCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: buildShopCardDecoration(radius: 14).boxShadow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: service.active
+              ? AppColors.border
+              : AppColors.warning.withValues(alpha: 0.35),
+        ),
+        boxShadow: buildShopCardDecoration(radius: 18).boxShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  service.isNew ? 'Novo serviço' : 'Serviço ${index + 1}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textBold,
+          _ServiceCardHeader(
+            title: service.title,
+            active: service.active,
+            isNew: service.isNew,
+            trailing: onRemoveNew != null
+                ? IconButton(
+                    onPressed: onRemoveNew,
+                    icon: const Icon(Icons.delete_outline),
+                    color: AppColors.error,
+                    tooltip: 'Remover serviço',
+                  )
+                : Switch(
+                    value: service.active,
+                    onChanged: (value) {
+                      service.active = value;
+                      onChanged();
+                    },
+                    activeThumbColor: AppColors.accent,
                   ),
+          ),
+          const SizedBox(height: 18),
+          const _ServiceFieldGroupLabel(
+            icon: Icons.description_outlined,
+            label: 'Informações do serviço',
+          ),
+          const SizedBox(height: 12),
+          _ServiceSectionShell(
+            child: Column(
+              children: [
+                _ServiceTextField(
+                  controller: service.nameController,
+                  label: 'Nome do serviço',
+                  icon: Icons.design_services_outlined,
+                  validator: _validateServiceName,
+                  onChanged: (_) => onChanged(),
                 ),
-              ),
-              if (onRemoveNew != null)
-                IconButton(
-                  onPressed: onRemoveNew,
-                  icon: const Icon(Icons.delete_outline),
-                  color: AppColors.error,
-                  tooltip: 'Remover serviço',
-                )
-              else
-                Switch(
-                  value: service.active,
-                  onChanged: (value) {
-                    service.active = value;
-                    onChanged();
-                  },
-                  activeThumbColor: AppColors.accent,
+                const SizedBox(height: 12),
+                _ServiceTextField(
+                  controller: service.descriptionController,
+                  label: 'Descrição',
+                  icon: Icons.notes_rounded,
+                  maxLines: 3,
+                  validator: _validateServiceDescription,
                 ),
-            ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _ServiceFieldGroupLabel(
+            icon: Icons.tune_rounded,
+            label: 'Agenda e preço',
           ),
           const SizedBox(height: 12),
-          _ServiceTextField(
-            controller: service.nameController,
-            label: 'Nome do serviço',
-            icon: Icons.design_services_outlined,
-            validator: _validateServiceName,
-          ),
-          const SizedBox(height: 12),
-          _ServiceTextField(
-            controller: service.descriptionController,
-            label: 'Descrição',
-            icon: Icons.notes_rounded,
-            maxLines: 3,
-            validator: _validateServiceDescription,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _DurationControl(
+          _ServiceSectionShell(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final duration = _DurationControl(
                   duration: service.durationMin,
                   onChanged: (value) {
                     service.durationMin = value;
                     onChanged();
                   },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ServiceTextField(
+                );
+                final price = _ServiceTextField(
                   controller: service.priceController,
                   label: 'Preço',
                   icon: Icons.payments_outlined,
@@ -414,23 +677,64 @@ class _ServiceEditorCard extends StatelessWidget {
                     LengthLimitingTextInputFormatter(9),
                   ],
                   validator: _validatePrice,
-                ),
-              ),
-            ],
+                );
+
+                if (constraints.maxWidth < 330) {
+                  return Column(
+                    children: [duration, const SizedBox(height: 12), price],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: duration),
+                    const SizedBox(width: 12),
+                    Expanded(child: price),
+                  ],
+                );
+              },
+            ),
           ),
           if (!service.active) ...[
             const SizedBox(height: 12),
-            const Text(
-              'Serviço pausado: ele não aparece para clientes no catálogo.',
-              style: TextStyle(
-                color: AppColors.textRegular,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Text(
+                'Serviço pausado: ele não aparece para clientes no catálogo.',
+                style: TextStyle(
+                  color: AppColors.textRegular,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _ServiceSectionShell extends StatelessWidget {
+  final Widget child;
+
+  const _ServiceSectionShell({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.55)),
+      ),
+      child: child,
     );
   }
 }
@@ -443,6 +747,7 @@ class _ServiceTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?) validator;
+  final ValueChanged<String>? onChanged;
 
   const _ServiceTextField({
     required this.controller,
@@ -452,6 +757,7 @@ class _ServiceTextField extends StatelessWidget {
     this.maxLines = 1,
     this.keyboardType,
     this.inputFormatters,
+    this.onChanged,
   });
 
   @override
@@ -461,16 +767,33 @@ class _ServiceTextField extends StatelessWidget {
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
+      onChanged: onChanged,
       validator: validator,
+      style: const TextStyle(
+        color: AppColors.textBold,
+        fontWeight: FontWeight.w600,
+      ),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: AppColors.textMuted),
         prefixIcon: Icon(icon, color: AppColors.accent),
         filled: true,
-        fillColor: AppColors.inputBackground,
+        fillColor: AppColors.cardBackground,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 15,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.6),
         ),
       ),
     );
@@ -489,8 +812,9 @@ class _DurationControl extends StatelessWidget {
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
-        borderRadius: BorderRadius.circular(12),
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
@@ -538,20 +862,29 @@ class _EmptyServicesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: buildShopCardDecoration(radius: 18),
+      padding: const EdgeInsets.all(22),
+      decoration: buildShopCardDecoration(radius: 20),
       child: Column(
         children: [
-          const Icon(
-            Icons.add_business_outlined,
-            color: AppColors.accent,
-            size: 34,
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.11),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(
+              Icons.add_business_outlined,
+              color: AppColors.accent,
+              size: 30,
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
           const Text(
             'Nenhum serviço cadastrado',
             style: TextStyle(
               color: AppColors.textBold,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -569,9 +902,56 @@ class _EmptyServicesCard extends StatelessWidget {
           FilledButton.icon(
             onPressed: onAdd,
             icon: const Icon(Icons.add),
-            label: const Text('Adicionar serviço'),
+            label: const Text('Criar primeiro serviço'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ServiceSaveBar extends StatelessWidget {
+  final bool saving;
+  final VoidCallback onSave;
+
+  const _ServiceSaveBar({required this.saving, required this.onSave});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        decoration: const BoxDecoration(
+          color: AppColors.cardBackground,
+          border: Border(top: BorderSide(color: AppColors.border)),
+        ),
+        child: FilledButton.icon(
+          onPressed: saving ? null : onSave,
+          icon: saving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.check_rounded),
+          label: Text(saving ? 'Salvando' : 'Salvar alterações'),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.accent,
+            foregroundColor: Colors.white,
+            minimumSize: const Size.fromHeight(54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            textStyle: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
       ),
     );
   }
