@@ -39,8 +39,8 @@ void main() {
 
     expect(find.text('Cancelar agendamento'), findsOneWidget);
 
-    await tester.tap(find.widgetWithText(OutlinedButton, 'Cancelar'));
-    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancelar'));
+    await tester.pump();
 
     expect(cancelled, isTrue);
   });

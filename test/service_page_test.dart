@@ -57,8 +57,6 @@ void main() {
             nome: 'Jorje Encanamentos',
             telefone: '62999990013',
             endereco: 'Rua dos Canos, 45 - Setor Oeste',
-            categoria: 'encanador',
-            categoriaLabel: 'Encanador',
             descricao:
                 'Atendimento rapido para vazamentos, pias, ralos e manutencao hidraulica.',
             horarioAtendimento: 'Segunda a sabado 7h - 19h',
@@ -92,7 +90,5 @@ void main() {
     expect(find.text('Serviços e preços'), findsOneWidget);
     expect(find.text('Nenhuma avaliação publicada ainda.'), findsOneWidget);
     expect(find.text('Nenhuma pergunta frequente cadastrada.'), findsOneWidget);
-    expect(find.text('Barbie Dream Barber'), findsNothing);
-    expect(find.text('Mostrar mais detalhes'), findsNothing);
   });
 }

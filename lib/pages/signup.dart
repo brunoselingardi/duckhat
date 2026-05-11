@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:duckhat/pages/app_shell.dart';
 import 'package:duckhat/pages/post_login_transition_page.dart';
-import 'package:duckhat/models/establishment_category.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/shop_main.dart';
 import 'package:duckhat/theme.dart';
@@ -306,10 +305,8 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
-  final _categoryQueryController = TextEditingController();
   final _bannerController = _SignupImageController();
   final List<_SignupServiceDraft> _services = [_SignupServiceDraft()];
-  EstablishmentCategory? _selectedCategory;
 
   int _step = 0;
   bool _hidePassword = true;
@@ -330,7 +327,6 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
     _emailController.dispose();
     _senhaController.dispose();
     _confirmarSenhaController.dispose();
-    _categoryQueryController.dispose();
     for (final service in _services) {
       service.dispose();
     }
@@ -349,15 +345,11 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
 
   Future<void> _next() async {
     FocusScope.of(context).unfocus();
-    if (_step == 0 && _selectedCategory == null) {
-      setState(() => _error = 'Escolha a categoria do estabelecimento.');
-      return;
-    }
-    if (_step == 1 && !_businessFormKey.currentState!.validate()) return;
-    if (_step == 2 && !_profileFormKey.currentState!.validate()) return;
-    if (_step == 3 && !_servicesFormKey.currentState!.validate()) return;
-    if (_step == 4 && !_responsibleFormKey.currentState!.validate()) return;
-    if (_step < 5) {
+    if (_step == 0 && !_businessFormKey.currentState!.validate()) return;
+    if (_step == 1 && !_profileFormKey.currentState!.validate()) return;
+    if (_step == 2 && !_servicesFormKey.currentState!.validate()) return;
+    if (_step == 3 && !_responsibleFormKey.currentState!.validate()) return;
+    if (_step < 4) {
       setState(() {
         _step += 1;
         _error = null;
@@ -408,7 +400,6 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
         tipo: 'PRESTADOR',
         cnpj: _cnpjController.text,
         responsavelNome: _responsavelController.text,
-        categoria: _selectedCategory!.code,
       );
       await DuckHatApi.instance.login(
         email: _emailController.text.trim(),
@@ -429,8 +420,6 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
               responsavelNome: _responsavelController.text,
               dataNascimento: null,
               endereco: _addressController.text,
-              categoria: _selectedCategory!.code,
-              categoriaLabel: _selectedCategory!.label,
               descricao: _descriptionController.text,
               horarioAtendimento: _hoursController.text,
               bannerImagemBase64: bannerBase64,
@@ -487,24 +476,13 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
             onBack: _backStep,
           ),
           const SizedBox(height: 20),
-          _StepIndicator(current: _step, total: 6),
+          _StepIndicator(current: _step, total: 5),
           const SizedBox(height: 20),
           Expanded(
             child: PageView(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                _BusinessCategoryStep(
-                  queryController: _categoryQueryController,
-                  selected: _selectedCategory,
-                  onQueryChanged: (_) => setState(() {}),
-                  onSelected: (category) {
-                    setState(() {
-                      _selectedCategory = category;
-                      _error = null;
-                    });
-                  },
-                ),
                 Form(
                   key: _businessFormKey,
                   child: _BusinessDataStep(
@@ -587,7 +565,7 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
               Expanded(
                 flex: 2,
                 child: _PrimaryButton(
-                  label: _step == 5 ? 'Criar estabelecimento' : 'Next',
+                  label: _step == 4 ? 'Criar estabelecimento' : 'Next',
                   loading: _loading,
                   onPressed: _next,
                 ),
@@ -598,179 +576,7 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
       ),
     );
   }
-}
 
-class _BusinessCategoryStep extends StatelessWidget {
-  final TextEditingController queryController;
-  final EstablishmentCategory? selected;
-  final ValueChanged<String> onQueryChanged;
-  final ValueChanged<EstablishmentCategory> onSelected;
-
-  const _BusinessCategoryStep({
-    required this.queryController,
-    required this.selected,
-    required this.onQueryChanged,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final categories = EstablishmentCategory.categories
-        .where((category) => category.matches(queryController.text))
-        .toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const _StepTitle(
-          title: 'Categoria do estabelecimento',
-          subtitle: 'Escolha como seu negócio será encontrado pelos clientes.',
-        ),
-        const SizedBox(height: 16),
-        TextField(
-          controller: queryController,
-          onChanged: onQueryChanged,
-          textInputAction: TextInputAction.search,
-          decoration: InputDecoration(
-            hintText: 'Buscar categoria',
-            prefixIcon: const Icon(Icons.search, color: AppColors.accent),
-            filled: true,
-            fillColor: Colors.white,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.accent, width: 2),
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        Expanded(
-          child: categories.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Nenhuma categoria encontrada.',
-                    style: TextStyle(
-                      color: AppColors.textRegular,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                )
-              : GridView.builder(
-                  key: const PageStorageKey('business-category-grid'),
-                  itemCount: categories.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.02,
-                  ),
-                  itemBuilder: (context, index) {
-                    final category = categories[index];
-                    return _CategoryButton(
-                      category: category,
-                      selected: selected?.code == category.code,
-                      onTap: () => onSelected(category),
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CategoryButton extends StatelessWidget {
-  final EstablishmentCategory category;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _CategoryButton({
-    required this.category,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppColors.accent : Colors.white,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: selected ? AppColors.accent : AppColors.border,
-              width: selected ? 2 : 1,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x10000000),
-                blurRadius: 16,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.18)
-                      : AppColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  category.icon,
-                  color: selected ? Colors.white : AppColors.accent,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                category.label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: selected ? Colors.white : AppColors.textBold,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w900,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                category.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.86)
-                      : AppColors.textRegular,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _BusinessDataStep extends StatelessWidget {

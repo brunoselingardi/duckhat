@@ -444,7 +444,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
     );
   }
 
-Widget _buildErrorState() {
+  Widget _buildErrorState() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(

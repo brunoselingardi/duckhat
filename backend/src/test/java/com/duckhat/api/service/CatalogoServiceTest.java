@@ -60,56 +60,6 @@ class CatalogoServiceTest {
   }
 
   @Test
-  void listarEstabelecimentosRetornaTodosQuePossuemPalavraNoServico() {
-    Estabelecimento barbearia = estabelecimento(2L, "Barbie Dream Barber");
-    Estabelecimento studio = estabelecimento(42L, "DuckHat Studio");
-    Estabelecimento encanador = estabelecimento(13L, "Jorje Encanamentos");
-    encanador.setCategoria("encanador");
-    when(estabelecimentoRepository.findAllByOrderByNomeAsc())
-        .thenReturn(List.of(barbearia, encanador, studio));
-    when(servicoRepository.findAtivosComPrestador()).thenReturn(List.of(
-        servico(10L, 2L, "Pink Beard Design", "Desenho de barba com toalha quente", "42.00"),
-        servico(11L, 42L, "Barba premium", "Acabamento e contorno", "35.00"),
-        servico(12L, 13L, "Reparo de vazamento", "Servico hidraulico", "180.00")));
-
-    List<EstabelecimentoCatalogoResponse> responses = service.listarEstabelecimentos("barba");
-
-    assertEquals(2, responses.size());
-    assertEquals("Barbie Dream Barber", responses.get(0).nome());
-    assertEquals("DuckHat Studio", responses.get(1).nome());
-  }
-
-  @Test
-  void listarEstabelecimentosFiltraPorPalavraNoServicoSemTrocarTermoOriginal() {
-    Estabelecimento barbearia = estabelecimento(2L, "Barbie Dream Barber");
-    Estabelecimento studio = estabelecimento(42L, "DuckHat Studio");
-    when(estabelecimentoRepository.findAllByOrderByNomeAsc()).thenReturn(List.of(barbearia, studio));
-    when(servicoRepository.findAtivosComPrestador()).thenReturn(List.of(
-        servico(10L, 2L, "Glow Cut", "Corte de cabelo masculino", "55.00"),
-        servico(11L, 42L, "Escova modelada", "Tratamento completo para cabelo", "70.00")));
-
-    List<EstabelecimentoCatalogoResponse> responses = service.listarEstabelecimentos("cabelo");
-
-    assertEquals(2, responses.size());
-    assertEquals("Barbie Dream Barber", responses.get(0).nome());
-    assertEquals("DuckHat Studio", responses.get(1).nome());
-  }
-
-  @Test
-  void listarEstabelecimentosFiltraPorCategoriaEPalavraChaveNormalizada() {
-    Estabelecimento encanador = estabelecimento(13L, "Jorje Encanamentos");
-    encanador.setCategoria("encanador");
-    when(estabelecimentoRepository.findAllByOrderByNomeAsc()).thenReturn(List.of(encanador));
-    when(servicoRepository.findAtivosComPrestador()).thenReturn(List.of(
-        servico(10L, 13L, "Visita tecnica", "Reparo de canos e vazamentos", "90.00")));
-
-    List<EstabelecimentoCatalogoResponse> responses = service.listarEstabelecimentos("hidráulica perto de mim");
-
-    assertEquals(1, responses.size());
-    assertEquals("Encanador", responses.get(0).categoriaLabel());
-  }
-
-  @Test
   void buscarEstabelecimentoRetorna404QuandoNaoExiste() {
     when(estabelecimentoRepository.findByUsuarioId(99L)).thenReturn(Optional.empty());
 
@@ -128,7 +78,6 @@ class CatalogoServiceTest {
     estabelecimento.setCnpj("11222333000144");
     estabelecimento.setResponsavelNome("Ana Responsavel");
     estabelecimento.setEndereco("Av. Central, 100");
-    estabelecimento.setCategoria("barbearia");
     estabelecimento.setDescricao("Atendimento profissional.");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 18h");
     estabelecimento.setBannerImagemBase64("banner");

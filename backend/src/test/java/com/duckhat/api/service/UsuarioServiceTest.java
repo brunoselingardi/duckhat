@@ -59,7 +59,6 @@ class UsuarioServiceTest {
         "(62) 99999-8888",
         "11.222.333/0001-44",
         "Ana Responsavel",
-        "barbearia",
         TipoUsuario.PRESTADOR));
 
     assertEquals(42L, response.id());
@@ -77,7 +76,6 @@ class UsuarioServiceTest {
     assertEquals("62999998888", estabelecimento.getTelefone());
     assertEquals("11222333000144", estabelecimento.getCnpj());
     assertEquals("Ana Responsavel", estabelecimento.getResponsavelNome());
-    assertEquals("barbearia", estabelecimento.getCategoria());
     verify(disponibilidadePadraoService)
         .garantirDisponibilidadePadrao(argThat(usuario -> usuario != null && usuario.getId().equals(42L)));
   }
@@ -94,7 +92,6 @@ class UsuarioServiceTest {
         "(62) 99999-8888",
         null,
         null,
-        null,
         TipoUsuario.CLIENTE));
 
     verify(estabelecimentoRepository, never()).save(any(Estabelecimento.class));
@@ -102,42 +99,19 @@ class UsuarioServiceTest {
   }
 
   @Test
-  void criarPrestadorRecusaCategoriaInvalida() {
-    ResponseStatusException error = assertThrows(
-        ResponseStatusException.class,
-        () -> service.criar(new CreateUsuarioRequest(
-            "DuckHat Studio",
-            "studio@duckhat.com",
-            "123456",
-            "(62) 99999-8888",
-            "11.222.333/0001-44",
-            "Ana Responsavel",
-            "categoria-inexistente",
-            TipoUsuario.PRESTADOR)));
-
-    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
-    assertEquals("Categoria de estabelecimento inválida", error.getReason());
-  }
-
-  @Test
   void buscarPrestadorPublicoRetornaCamposPublicosDoPrestador() {
     Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
-    Estabelecimento estabelecimento = new Estabelecimento();
-    estabelecimento.setUsuario(usuario);
-    estabelecimento.setNome("Barbie Dream Barber");
-    estabelecimento.setTelefone("62999998888");
-    estabelecimento.setEndereco("Av. DuckHat, 120 - Setor Bueno");
-    estabelecimento.setDescricao("Cortes e cuidados para todos os estilos.");
-    estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
-
+    usuario.setDescricaoPublica("Cortes e cuidados para todos os estilos.");
+    usuario.setHorarioAtendimento("Segunda a sexta 9h - 20h");
+    usuario.setImagemCapa("assets/barbie.jpg");
+    usuario.setImagemLogo("assets/barbielogo.jpg");
     when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
-    when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.of(estabelecimento));
 
     PrestadorPublicoResponse response = service.buscarPrestadorPublico(2L);
 
     assertEquals(2L, response.id());
-    assertEquals("Barbie Dream Barber", response.nome());
-    assertEquals("62999998888", response.telefone());
+    assertEquals("Nome Original", response.nome());
+    assertEquals("62999990000", response.telefone());
     assertEquals("Cortes e cuidados para todos os estilos.", response.descricaoPublica());
     assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
   }
@@ -193,7 +167,6 @@ class UsuarioServiceTest {
             "Rua das Palmas, 42",
             null,
             null,
-            null,
             null));
 
     assertEquals("Maria Duck", response.nome());
@@ -222,7 +195,6 @@ class UsuarioServiceTest {
             "Ana Responsavel",
             null,
             "Av. Central, 100",
-            "barbearia",
             "Atendimento com horario marcado e ambiente profissional.",
             "Segunda a sexta 9h - 20h",
             "banner-base64"));
@@ -231,8 +203,6 @@ class UsuarioServiceTest {
     assertEquals("11222333000144", response.cnpj());
     assertEquals("Ana Responsavel", response.responsavelNome());
     assertEquals("Av. Central, 100", response.endereco());
-    assertEquals("barbearia", response.categoria());
-    assertEquals("Barbearia", response.categoriaLabel());
     assertEquals("Atendimento com horario marcado e ambiente profissional.", response.descricao());
     assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
     assertEquals("banner-base64", response.bannerImagemBase64());
@@ -246,7 +216,6 @@ class UsuarioServiceTest {
     assertEquals("11222333000144", estabelecimento.getCnpj());
     assertEquals("Ana Responsavel", estabelecimento.getResponsavelNome());
     assertEquals("Av. Central, 100", estabelecimento.getEndereco());
-    assertEquals("barbearia", estabelecimento.getCategoria());
     assertEquals("Atendimento com horario marcado e ambiente profissional.", estabelecimento.getDescricao());
     assertEquals("Segunda a sexta 9h - 20h", estabelecimento.getHorarioAtendimento());
     assertEquals("banner-base64", estabelecimento.getBannerImagemBase64());
@@ -262,7 +231,6 @@ class UsuarioServiceTest {
     estabelecimento.setCnpj("11222333000144");
     estabelecimento.setResponsavelNome("Ana Responsavel");
     estabelecimento.setEndereco("Av. Central, 100");
-    estabelecimento.setCategoria("encanador");
     estabelecimento.setDescricao("Descricao salva no estabelecimento");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
     estabelecimento.setBannerImagemBase64("banner-salvo");
@@ -278,8 +246,6 @@ class UsuarioServiceTest {
     assertEquals("11222333000144", response.cnpj());
     assertEquals("Ana Responsavel", response.responsavelNome());
     assertEquals("Av. Central, 100", response.endereco());
-    assertEquals("encanador", response.categoria());
-    assertEquals("Encanador", response.categoriaLabel());
     assertEquals("Descricao salva no estabelecimento", response.descricao());
     assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
     assertEquals("banner-salvo", response.bannerImagemBase64());
@@ -298,7 +264,6 @@ class UsuarioServiceTest {
             new UpdatePerfilRequest(
                 "Maria Duck",
                 "outro@duckhat.com",
-                null,
                 null,
                 null,
                 null,
@@ -331,7 +296,6 @@ class UsuarioServiceTest {
                 "Rua das Palmas, 42",
                 null,
                 null,
-                null,
                 null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
@@ -356,7 +320,6 @@ class UsuarioServiceTest {
                 null,
                 LocalDate.now().minusYears(121),
                 "Rua das Palmas, 42",
-                null,
                 null,
                 null,
                 null)));
@@ -385,7 +348,6 @@ class UsuarioServiceTest {
                 "Rua das Palmas, 42",
                 null,
                 null,
-                null,
                 null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
@@ -412,7 +374,6 @@ class UsuarioServiceTest {
                 "Rua das Palmas, 42",
                 null,
                 null,
-                null,
                 null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
@@ -437,7 +398,6 @@ class UsuarioServiceTest {
                 null,
                 LocalDate.of(1998, 5, 12),
                 "Rua das Palmas",
-                null,
                 null,
                 null,
                 null)));

@@ -78,18 +78,7 @@ public class CatalogoService {
   }
 
   private boolean combinaComBusca(EstabelecimentoCatalogoResponse item, String termo) {
-    if (combinaTermo(item, termo)) {
-      return true;
-    }
-
-    List<String> tokens = tokensBusca(termo);
-    return !tokens.isEmpty() && tokens.stream().anyMatch(token -> combinaTermo(item, token));
-  }
-
-  private boolean combinaTermo(EstabelecimentoCatalogoResponse item, String termo) {
-    if (EstabelecimentoCategoriaCatalog.combina(item.categoria(), termo)
-        || contem(item.categoriaLabel(), termo)
-        || contem(item.nome(), termo)
+    if (contem(item.nome(), termo)
         || contem(item.endereco(), termo)
         || contem(item.descricao(), termo)) {
       return true;
@@ -99,26 +88,14 @@ public class CatalogoService {
         .anyMatch(servico -> contem(servico.nome(), termo) || contem(servico.descricao(), termo));
   }
 
-  private List<String> tokensBusca(String termo) {
-    if (termo == null || termo.isBlank()) {
-      return List.of();
-    }
-    return List.of(termo.split(" "))
-        .stream()
-        .filter(token -> token.length() >= 3)
-        .filter(token -> !List.of("para", "com", "sem", "perto", "mim", "servico", "servicos").contains(token))
-        .toList();
-  }
-
   private boolean contem(String valor, String termo) {
-    String normalizado = EstabelecimentoCategoriaCatalog.normalizar(valor);
-    return normalizado != null && normalizado.contains(termo);
+    return valor != null && valor.toLowerCase(Locale.ROOT).contains(termo);
   }
 
   private String normalizarBusca(String termo) {
     if (termo == null || termo.isBlank()) {
       return null;
     }
-    return EstabelecimentoCategoriaCatalog.normalizar(termo);
+    return termo.trim().toLowerCase(Locale.ROOT);
   }
 }

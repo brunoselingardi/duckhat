@@ -32,9 +32,6 @@ public record UpdatePerfilRequest(
     @Size(max = 255)
     String endereco,
 
-    @Size(max = 60)
-    String categoria,
-
     @Size(max = 500)
     String descricao,
 

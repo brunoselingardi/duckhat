@@ -7,8 +7,6 @@ class UsuarioPerfil {
   final String? responsavelNome;
   final DateTime? dataNascimento;
   final String? endereco;
-  final String? categoria;
-  final String? categoriaLabel;
   final String? descricao;
   final String? horarioAtendimento;
   final String? bannerImagemBase64;
@@ -23,8 +21,6 @@ class UsuarioPerfil {
     required this.responsavelNome,
     required this.dataNascimento,
     required this.endereco,
-    required this.categoria,
-    required this.categoriaLabel,
     required this.descricao,
     required this.horarioAtendimento,
     required this.bannerImagemBase64,
@@ -41,8 +37,6 @@ class UsuarioPerfil {
       responsavelNome: json['responsavelNome'] as String?,
       dataNascimento: _parseDate(json['dataNascimento']),
       endereco: json['endereco'] as String?,
-      categoria: json['categoria'] as String?,
-      categoriaLabel: json['categoriaLabel'] as String?,
       descricao: json['descricao'] as String?,
       horarioAtendimento: json['horarioAtendimento'] as String?,
       bannerImagemBase64: json['bannerImagemBase64'] as String?,
@@ -61,7 +55,6 @@ class UsuarioPerfil {
           ? null
           : _formatDate(dataNascimento!),
       'endereco': _nullableTrim(endereco),
-      'categoria': _nullableTrim(categoria),
       'descricao': _nullableTrim(descricao),
       'horarioAtendimento': _nullableTrim(horarioAtendimento),
       'bannerImagemBase64': _nullableTrim(bannerImagemBase64),

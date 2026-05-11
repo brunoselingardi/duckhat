@@ -5,8 +5,6 @@ class EstabelecimentoCatalogo {
   final String nome;
   final String? telefone;
   final String? endereco;
-  final String? categoria;
-  final String? categoriaLabel;
   final String? descricao;
   final String? horarioAtendimento;
   final String? bannerImagemBase64;
@@ -19,8 +17,6 @@ class EstabelecimentoCatalogo {
     required this.nome,
     required this.telefone,
     required this.endereco,
-    required this.categoria,
-    required this.categoriaLabel,
     required this.descricao,
     required this.horarioAtendimento,
     required this.bannerImagemBase64,
@@ -49,8 +45,6 @@ class EstabelecimentoCatalogo {
       nome: json['nome'] as String? ?? 'Estabelecimento',
       telefone: json['telefone'] as String?,
       endereco: json['endereco'] as String?,
-      categoria: json['categoria'] as String?,
-      categoriaLabel: json['categoriaLabel'] as String?,
       descricao: json['descricao'] as String?,
       horarioAtendimento: json['horarioAtendimento'] as String?,
       bannerImagemBase64: json['bannerImagemBase64'] as String?,
