@@ -76,6 +76,29 @@ class ServicoServiceTest {
   }
 
   @Test
+  void atualizarPermitePausarServicoDoPrestadorAutenticado() {
+    Usuario prestador = usuario(2L, TipoUsuario.PRESTADOR);
+    Servico servico = servico(8L, prestador);
+
+    when(servicoRepository.findById(8L)).thenReturn(Optional.of(servico));
+    when(servicoRepository.save(any(Servico.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    ServicoResponse response = service.atualizar(
+        8L,
+        new CreateServicoRequest(
+            "Corte",
+            "Corte completo",
+            30,
+            new BigDecimal("40.00"),
+            false),
+        prestador);
+
+    assertEquals(false, response.ativo());
+    assertEquals(false, servico.getAtivo());
+    verify(servicoRepository).save(servico);
+  }
+
+  @Test
   void atualizarRecusaServicoDeOutroPrestador() {
     Usuario prestador = usuario(2L, TipoUsuario.PRESTADOR);
     Servico servico = servico(8L, usuario(3L, TipoUsuario.PRESTADOR));
