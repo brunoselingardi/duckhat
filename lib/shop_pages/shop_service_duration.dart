@@ -571,7 +571,7 @@ class _ServiceFieldGroupLabel extends StatelessWidget {
   }
 }
 
-class _ServiceEditorCard extends StatelessWidget {
+class _ServiceEditorCard extends StatefulWidget {
   final _EditableShopService service;
   final int index;
   final VoidCallback onChanged;
@@ -585,7 +585,42 @@ class _ServiceEditorCard extends StatelessWidget {
   });
 
   @override
+  State<_ServiceEditorCard> createState() => _ServiceEditorCardState();
+}
+
+class _ServiceEditorCardState extends State<_ServiceEditorCard> {
+  bool _userExpanded = true;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.service.active) {
+      _userExpanded = false;
+    }
+  }
+
+  void _toggleExpanded() {
+    if (!widget.service.active) return;
+    setState(() => _userExpanded = !_userExpanded);
+  }
+
+  @override
+  void didUpdateWidget(_ServiceEditorCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!widget.service.active && widget.service.active != oldWidget.service.active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _userExpanded = false);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final service = widget.service;
+    final canCollapse = service.active;
+    final isExpanded = canCollapse && _userExpanded;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(18),
@@ -602,117 +637,165 @@ class _ServiceEditorCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ServiceCardHeader(
-            title: service.title,
-            active: service.active,
-            isNew: service.isNew,
-            trailing: onRemoveNew != null
-                ? IconButton(
-                    onPressed: onRemoveNew,
+          GestureDetector(
+            onTap: canCollapse ? _toggleExpanded : null,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (canCollapse)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    child: Icon(
+                      isExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_up,
+                      color: AppColors.accent,
+                      size: 26,
+                    ),
+                  )
+                else
+                  const SizedBox(width: 26),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        service.isNew ? 'Novo serviço' : 'Serviço publicado',
+                        style: const TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        service.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textBold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      _ServiceStatusBadge(active: service.active),
+                    ],
+                  ),
+                ),
+                if (widget.onRemoveNew != null)
+                  IconButton(
+                    onPressed: widget.onRemoveNew,
                     icon: const Icon(Icons.delete_outline),
                     color: AppColors.error,
                     tooltip: 'Remover serviço',
                   )
-                : Switch(
+                else
+                  Switch(
                     value: service.active,
                     onChanged: (value) {
                       service.active = value;
-                      onChanged();
+                      setState(() => _userExpanded = value);
+                      widget.onChanged();
                     },
                     activeThumbColor: AppColors.accent,
                   ),
-          ),
-          const SizedBox(height: 18),
-          const _ServiceFieldGroupLabel(
-            icon: Icons.description_outlined,
-            label: 'Informações do serviço',
-          ),
-          const SizedBox(height: 12),
-          _ServiceSectionShell(
-            child: Column(
-              children: [
-                _ServiceTextField(
-                  controller: service.nameController,
-                  label: 'Nome do serviço',
-                  icon: Icons.design_services_outlined,
-                  validator: _validateServiceName,
-                  onChanged: (_) => onChanged(),
-                ),
-                const SizedBox(height: 12),
-                _ServiceTextField(
-                  controller: service.descriptionController,
-                  label: 'Descrição',
-                  icon: Icons.notes_rounded,
-                  maxLines: 3,
-                  validator: _validateServiceDescription,
-                ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          const _ServiceFieldGroupLabel(
-            icon: Icons.tune_rounded,
-            label: 'Agenda e preço',
-          ),
-          const SizedBox(height: 12),
-          _ServiceSectionShell(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final duration = _DurationControl(
-                  duration: service.durationMin,
-                  onChanged: (value) {
-                    service.durationMin = value;
-                    onChanged();
-                  },
-                );
-                final price = _ServiceTextField(
-                  controller: service.priceController,
-                  label: 'Preço',
-                  icon: Icons.payments_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                    LengthLimitingTextInputFormatter(9),
-                  ],
-                  validator: _validatePrice,
-                );
-
-                if (constraints.maxWidth < 330) {
-                  return Column(
-                    children: [duration, const SizedBox(height: 12), price],
-                  );
-                }
-
-                return Row(
-                  children: [
-                    Expanded(child: duration),
-                    const SizedBox(width: 12),
-                    Expanded(child: price),
-                  ],
-                );
-              },
+          if (!canCollapse || isExpanded) ...[
+            const SizedBox(height: 18),
+            const _ServiceFieldGroupLabel(
+              icon: Icons.description_outlined,
+              label: 'Informações do serviço',
             ),
-          ),
-          if (!service.active) ...[
             const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+            _ServiceSectionShell(
+              child: Column(
+                children: [
+                  _ServiceTextField(
+                    controller: service.nameController,
+                    label: 'Nome do serviço',
+                    icon: Icons.design_services_outlined,
+                    validator: _validateServiceName,
+                    onChanged: (_) => widget.onChanged(),
+                  ),
+                  const SizedBox(height: 12),
+                  _ServiceTextField(
+                    controller: service.descriptionController,
+                    label: 'Descrição',
+                    icon: Icons.notes_rounded,
+                    maxLines: 3,
+                    validator: _validateServiceDescription,
+                  ),
+                ],
               ),
-              child: const Text(
-                'Serviço pausado: ele não aparece para clientes no catálogo.',
-                style: TextStyle(
-                  color: AppColors.textRegular,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+            ),
+            const SizedBox(height: 16),
+            const _ServiceFieldGroupLabel(
+              icon: Icons.tune_rounded,
+              label: 'Agenda e preço',
+            ),
+            const SizedBox(height: 12),
+            _ServiceSectionShell(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final duration = _DurationControl(
+                    duration: service.durationMin,
+                    onChanged: (value) {
+                      service.durationMin = value;
+                      widget.onChanged();
+                    },
+                  );
+                  final price = _ServiceTextField(
+                    controller: service.priceController,
+                    label: 'Preço',
+                    icon: Icons.payments_outlined,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                      LengthLimitingTextInputFormatter(9),
+                    ],
+                    validator: _validatePrice,
+                  );
+
+                  if (constraints.maxWidth < 330) {
+                    return Column(
+                      children: [duration, const SizedBox(height: 12), price],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(child: duration),
+                      const SizedBox(width: 12),
+                      Expanded(child: price),
+                    ],
+                  );
+                },
+              ),
+            ),
+            if (!service.active) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text(
+                  'Serviço pausado: ele não aparece para clientes no catálogo.',
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ],
       ),

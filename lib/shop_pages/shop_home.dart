@@ -20,6 +20,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
   String? _error;
   List<Agendamento> _agendamentos = [];
   int _lastSyncRevision = 0;
+  int _selectedDayIndex = 0;
 
   @override
   void initState() {
@@ -70,16 +71,19 @@ class _ShopHomePageState extends State<ShopHomePage> {
     _carregarAgendamentos(showLoader: false);
   }
 
-  List<Agendamento> get _todayAppointments {
+  List<Agendamento> get _selectedDayAppointments {
     final today = _dateOnly(DateTime.now());
+    final selectedDate = today.add(Duration(days: _selectedDayIndex));
     return _agendamentos
         .where(
           (item) =>
-              _isSameDay(item.inicioEm, today) && item.status != 'CANCELADO',
+              _isSameDay(item.inicioEm, selectedDate) && item.status != 'CANCELADO',
         )
         .toList()
       ..sort((a, b) => a.inicioEm.compareTo(b.inicioEm));
   }
+
+  List<Agendamento> get _todayAppointments => _selectedDayAppointments;
 
   int get _pendingCount =>
       _agendamentos.where((item) => item.status == 'PENDENTE').length;
@@ -257,6 +261,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
             itemCount: days.length,
             itemBuilder: (context, index) {
               final day = days[index];
+              final isSelected = _selectedDayIndex == index;
               final isToday = _isSameDay(day, today);
               final count = _agendamentos
                   .where(
@@ -265,48 +270,59 @@ class _ShopHomePageState extends State<ShopHomePage> {
                         item.status != 'CANCELADO',
                   )
                   .length;
-              return Container(
-                width: 58,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: isToday ? AppColors.accent : AppColors.cardBackground,
-                  borderRadius: BorderRadius.circular(14),
-                  border: isToday ? null : Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _weekdayLabel(day.weekday),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isToday
-                            ? AppColors.primary
-                            : AppColors.textMuted,
-                        fontWeight: FontWeight.w700,
+              return GestureDetector(
+                onTap: () => setState(() => _selectedDayIndex = index),
+                child: Container(
+                  width: 58,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColors.accent
+                        : isToday
+                        ? AppColors.accent.withValues(alpha: 0.15)
+                        : AppColors.cardBackground,
+                    borderRadius: BorderRadius.circular(14),
+                    border: isToday && !isSelected
+                        ? Border.all(color: AppColors.accent, width: 1.5)
+                        : null,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _weekdayLabel(day.weekday),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.textMuted,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${day.day}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: isToday ? AppColors.primary : AppColors.darkAlt,
+                      const SizedBox(height: 4),
+                      Text(
+                        '${day.day}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: isSelected
+                              ? AppColors.primary
+                              : AppColors.darkAlt,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$count',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isToday
-                            ? AppColors.primary.withValues(alpha: 0.85)
-                            : AppColors.accent,
-                        fontWeight: FontWeight.w800,
+                      const SizedBox(height: 4),
+                      Text(
+                        '$count',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isSelected
+                              ? AppColors.primary.withValues(alpha: 0.85)
+                              : AppColors.accent,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
@@ -318,6 +334,11 @@ class _ShopHomePageState extends State<ShopHomePage> {
 
   Widget _buildAppointmentsList() {
     final appointments = _todayAppointments;
+    final today = _dateOnly(DateTime.now());
+    final selectedDate = today.add(Duration(days: _selectedDayIndex));
+    final dayLabel = _isSameDay(selectedDate, today)
+        ? 'hoje'
+        : _dateLabel(selectedDate);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -326,10 +347,12 @@ class _ShopHomePageState extends State<ShopHomePage> {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Agendamentos de hoje',
-                  style: TextStyle(
+                  _isSameDay(selectedDate, today)
+                      ? 'Agendamentos de hoje'
+                      : 'Agendamentos de $dayLabel',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.darkAlt,
@@ -337,7 +360,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
                 ),
               ),
               Text(
-                '${appointments.length} hoje',
+                '${appointments.length} ${_isSameDay(selectedDate, today) ? 'hoje' : 'nesta data'}',
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textMuted,
@@ -383,6 +406,14 @@ class _ShopHomePageState extends State<ShopHomePage> {
   String _weekdayLabel(int weekday) {
     const labels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
     return labels[weekday - 1];
+  }
+
+  String _dateLabel(DateTime date) {
+    final months = [
+      'Jan', 'Fev', 'Mar', 'Abr', 'Maio', 'Jun',
+      'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+    ];
+    return '${date.day} ${months[date.month - 1]}';
   }
 }
 

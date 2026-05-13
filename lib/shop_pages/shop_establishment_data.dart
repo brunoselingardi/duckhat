@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:duckhat/models/usuario_perfil.dart';
+import 'package:duckhat/models/horario_funcionamento.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/utils/image_base64.dart';
 import 'package:duckhat/utils/profile_validators.dart';
@@ -28,11 +29,9 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
   final _responsavelController = TextEditingController();
   final _addressController = TextEditingController();
   final _descriptionController = TextEditingController();
-  final _hoursController = TextEditingController(
-    text: 'Segunda a sexta 9h - 20h | Sabado 9h - 18h',
-  );
   final _imagePicker = ImagePicker();
 
+  HorarioFuncionamento _horario = HorarioFuncionamento();
   UsuarioPerfil? _perfil;
   File? _coverImage;
   File? _logoImage;
@@ -100,9 +99,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     _responsavelController.text = perfil.responsavelNome ?? '';
     _addressController.text = perfil.endereco ?? '';
     _descriptionController.text = perfil.descricao ?? '';
-    _hoursController.text =
-        perfil.horarioAtendimento ??
-        'Segunda a sexta 9h - 20h | Sabado 9h - 18h';
+    _horario = HorarioFuncionamento.parseFromText(perfil.horarioAtendimento);
   }
 
   @override
@@ -114,7 +111,6 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     _responsavelController.dispose();
     _addressController.dispose();
     _descriptionController.dispose();
-    _hoursController.dispose();
     super.dispose();
   }
 
@@ -231,9 +227,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                         address: _addressController.text.trim().isEmpty
                             ? 'Endereco do estabelecimento'
                             : _addressController.text.trim(),
-                        hours: _hoursController.text.trim().isEmpty
-                            ? 'Horarios de atendimento'
-                            : _hoursController.text.trim(),
+                        hours: _horario.toHorarioAtendimento(),
                         description: _descriptionController.text.trim().isEmpty
                             ? 'Descreva a experiencia que o cliente encontra no seu estabelecimento.'
                             : _descriptionController.text.trim(),
@@ -264,12 +258,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                             validator: _validateOptionalLongText,
                           ),
                           const SizedBox(height: 14),
-                          _buildTextField(
-                            'Horario de atendimento',
-                            _hoursController,
-                            Icons.access_time_rounded,
-                            validator: _validateOptionalLongText,
-                          ),
+                          _buildHorarioField(),
                           const SizedBox(height: 14),
                           _buildTextField(
                             'Descricao para clientes',
@@ -367,6 +356,49 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     );
   }
 
+  Widget _buildHorarioField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
+      ),
+      child: ListTile(
+        leading: const Icon(Icons.access_time_rounded, color: AppColors.accent),
+        title: const Text(
+          'Horario de funcionamento',
+          style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            _horario.resumo,
+            style: const TextStyle(
+              color: AppColors.textBold,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: AppColors.accent),
+        onTap: _saving ? null : () => _openHorarioEditor(),
+      ),
+    );
+  }
+
+  Future<void> _openHorarioEditor() async {
+    final resultado = await showModalBottomSheet<HorarioFuncionamento>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _HorarioEditorSheet(horario: _horario),
+    );
+
+    if (resultado != null) {
+      setState(() => _horario = resultado);
+    }
+  }
+
   Future<void> _pickImage(_EstablishmentImageSlot slot) async {
     try {
       final image = await _imagePicker.pickImage(
@@ -420,7 +452,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           dataNascimento: current.dataNascimento,
           endereco: _addressController.text,
           descricao: _descriptionController.text,
-          horarioAtendimento: _hoursController.text,
+          horarioAtendimento: _horario.toHorarioAtendimento(),
           bannerImagemBase64: bannerBase64,
           tipo: current.tipo,
         ),
@@ -796,6 +828,234 @@ class _FormSection extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ...children,
+        ],
+      ),
+    );
+  }
+}
+
+class _HorarioEditorSheet extends StatefulWidget {
+  final HorarioFuncionamento horario;
+
+  const _HorarioEditorSheet({required this.horario});
+
+  @override
+  State<_HorarioEditorSheet> createState() => _HorarioEditorSheetState();
+}
+
+class _HorarioEditorSheetState extends State<_HorarioEditorSheet> {
+  late HorarioFuncionamento _horario;
+
+  @override
+  void initState() {
+    super.initState();
+    _horario = widget.horario;
+  }
+
+  String _nomeExibicao(String dia) {
+    return {
+      'SEGUNDA': 'Seg',
+      'TERCA': 'Ter',
+      'QUARTA': 'Qua',
+      'QUINTA': 'Qui',
+      'SEXTA': 'Sex',
+      'SABADO': 'Sáb',
+      'DOMINGO': 'Dom',
+    }[dia] ?? dia;
+  }
+
+  Future<void> _selecionarHora(bool isAbertura) async {
+    final partes = isAbertura
+        ? _horario.horaAbertura.split(':')
+        : _horario.horaFechamento.split(':');
+    final horaInicial = int.parse(partes[0]);
+    final minutoInicial = int.parse(partes[1]);
+
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: horaInicial, minute: minutoInicial),
+    );
+
+    if (picked != null) {
+      setState(() {
+        final horaFormatada =
+            '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+        if (isAbertura) {
+          _horario = _horario.copyWith(horaAbertura: horaFormatada);
+        } else {
+          _horario = _horario.copyWith(horaFechamento: horaFormatada);
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.textMuted,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Horário de Funcionamento',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textBold,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, _horario),
+                      child: const Text(
+                        'Salvar',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.accent,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Dias da semana',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textRegular,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _horario.dias.entries.map((entry) {
+                    return FilterChip(
+                      label: Text(_nomeExibicao(entry.key)),
+                      selected: entry.value,
+                      selectedColor: AppColors.accent.withValues(alpha: 0.2),
+                      checkmarkColor: AppColors.accent,
+                      onSelected: (selected) {
+                        setState(() {
+                          final novosDias =
+                              Map<String, bool>.from(_horario.dias);
+                          novosDias[entry.key] = selected;
+                          _horario = _horario.copyWith(dias: novosDias);
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Horário',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textRegular,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _selecionarHora(true),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(_horario.horaAbertura),
+                      ),
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('até'),
+                    ),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => _selecionarHora(false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: Text(_horario.horaFechamento),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                SwitchListTile(
+                  title: const Text('24 horas'),
+                  subtitle: const Text('Aberto o dia todo'),
+                  value: _horario.vinteQuatroHoras,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (value) {
+                    setState(() {
+                      _horario = _horario.copyWith(vinteQuatroHoras: value);
+                      if (value) {
+                        _horario = _horario.copyWith(fechado: false);
+                      }
+                    });
+                  },
+                ),
+                SwitchListTile(
+                  title: const Text('Fechado'),
+                  subtitle: const Text('Não atende'),
+                  value: _horario.fechado,
+                  contentPadding: EdgeInsets.zero,
+                  onChanged: (value) {
+                    setState(() {
+                      _horario = _horario.copyWith(fechado: value);
+                      if (value) {
+                        _horario = _horario.copyWith(vinteQuatroHoras: false);
+                      }
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Resumo',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _horario.resumo,
+                        style: const TextStyle(color: AppColors.textRegular),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+              ],
+            ),
+          ),
         ],
       ),
     );
