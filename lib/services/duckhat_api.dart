@@ -105,6 +105,14 @@ class DuckHatApi {
   }
 
   Future<UsuarioPerfil> carregarMeuPerfil() async {
+    if (_devMode) {
+      final session = _session;
+      if (session == null) {
+        throw Exception('Sessão de desenvolvimento não iniciada.');
+      }
+      return _perfilFromSession(session);
+    }
+
     await ensureAuthenticated();
 
     final response = await _client.get(
@@ -130,6 +138,15 @@ class DuckHatApi {
   }
 
   Future<UsuarioPerfil> atualizarMeuPerfil(UsuarioPerfil perfil) async {
+    if (_devMode) {
+      _mergePerfilIntoSession(perfil);
+      final session = _session;
+      if (session == null) {
+        throw Exception('Sessão de desenvolvimento não iniciada.');
+      }
+      return _perfilFromSession(session);
+    }
+
     await ensureAuthenticated();
 
     final response = await _client.put(
@@ -1244,6 +1261,25 @@ class DuckHatApi {
         bannerImagemBase64: perfil.bannerImagemBase64,
         tipo: perfil.tipo,
       ),
+    );
+  }
+
+  UsuarioPerfil _perfilFromSession(LoginSession session) {
+    return UsuarioPerfil(
+      id: session.id,
+      nome: session.nome,
+      email: session.email,
+      telefone: session.telefone,
+      cnpj: session.cnpj,
+      responsavelNome: session.responsavelNome,
+      dataNascimento: session.dataNascimento,
+      endereco: session.endereco,
+      categoria: session.categoria,
+      categoriaLabel: session.categoriaLabel,
+      descricao: session.descricao,
+      horarioAtendimento: session.horarioAtendimento,
+      bannerImagemBase64: session.bannerImagemBase64,
+      tipo: session.tipo,
     );
   }
 

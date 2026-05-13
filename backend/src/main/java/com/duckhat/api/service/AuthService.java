@@ -70,6 +70,10 @@ public class AuthService {
         estabelecimento == null || estabelecimento.getEndereco() == null
             ? usuario.getEndereco()
             : estabelecimento.getEndereco(),
+        estabelecimento == null ? null : estabelecimento.getCategoria(),
+        estabelecimento == null
+            ? null
+            : EstabelecimentoCategoriaCatalog.label(estabelecimento.getCategoria()),
         estabelecimento == null ? null : estabelecimento.getDescricao(),
         estabelecimento == null ? null : estabelecimento.getHorarioAtendimento(),
         estabelecimento == null ? null : estabelecimento.getBannerImagemBase64(),

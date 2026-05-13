@@ -12,6 +12,8 @@ public record LoginResponse(
     String responsavelNome,
     LocalDate dataNascimento,
     String endereco,
+    String categoria,
+    String categoriaLabel,
     String descricao,
     String horarioAtendimento,
     String bannerImagemBase64,

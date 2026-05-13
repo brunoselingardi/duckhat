@@ -431,9 +431,12 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
       );
 
       if (!context.mounted) return;
+      final message = DuckHatApi.instance.isDevMode
+          ? 'Dados salvos nesta sessão de desenvolvimento'
+          : 'Dados salvos no banco';
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Dados salvos no banco')));
+      ).showSnackBar(SnackBar(content: Text(message)));
       Navigator.pop(context, true);
     } catch (error) {
       if (!mounted) return;

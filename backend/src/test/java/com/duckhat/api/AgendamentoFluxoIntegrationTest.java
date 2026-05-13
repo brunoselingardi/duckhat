@@ -2,6 +2,7 @@ package com.duckhat.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.duckhat.api.dto.AgendamentoResponse;
 import com.duckhat.api.dto.CreateAgendamentoRequest;
@@ -25,8 +26,10 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -108,6 +111,57 @@ class AgendamentoFluxoIntegrationTest {
     assertEquals(1, agendaDoPrestador.size());
     assertEquals(cliente.getId(), agendaDoPrestador.get(0).clienteId());
     assertEquals("Cliente Agenda", agendaDoPrestador.get(0).clienteNome());
+  }
+
+  @Test
+  void clienteNaoConsegueAgendarServicoPausado() {
+    usuarioService.criar(new CreateUsuarioRequest(
+        "Studio Pausado",
+        "studio.pausado@duckhat.test",
+        "123456",
+        "62999996666",
+        "11.222.333/0001-55",
+        "Paula Responsavel",
+        "barbearia",
+        TipoUsuario.PRESTADOR));
+    Usuario prestador = usuarioRepository.findByEmail("studio.pausado@duckhat.test")
+        .orElseThrow();
+
+    ServicoResponse servico = servicoService.criar(
+        new CreateServicoRequest(
+            "Corte pausado",
+            "Servico usado para validar pausa",
+            30,
+            new BigDecimal("45.00"),
+            false),
+        prestador);
+
+    usuarioService.criar(new CreateUsuarioRequest(
+        "Cliente Pausa",
+        "cliente.pausa@duckhat.test",
+        "123456",
+        "62999995555",
+        null,
+        null,
+        null,
+        TipoUsuario.CLIENTE));
+    Usuario cliente = usuarioRepository.findByEmail("cliente.pausa@duckhat.test")
+        .orElseThrow();
+
+    LocalDateTime inicio = proximoDiaUtilAs10h();
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> agendamentoService.criar(
+            new CreateAgendamentoRequest(
+                servico.id(),
+                inicio,
+                inicio.plusMinutes(30),
+                "Tentativa de agendar servico pausado"),
+            cliente));
+
+    assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+    assertEquals("O serviço informado está pausado e não aceita agendamentos", error.getReason());
+    assertEquals(0, agendamentoService.listarParaPrestador(prestador).size());
   }
 
   private LocalDateTime proximoDiaUtilAs10h() {

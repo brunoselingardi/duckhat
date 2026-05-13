@@ -49,15 +49,7 @@ public class AgendamentoService {
           HttpStatus.BAD_REQUEST,
           "O usuário autenticado não é um cliente");
     }
-    Servico servico = servicoRepository.findById(request.servicoId())
-        .orElseThrow(() -> new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Serviço não encontrado"));
-
-    if (!Boolean.TRUE.equals(servico.getAtivo())) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O serviço informado está inativo");
-    }
+    Servico servico = buscarServicoAgendavel(request.servicoId());
 
     if (!request.inicioEm().isBefore(request.fimEm())) {
       throw new ResponseStatusException(
@@ -117,6 +109,20 @@ public class AgendamentoService {
     Agendamento salvo = agendamentoRepository.save(agendamento);
     notificacaoEventoService.registrarAgendamentoCriado(salvo);
     return AgendamentoResponse.fromEntity(salvo);
+  }
+
+  private Servico buscarServicoAgendavel(Long servicoId) {
+    Servico servico = servicoRepository.findById(servicoId)
+        .orElseThrow(() -> new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Serviço não encontrado"));
+
+    if (!Boolean.TRUE.equals(servico.getAtivo())) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST,
+          "O serviço informado está pausado e não aceita agendamentos");
+    }
+
+    return servico;
   }
 
   @Transactional(readOnly = true)
