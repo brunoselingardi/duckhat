@@ -5,7 +5,6 @@ import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
 import 'shop_establishment_data.dart';
-import 'shop_service_duration.dart';
 
 class ShopProfilePage extends StatefulWidget {
   const ShopProfilePage({super.key});
@@ -249,8 +248,8 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
         _buildSectionTitle('VITRINE DO ESTABELECIMENTO'),
         _buildMenuCard([
           _buildMenuItem(
-            icon: Icons.store,
-            title: 'Dados do Estabelecimento',
+            icon: Icons.storefront_outlined,
+            title: 'Editar perfil público',
             subtitle: 'Capa, logo, nome, endereco e descricao',
             onTap: () async {
               final updated = await Navigator.push<bool>(
@@ -264,24 +263,12 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
               }
             },
           ),
-          _buildDivider(),
-          _buildMenuItem(
-            icon: Icons.timer,
-            title: 'Serviços e Preços',
-            subtitle: 'Tempo e valor de cada serviço',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const ShopServiceDurationPage(),
-              ),
-            ),
-          ),
         ]),
         const SizedBox(height: 16),
         _buildMenuCard([
           _buildMenuItem(
             icon: Icons.logout,
-            title: 'Sair',
+            title: 'Sair da conta',
             subtitle: 'Encerrar a sessao neste dispositivo',
             titleColor: AppColors.error,
             onTap: () => _showLogoutDialog(context),
@@ -379,14 +366,6 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildDivider() {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      color: AppColors.textMuted.withValues(alpha: 0.45),
     );
   }
 

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
-import 'shop_establishment_data.dart';
-import 'shop_service_duration.dart';
 
 class ShopHomePage extends StatefulWidget {
   const ShopHomePage({super.key});
@@ -104,8 +102,6 @@ class _ShopHomePageState extends State<ShopHomePage> {
             padding: const EdgeInsets.only(bottom: 24),
             children: [
               _buildHeader(),
-              _buildVitrineActions(context),
-              const SizedBox(height: 16),
               _buildDateSelector(),
               const SizedBox(height: 16),
               _buildAppointmentsList(),
@@ -163,69 +159,6 @@ class _ShopHomePageState extends State<ShopHomePage> {
             tooltip: 'Atualizar agendamentos',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildVitrineActions(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: buildShopCardDecoration(radius: 18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Vitrine do estabelecimento',
-              style: TextStyle(
-                color: AppColors.textBold,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Mantenha sua descricao, banner e servicos atualizados para os clientes.',
-              style: TextStyle(
-                color: AppColors.textRegular,
-                fontSize: 12,
-                height: 1.35,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.notes_rounded,
-                    label: 'Descricao',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ShopEstablishmentDataPage(),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _QuickActionButton(
-                    icon: Icons.design_services_outlined,
-                    label: 'Servicos',
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ShopServiceDurationPage(),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -383,51 +316,6 @@ class _ShopHomePageState extends State<ShopHomePage> {
   String _weekdayLabel(int weekday) {
     const labels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab', 'Dom'];
     return labels[weekday - 1];
-  }
-}
-
-class _QuickActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _QuickActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.accent.withValues(alpha: 0.1),
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: AppColors.accent, size: 18),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textBold,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 

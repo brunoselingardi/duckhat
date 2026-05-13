@@ -43,6 +43,40 @@ void main() {
 
     expect(find.text('Novo serviço'), findsWidgets);
     expect(scrollable.position.pixels, greaterThan(0));
+
+    final newServiceNameField = find
+        .widgetWithText(TextFormField, 'Nome do serviço')
+        .last;
+    final editableText = tester.widget<EditableText>(
+      find.descendant(
+        of: newServiceNameField,
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editableText.focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('paused service cards collapse editing fields', (tester) async {
+    DuckHatApi.instance.startDevSession(tipo: 'PRESTADOR');
+
+    await tester.pumpWidget(const MaterialApp(home: ShopServiceDurationPage()));
+    await tester.pumpAndSettle();
+
+    const firstCardKey = ValueKey('service-card-0');
+    final expandedHeight = tester.getSize(find.byKey(firstCardKey)).height;
+    expect(find.text('Informações do serviço'), findsOneWidget);
+    expect(find.text('Agenda e preço'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pausado'), findsOneWidget);
+    final collapsedHeight = tester.getSize(find.byKey(firstCardKey)).height;
+    expect(collapsedHeight, lessThan(expandedHeight * 0.65));
+    expect(
+      find.text('Serviço pausado: reative para editar detalhes.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('service editor fits on narrow phones', (tester) async {
