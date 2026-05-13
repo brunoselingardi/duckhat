@@ -58,7 +58,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Dados do estabelecimento'), findsOneWidget);
+    expect(find.text('Adicionar foto'), findsOneWidget);
     expect(find.text('Adicionar banner'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('Adicionar foto')).dy,
+      lessThan(tester.getTopLeft(find.text('Adicionar banner')).dy),
+    );
     expect(find.text('Nome do estabelecimento'), findsOneWidget);
 
     await tester.enterText(

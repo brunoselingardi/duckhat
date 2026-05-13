@@ -68,14 +68,20 @@ class _ShopServiceDurationPageState extends State<ShopServiceDurationPage> {
   }
 
   void _addService() {
-    setState(() => _services.add(_EditableShopService.empty()));
+    final service = _EditableShopService.empty();
+    setState(() => _services.add(service));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_scrollController.hasClients) return;
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-      );
+      _scrollController
+          .animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+          )
+          .then((_) {
+            if (!mounted) return;
+            service.nameFocusNode.requestFocus();
+          });
     });
   }
 
@@ -223,6 +229,7 @@ class _EditableShopService {
   final TextEditingController nameController;
   final TextEditingController descriptionController;
   final TextEditingController priceController;
+  final FocusNode nameFocusNode;
   int durationMin;
   bool active;
 
@@ -231,6 +238,7 @@ class _EditableShopService {
     required this.nameController,
     required this.descriptionController,
     required this.priceController,
+    required this.nameFocusNode,
     required this.durationMin,
     required this.active,
   });
@@ -239,6 +247,7 @@ class _EditableShopService {
     return _EditableShopService(
       id: service.id,
       nameController: TextEditingController(text: service.nome),
+      nameFocusNode: FocusNode(),
       descriptionController: TextEditingController(
         text: service.descricao ?? '',
       ),
@@ -252,6 +261,7 @@ class _EditableShopService {
     return _EditableShopService(
       id: null,
       nameController: TextEditingController(),
+      nameFocusNode: FocusNode(debugLabel: 'new-service-name'),
       descriptionController: TextEditingController(),
       priceController: TextEditingController(),
       durationMin: 30,
@@ -269,6 +279,7 @@ class _EditableShopService {
   }
 
   void dispose() {
+    nameFocusNode.dispose();
     nameController.dispose();
     descriptionController.dispose();
     priceController.dispose();
@@ -586,9 +597,12 @@ class _ServiceEditorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = !service.active && !service.isNew;
+
     return Container(
+      key: ValueKey('service-card-$index'),
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(compact ? 14 : 18),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(20),
@@ -622,98 +636,186 @@ class _ServiceEditorCard extends StatelessWidget {
                     activeThumbColor: AppColors.accent,
                   ),
           ),
-          const SizedBox(height: 18),
-          const _ServiceFieldGroupLabel(
-            icon: Icons.description_outlined,
-            label: 'Informações do serviço',
-          ),
-          const SizedBox(height: 12),
-          _ServiceSectionShell(
-            child: Column(
-              children: [
-                _ServiceTextField(
-                  controller: service.nameController,
-                  label: 'Nome do serviço',
-                  icon: Icons.design_services_outlined,
-                  validator: _validateServiceName,
-                  onChanged: (_) => onChanged(),
-                ),
-                const SizedBox(height: 12),
-                _ServiceTextField(
-                  controller: service.descriptionController,
-                  label: 'Descrição',
-                  icon: Icons.notes_rounded,
-                  maxLines: 3,
-                  validator: _validateServiceDescription,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          const _ServiceFieldGroupLabel(
-            icon: Icons.tune_rounded,
-            label: 'Agenda e preço',
-          ),
-          const SizedBox(height: 12),
-          _ServiceSectionShell(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final duration = _DurationControl(
-                  duration: service.durationMin,
-                  onChanged: (value) {
-                    service.durationMin = value;
-                    onChanged();
-                  },
-                );
-                final price = _ServiceTextField(
-                  controller: service.priceController,
-                  label: 'Preço',
-                  icon: Icons.payments_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                    LengthLimitingTextInputFormatter(9),
-                  ],
-                  validator: _validatePrice,
-                );
-
-                if (constraints.maxWidth < 330) {
-                  return Column(
-                    children: [duration, const SizedBox(height: 12), price],
-                  );
-                }
-
-                return Row(
-                  children: [
-                    Expanded(child: duration),
-                    const SizedBox(width: 12),
-                    Expanded(child: price),
-                  ],
-                );
-              },
-            ),
-          ),
-          if (!service.active) ...[
+          if (compact) ...[
             const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.warning.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Text(
-                'Serviço pausado: ele não aparece para clientes no catálogo.',
-                style: TextStyle(
-                  color: AppColors.textRegular,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
+            _PausedServiceSummary(service: service),
+          ] else ...[
+            const SizedBox(height: 18),
+            const _ServiceFieldGroupLabel(
+              icon: Icons.description_outlined,
+              label: 'Informações do serviço',
+            ),
+            const SizedBox(height: 12),
+            _ServiceSectionShell(
+              child: Column(
+                children: [
+                  _ServiceTextField(
+                    controller: service.nameController,
+                    focusNode: service.nameFocusNode,
+                    label: 'Nome do serviço',
+                    icon: Icons.design_services_outlined,
+                    validator: _validateServiceName,
+                    onChanged: (_) => onChanged(),
+                  ),
+                  const SizedBox(height: 12),
+                  _ServiceTextField(
+                    controller: service.descriptionController,
+                    label: 'Descrição',
+                    icon: Icons.notes_rounded,
+                    maxLines: 3,
+                    validator: _validateServiceDescription,
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 16),
+            const _ServiceFieldGroupLabel(
+              icon: Icons.tune_rounded,
+              label: 'Agenda e preço',
+            ),
+            const SizedBox(height: 12),
+            _ServiceSectionShell(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final duration = _DurationControl(
+                    duration: service.durationMin,
+                    onChanged: (value) {
+                      service.durationMin = value;
+                      onChanged();
+                    },
+                  );
+                  final price = _ServiceTextField(
+                    controller: service.priceController,
+                    label: 'Preço',
+                    icon: Icons.payments_outlined,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
+                      LengthLimitingTextInputFormatter(9),
+                    ],
+                    validator: _validatePrice,
+                  );
+
+                  if (constraints.maxWidth < 330) {
+                    return Column(
+                      children: [duration, const SizedBox(height: 12), price],
+                    );
+                  }
+
+                  return Row(
+                    children: [
+                      Expanded(child: duration),
+                      const SizedBox(width: 12),
+                      Expanded(child: price),
+                    ],
+                  );
+                },
+              ),
+            ),
+            if (!service.active) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text(
+                  'Serviço pausado: ele não aparece para clientes no catálogo.',
+                  style: TextStyle(
+                    color: AppColors.textRegular,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PausedServiceSummary extends StatelessWidget {
+  final _EditableShopService service;
+
+  const _PausedServiceSummary({required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    final price = service.priceController.text.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _PausedServiceChip(
+                icon: Icons.schedule_outlined,
+                label: '${service.durationMin} min',
+              ),
+              if (price.isNotEmpty)
+                _PausedServiceChip(
+                  icon: Icons.payments_outlined,
+                  label: 'R\$ $price',
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Serviço pausado: reative para editar detalhes.',
+            style: TextStyle(
+              color: AppColors.textRegular,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PausedServiceChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _PausedServiceChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppColors.warning, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppColors.textBold,
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
         ],
       ),
     );
@@ -748,6 +850,7 @@ class _ServiceTextField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?) validator;
   final ValueChanged<String>? onChanged;
+  final FocusNode? focusNode;
 
   const _ServiceTextField({
     required this.controller,
@@ -758,12 +861,14 @@ class _ServiceTextField extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.onChanged,
+    this.focusNode,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
+      focusNode: focusNode,
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,

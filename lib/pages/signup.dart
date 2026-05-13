@@ -308,6 +308,7 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
   final _confirmarSenhaController = TextEditingController();
   final _categoryQueryController = TextEditingController();
   final _bannerController = _SignupImageController();
+  final _logoController = _SignupImageController();
   final List<_SignupServiceDraft> _services = [_SignupServiceDraft()];
   EstablishmentCategory? _selectedCategory;
 
@@ -345,6 +346,16 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
       return;
     }
     setState(() => _bannerController.image = result.image);
+  }
+
+  Future<void> _pickLogoImage() async {
+    final result = await _logoController.pick();
+    if (!mounted || result == null) return;
+    if (result.error != null) {
+      setState(() => _error = result.error);
+      return;
+    }
+    setState(() => _logoController.image = result.image);
   }
 
   Future<void> _next() async {
@@ -509,8 +520,10 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
                   key: _businessFormKey,
                   child: _BusinessDataStep(
                     image: _bannerController.image,
+                    logoImage: _logoController.image,
                     enabled: !_loading,
                     onPickImage: _pickBannerImage,
+                    onPickLogo: _pickLogoImage,
                     nameController: _nomeController,
                   ),
                 ),
@@ -775,14 +788,18 @@ class _CategoryButton extends StatelessWidget {
 
 class _BusinessDataStep extends StatelessWidget {
   final File? image;
+  final File? logoImage;
   final bool enabled;
   final VoidCallback onPickImage;
+  final VoidCallback onPickLogo;
   final TextEditingController nameController;
 
   const _BusinessDataStep({
     required this.image,
+    required this.logoImage,
     required this.enabled,
     required this.onPickImage,
+    required this.onPickLogo,
     required this.nameController,
   });
 
@@ -795,9 +812,17 @@ class _BusinessDataStep extends StatelessWidget {
           const _StepTitle(
             title: 'Dados do estabelecimento',
             subtitle:
-                'Comece pela identidade publica e pelo banner da vitrine.',
+                'Comece pela identidade publica e pelas imagens da vitrine.',
           ),
           const SizedBox(height: 20),
+          Center(
+            child: _AvatarPickerButton(
+              image: logoImage,
+              enabled: enabled,
+              onPressed: onPickLogo,
+            ),
+          ),
+          const SizedBox(height: 18),
           _BannerPickerButton(
             image: image,
             enabled: enabled,
@@ -1583,13 +1608,6 @@ class _AvatarPickerButton extends StatelessWidget {
             image: image == null
                 ? null
                 : DecorationImage(image: FileImage(image!), fit: BoxFit.cover),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x18000000),
-                blurRadius: 18,
-                offset: Offset(0, 10),
-              ),
-            ],
           ),
           child: image == null
               ? const Column(

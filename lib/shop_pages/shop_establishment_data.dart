@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
+import 'shop_service_duration.dart';
 
 class ShopEstablishmentDataPage extends StatefulWidget {
   const ShopEstablishmentDataPage({super.key});
@@ -247,6 +248,18 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                             : () => _pickImage(_EstablishmentImageSlot.logo),
                       ),
                       const SizedBox(height: 16),
+                      _ServicesEditorCard(
+                        onTap: _saving
+                            ? null
+                            : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      const ShopServiceDurationPage(),
+                                ),
+                              ),
+                      ),
+                      const SizedBox(height: 16),
                       _FormSection(
                         title: 'Perfil publico',
                         subtitle:
@@ -452,6 +465,79 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
 }
 
 enum _EstablishmentImageSlot { cover, logo }
+
+class _ServicesEditorCard extends StatelessWidget {
+  final VoidCallback? onTap;
+
+  const _ServicesEditorCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: buildShopCardDecoration(radius: 18),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(
+                    Icons.design_services_outlined,
+                    color: AppColors.accent,
+                    size: 23,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Serviços e Preços',
+                        style: TextStyle(
+                          color: AppColors.textBold,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Edite duração, valor e disponibilidade dos serviços.',
+                        style: TextStyle(
+                          color: AppColors.textRegular,
+                          fontSize: 12,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textMuted.withValues(alpha: 0.8),
+                  size: 24,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _PublicProfilePreview extends StatelessWidget {
   final File? coverImage;
