@@ -116,6 +116,23 @@ class SearchIntent {
     return serviceTerm;
   }
 
+  static String? catalogSearchTerm({
+    required String query,
+    required String? category,
+  }) {
+    final selectedCategory = category?.trim();
+    if (selectedCategory != null && selectedCategory.isNotEmpty) {
+      return selectedCategory;
+    }
+
+    final intent = SearchIntent.fromQuery(query);
+    final term = intent.internalCatalogTerm.trim();
+    if (term.isEmpty || term.toLowerCase() == 'estabelecimentos') {
+      return null;
+    }
+    return term;
+  }
+
   String get geoapifyCategories {
     return switch (kind) {
       SearchServiceKind.beauty ||

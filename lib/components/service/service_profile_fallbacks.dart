@@ -29,7 +29,7 @@ class ServicePublicPageFallback {
 
 const serviceTabs = [
   'Experiencia',
-  'Servicos',
+  'Serviços',
   'Galeria',
   'Avaliacoes',
   'Perguntas',
@@ -66,7 +66,7 @@ const Map<int, ServicePublicPageFallback> servicePublicPageFallbacks = {
         name: 'Theo Martins',
         rating: 4,
         comment:
-            'Gostei muito da proposta da casa. Tudo parece pensado para gerar experiencia, nao so um corte comum.',
+            'Gostei muito da proposta da casa. Tudo parece pensado para gerar experiência, não só um corte comum.',
         date: 'Fev 18, 2025',
       ),
       ServiceReview(

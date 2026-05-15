@@ -89,7 +89,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       _error = null;
       _locationMessage = _usingCurrentLocation
           ? 'Buscando sua localizacao atual'
-          : 'Resolvendo endereco ou CEP';
+          : 'Resolvendo endereço ou CEP';
     });
 
     try {
@@ -211,14 +211,10 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   }
 
   String? _catalogSearchTerm() {
-    if (widget.category != null && widget.category!.trim().isNotEmpty) {
-      return widget.category!.trim();
-    }
-    final value = _queryController.text.trim();
-    if (value.isEmpty || value.toLowerCase() == 'estabelecimentos') {
-      return null;
-    }
-    return value;
+    return SearchIntent.catalogSearchTerm(
+      query: _queryController.text,
+      category: widget.category,
+    );
   }
 
   Future<GeocodedLocation> _loadCurrentPosition() async {
@@ -259,7 +255,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
       if (_locationController.text == 'Minha localizacao atual') {
         _locationController.clear();
       }
-      _locationMessage = 'Digite um endereco ou CEP para pesquisar.';
+      _locationMessage = 'Digite um endereço ou CEP para pesquisar.';
     });
   }
 
@@ -1096,7 +1092,7 @@ class _SearchErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             const Text(
-              'Nao foi possivel concluir a busca',
+              'Não foi possível concluir a busca',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textBold,
@@ -1153,7 +1149,7 @@ class _NoResults extends StatelessWidget {
             ),
             SizedBox(height: 6),
             Text(
-              'Tente ajustar o termo de busca ou o CEP/endereco informado.',
+              'Tente ajustar o termo de busca ou o CEP/endereço informado.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textRegular, fontSize: 13),
             ),
@@ -1269,8 +1265,8 @@ class _PlaceCardModel {
       location: location,
       distanceMeters: meters,
       distanceLabel: item.totalServicos > 0
-          ? '${item.totalServicos} servicos'
-          : 'Sem servicos',
+          ? '${item.totalServicos} serviços'
+          : 'Sem serviços',
       hasInternalPage: true,
       prestadorId: item.prestadorId,
       estabelecimento: item,

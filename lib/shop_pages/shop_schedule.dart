@@ -143,7 +143,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
       await _api.concluirAgendamento(agendamento.id);
       if (!mounted) return;
       await _carregarAgendamentos();
-      _showSnackBar('Agendamento concluido com sucesso.');
+      _showSnackBar('Agendamento concluído com sucesso.');
     } catch (error) {
       if (!mounted) return;
       _showSnackBar(_prettyError(error), isError: true);
@@ -210,7 +210,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Veja os clientes que agendaram servicos no seu estabelecimento.',
+                  'Veja os clientes que agendaram serviços no seu estabelecimento.',
                   style: TextStyle(
                     color: AppColors.textRegular,
                     fontSize: 13,
@@ -457,7 +457,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'Nao foi possivel carregar a agenda',
+            'Não foi possível carregar a agenda',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.textBold,
@@ -846,7 +846,7 @@ class _StatusChip extends StatelessWidget {
     final label = switch (status) {
       'CONFIRMADO' => 'Confirmado',
       'CANCELADO' => 'Cancelado',
-      'CONCLUIDO' => 'Concluido',
+      'CONCLUIDO' => 'Concluído',
       _ => 'Pendente',
     };
 

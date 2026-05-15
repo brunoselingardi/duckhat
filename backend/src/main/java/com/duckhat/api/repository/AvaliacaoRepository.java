@@ -13,4 +13,6 @@ public interface AvaliacaoRepository extends JpaRepository<Avaliacao, Long> {
   boolean existsByAgendamentoId(Long agendamentoId);
 
   List<Avaliacao> findByAgendamentoClienteId(Long clienteId);
+
+  List<Avaliacao> findByAgendamentoPrestadorId(Long prestadorId);
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show lerpDouble;
 
+import 'package:duckhat/core/api_config.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
@@ -450,14 +451,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 18),
-                              _DevModePanel(
-                                enabled: !_loading && !_finishingLogin,
-                                onEnterCliente: () =>
-                                    _enterDevMode(_AccountType.cliente),
-                                onEnterEmpresa: () =>
-                                    _enterDevMode(_AccountType.empresa),
-                              ),
+                              if (ApiConfig.enableDevLogin) ...[
+                                const SizedBox(height: 18),
+                                _DevModePanel(
+                                  enabled: !_loading && !_finishingLogin,
+                                  onEnterCliente: () =>
+                                      _enterDevMode(_AccountType.cliente),
+                                  onEnterEmpresa: () =>
+                                      _enterDevMode(_AccountType.empresa),
+                                ),
+                              ],
                             ],
                           ),
                         ),

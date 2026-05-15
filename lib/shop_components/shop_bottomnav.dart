@@ -5,11 +5,13 @@ import 'package:duckhat/theme.dart';
 class ShopBottomNav extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
+  final int unreadChatCount;
 
   const ShopBottomNav({
     super.key,
     required this.selectedIndex,
     required this.onTap,
+    this.unreadChatCount = 0,
   });
 
   @override
@@ -69,6 +71,7 @@ class ShopBottomNav extends StatelessWidget {
               icon: _NavIcon(
                 asset: 'assets/icones/chatpato.svg',
                 isSelected: selectedIndex == 2,
+                badgeCount: unreadChatCount,
               ),
               label: 'Clientes',
             ),
@@ -89,18 +92,63 @@ class ShopBottomNav extends StatelessWidget {
 class _NavIcon extends StatelessWidget {
   final String asset;
   final bool isSelected;
+  final int badgeCount;
 
-  const _NavIcon({required this.asset, required this.isSelected});
+  const _NavIcon({
+    required this.asset,
+    required this.isSelected,
+    this.badgeCount = 0,
+  });
 
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
-      child: ColorFiltered(
-        colorFilter: ColorFilter.mode(
-          isSelected ? AppColors.accent : AppColors.navUnselected,
-          BlendMode.srcIn,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ColorFiltered(
+            colorFilter: ColorFilter.mode(
+              isSelected ? AppColors.accent : AppColors.navUnselected,
+              BlendMode.srcIn,
+            ),
+            child: SvgPicture.asset(asset, width: 32, height: 32),
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: _UnreadBadge(count: badgeCount),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UnreadBadge extends StatelessWidget {
+  final int count;
+
+  const _UnreadBadge({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = count > 9 ? '9+' : '$count';
+    return Container(
+      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color: AppColors.error,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.cardBackground, width: 1.5),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
         ),
-        child: SvgPicture.asset(asset, width: 32, height: 32),
       ),
     );
   }

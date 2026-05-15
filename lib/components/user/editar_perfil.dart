@@ -273,7 +273,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
                       ),
                       const SizedBox(height: 16),
                       _buildTextField(
-                        'Endereco',
+                        'Endereço',
                         _enderecoController,
                         Icons.location_on_outlined,
                         validator: ProfileValidators.address,

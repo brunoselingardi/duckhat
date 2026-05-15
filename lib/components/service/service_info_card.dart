@@ -5,7 +5,6 @@ import 'service_image.dart';
 
 class ServiceInfoCard extends StatelessWidget {
   final VoidCallback? onMessageTap;
-  final VoidCallback? onAvaliarTap;
   final String name;
   final double ratingValue;
   final int reviewCount;
@@ -17,7 +16,6 @@ class ServiceInfoCard extends StatelessWidget {
   const ServiceInfoCard({
     super.key,
     this.onMessageTap,
-    this.onAvaliarTap,
     required this.name,
     required this.ratingValue,
     required this.reviewCount,
@@ -114,12 +112,12 @@ class ServiceInfoCard extends StatelessWidget {
           const SizedBox(height: 18),
           _InfoRow(
             icon: Icons.location_on_outlined,
-            text: address ?? 'Endereco indisponivel',
+            text: address ?? 'Endereço indisponível',
           ),
           const SizedBox(height: 12),
           _InfoRow(
             icon: Icons.access_time_rounded,
-            text: schedule ?? 'Horario nao informado',
+            text: schedule ?? 'Horário não informado',
           ),
           const SizedBox(height: 16),
           Container(
@@ -131,7 +129,7 @@ class ServiceInfoCard extends StatelessWidget {
               border: Border.all(color: const Color(0xFFE6EDFF)),
             ),
             child: Text(
-              '"${description ?? 'Descricao publica indisponivel no momento.'}"',
+              '"${description ?? 'Descrição pública indisponível no momento.'}"',
               style: const TextStyle(
                 fontSize: 13.5,
                 height: 1.6,
@@ -154,27 +152,6 @@ class ServiceInfoCard extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onAvaliarTap,
-                  icon: const Icon(Icons.star_rounded, size: 20),
-                  label: const Text('Avaliar'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    elevation: 0,
                     textStyle: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

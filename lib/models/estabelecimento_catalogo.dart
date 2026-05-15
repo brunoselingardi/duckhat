@@ -66,18 +66,18 @@ class EstabelecimentoCatalogo {
 
   String get enderecoPublico => endereco?.trim().isNotEmpty == true
       ? endereco!.trim()
-      : 'Endereco nao informado';
+      : 'Endereço não informado';
 
   String get descricaoPublica => descricao?.trim().isNotEmpty == true
       ? descricao!.trim()
-      : 'Este estabelecimento ainda esta ajustando a descricao da vitrine.';
+      : 'Este estabelecimento ainda está ajustando a descrição da vitrine.';
 
   String get horarioPublico => horarioAtendimento?.trim().isNotEmpty == true
       ? horarioAtendimento!.trim()
-      : 'Horarios sob consulta';
+      : 'Horários sob consulta';
 
   String get precoInicialLabel {
-    if (precoInicial == null) return 'Precos em breve';
+    if (precoInicial == null) return 'Preços em breve';
     final normalized = precoInicial!.toStringAsFixed(2).replaceAll('.', ',');
     final withoutCents = normalized.endsWith(',00')
         ? normalized.substring(0, normalized.length - 3)

@@ -33,7 +33,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.agendamento.status == 'CONCLUIDO' && !_isPrestador) {
+    if (widget.agendamento.status == 'CONCLUIDO') {
       _loadReview();
     }
   }
@@ -157,8 +157,8 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
             children: [
               _InfoRow(
                 icon: Icons.content_cut,
-                label: 'Servico',
-                value: item.servicoNome ?? 'Servico #${item.servicoId}',
+                label: 'Serviço',
+                value: item.servicoNome ?? 'Serviço #${item.servicoId}',
               ),
               _InfoRow(
                 icon: _isPrestador
@@ -169,7 +169,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                     ? (item.clienteNome ?? 'Cliente #${item.clienteId}')
                     : (item.prestadorNome ??
                           (item.prestadorId == null
-                              ? 'Prestador nao informado'
+                              ? 'Prestador não informado'
                               : 'Prestador #${item.prestadorId}')),
               ),
               _InfoRow(
@@ -179,7 +179,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               ),
               _InfoRow(
                 icon: Icons.schedule,
-                label: 'Horario',
+                label: 'Horário',
                 value:
                     '${_formatTime(item.inicioEm)} - ${_formatTime(item.fimEm)}',
               ),
@@ -187,7 +187,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   item.observacoes!.trim().isNotEmpty)
                 _InfoRow(
                   icon: Icons.notes_outlined,
-                  label: 'Observacoes',
+                  label: 'Observações',
                   value: item.observacoes!,
                 ),
             ],
@@ -204,7 +204,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 icon: item.status == 'CANCELADO'
                     ? Icons.cancel_outlined
                     : Icons.verified_outlined,
-                label: 'Situacao',
+                label: 'Situação',
                 value: _statusText(item.status),
                 color: _statusColor(item.status),
               ),
@@ -215,7 +215,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               ),
             ],
           ),
-          if (item.status == 'CONCLUIDO' && !_isPrestador) ...[
+          if (item.status == 'CONCLUIDO') ...[
             const SizedBox(height: 16),
             _ReviewCard(
               rating: _rating,
@@ -223,6 +223,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
               loading: _loadingReview,
               submitting: _sendingReview,
               error: _reviewError,
+              canSubmit: !_isPrestador,
               controller: _commentController,
               onRetry: _loadReview,
               onRatingChanged: (value) {
@@ -241,8 +242,8 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     return switch (status) {
       'CONFIRMADO' => 'Confirmado pelo prestador',
       'CANCELADO' => 'Agendamento cancelado',
-      'CONCLUIDO' => 'Atendimento concluido',
-      _ => 'Aguardando confirmacao',
+      'CONCLUIDO' => 'Atendimento concluído',
+      _ => 'Aguardando confirmação',
     };
   }
 
@@ -305,7 +306,7 @@ class _DangerActionCard extends StatelessWidget {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Use esta acao se nao puder comparecer.',
+                  'Use esta ação se não puder comparecer.',
                   style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                 ),
               ],
@@ -385,7 +386,7 @@ class _HeroSummary extends StatelessWidget {
               children: [
                 Text(
                   agendamento.servicoNome ??
-                      'Servico #${agendamento.servicoId}',
+                      'Serviço #${agendamento.servicoId}',
                   style: const TextStyle(
                     color: AppColors.primary,
                     fontSize: 18,
@@ -569,6 +570,7 @@ class _ReviewCard extends StatelessWidget {
   final bool loading;
   final bool submitting;
   final String? error;
+  final bool canSubmit;
   final TextEditingController controller;
   final VoidCallback onRetry;
   final ValueChanged<int> onRatingChanged;
@@ -580,6 +582,7 @@ class _ReviewCard extends StatelessWidget {
     required this.loading,
     required this.submitting,
     required this.error,
+    required this.canSubmit,
     required this.controller,
     required this.onRetry,
     required this.onRatingChanged,
@@ -591,10 +594,10 @@ class _ReviewCard extends StatelessWidget {
     final sent = avaliacao != null;
 
     if (loading) {
-      return const _DetailCard(
-        title: 'Avaliacao',
+      return _DetailCard(
+        title: canSubmit ? 'Avalie este atendimento' : 'Avaliação do cliente',
         children: [
-          Padding(
+          const Padding(
             padding: EdgeInsets.symmetric(vertical: 14),
             child: Row(
               children: [
@@ -621,18 +624,26 @@ class _ReviewCard extends StatelessWidget {
     }
 
     return _DetailCard(
-      title: 'Avaliacao',
+      title: canSubmit ? 'Avalie este atendimento' : 'Avaliação do cliente',
       children: [
         Row(
           children: [
             Icon(
-              sent ? Icons.check_circle_outline : Icons.star_border,
+              sent
+                  ? Icons.check_circle_outline
+                  : canSubmit
+                  ? Icons.star_border
+                  : Icons.rate_review_outlined,
               color: AppColors.accent,
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                sent ? 'Avaliacao enviada' : 'Escolha sua nota',
+                sent
+                    ? (canSubmit ? 'Avaliação enviada' : 'Cliente avaliou')
+                    : canSubmit
+                    ? 'Toque nas estrelas e conte como foi'
+                    : 'Este atendimento ainda não recebeu avaliação',
                 style: const TextStyle(
                   color: AppColors.textBold,
                   fontSize: 16,
@@ -678,7 +689,7 @@ class _ReviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
         ],
-        if (!sent) ...[
+        if (!sent && canSubmit) ...[
           Row(
             children: List.generate(5, (index) {
               final value = index + 1;
@@ -722,7 +733,7 @@ class _ReviewCard extends StatelessWidget {
               label: Text(submitting ? 'Enviando...' : 'Enviar avaliação'),
             ),
           ),
-        ] else
+        ] else if (sent)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -754,6 +765,16 @@ class _ReviewCard extends StatelessWidget {
                   style: TextStyle(color: AppColors.textRegular),
                 ),
             ],
+          )
+        else
+          const Text(
+            'Quando o cliente avaliar o serviço, a nota e o comentário aparecerão aqui.',
+            style: TextStyle(
+              color: AppColors.textRegular,
+              fontSize: 13,
+              height: 1.45,
+              fontWeight: FontWeight.w600,
+            ),
           ),
       ],
     );

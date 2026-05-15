@@ -67,13 +67,18 @@ public class AvaliacaoService {
 
   @Transactional(readOnly = true)
   public List<AvaliacaoResponse> listarTodas(Usuario usuario) {
-    if (usuario.getTipo() != TipoUsuario.CLIENTE) {
+    List<Avaliacao> avaliacoes;
+    if (usuario.getTipo() == TipoUsuario.CLIENTE) {
+      avaliacoes = avaliacaoRepository.findByAgendamentoClienteId(usuario.getId());
+    } else if (usuario.getTipo() == TipoUsuario.PRESTADOR) {
+      avaliacoes = avaliacaoRepository.findByAgendamentoPrestadorId(usuario.getId());
+    } else {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um cliente");
+          "O usuário autenticado não pode acessar avaliações");
     }
 
-    return avaliacaoRepository.findByAgendamentoClienteId(usuario.getId())
+    return avaliacoes
         .stream()
         .map(AvaliacaoResponse::fromEntity)
         .toList();
@@ -81,20 +86,14 @@ public class AvaliacaoService {
 
   @Transactional(readOnly = true)
   public AvaliacaoResponse buscarPorId(Long id, Usuario usuario) {
-    if (usuario.getTipo() != TipoUsuario.CLIENTE) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um cliente");
-    }
-
     Avaliacao avaliacao = avaliacaoRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "Avaliação não encontrada"));
 
-    if (!avaliacao.getAgendamento().getCliente().getId().equals(usuario.getId())) {
+    if (!podeAcessar(avaliacao.getAgendamento(), usuario)) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
-          "Você não pode acessar uma avaliação que não é sua");
+          "Você não pode acessar uma avaliação que não é do seu atendimento");
     }
 
     return AvaliacaoResponse.fromEntity(avaliacao);
@@ -102,23 +101,27 @@ public class AvaliacaoService {
 
   @Transactional(readOnly = true)
   public AvaliacaoResponse buscarPorAgendamento(Long agendamentoId, Usuario usuario) {
-    if (usuario.getTipo() != TipoUsuario.CLIENTE) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          "O usuário autenticado não é um cliente");
-    }
-
     Avaliacao avaliacao = avaliacaoRepository.findByAgendamentoId(agendamentoId)
         .orElseThrow(() -> new ResponseStatusException(
             HttpStatus.NOT_FOUND, "Avaliação não encontrada para esse agendamento"));
 
-    if (!avaliacao.getAgendamento().getCliente().getId().equals(usuario.getId())) {
+    if (!podeAcessar(avaliacao.getAgendamento(), usuario)) {
       throw new ResponseStatusException(
           HttpStatus.FORBIDDEN,
           "Você não pode acessar a avaliação de um agendamento que não é seu");
     }
 
     return AvaliacaoResponse.fromEntity(avaliacao);
+  }
+
+  private boolean podeAcessar(Agendamento agendamento, Usuario usuario) {
+    if (usuario.getTipo() == TipoUsuario.CLIENTE) {
+      return agendamento.getCliente().getId().equals(usuario.getId());
+    }
+    if (usuario.getTipo() == TipoUsuario.PRESTADOR) {
+      return agendamento.getPrestador().getId().equals(usuario.getId());
+    }
+    return false;
   }
 
   private String normalizarComentario(String comentario) {

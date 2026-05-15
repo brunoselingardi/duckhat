@@ -9,7 +9,6 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/estabelecimento_publico.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
-import 'package:duckhat/pages/avaliar.dart';
 import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
@@ -227,10 +226,10 @@ class _ServicePageState extends State<ServicePage> {
       ServiceExperienceData(
         summary:
             _effectiveProfile?.descricaoPublica ??
-            'Este estabelecimento ainda esta ajustando sua experiencia publica.',
+            'Este estabelecimento ainda está ajustando sua experiência pública.',
         highlights: const [
-          'Servicos, precos e duracao visiveis antes do agendamento',
-          'Agenda conectada aos horarios disponiveis do estabelecimento',
+          'Serviços, preços e duração visíveis antes do agendamento',
+          'Agenda conectada aos horários disponíveis do estabelecimento',
           'Contato direto por mensagem dentro do DuckHat',
         ],
       );
@@ -367,19 +366,6 @@ class _ServicePageState extends State<ServicePage> {
     }
   }
 
-  Future<void> _avaliar() async {
-    final profile = _effectiveProfile;
-    await Navigator.push(
-      context,
-      AppRoute(
-        builder: (context) => AvaliarPage(
-          prestadorId: _prestadorId,
-          prestadorNome: profile?.nome ?? 'Estabelecimento',
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final profile = _effectiveProfile;
@@ -398,7 +384,7 @@ class _ServicePageState extends State<ServicePage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      _profileError ?? 'Nao foi possivel carregar a pagina.',
+                      _profileError ?? 'Não foi possível carregar a página.',
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
@@ -427,7 +413,6 @@ class _ServicePageState extends State<ServicePage> {
                       children: [
                         ServiceInfoCard(
                           onMessageTap: _openChat,
-                          onAvaliarTap: _avaliar,
                           name: profile.nome,
                           ratingValue: _averageRating,
                           reviewCount: _reviews.length,

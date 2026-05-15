@@ -36,6 +36,24 @@ void main() {
       );
     });
 
+    test('builds catalog search term from normalized intent', () {
+      expect(
+        SearchIntent.catalogSearchTerm(query: 'cano banheiro', category: null),
+        'encanador',
+      );
+      expect(
+        SearchIntent.catalogSearchTerm(
+          query: 'barbie dream barber',
+          category: null,
+        ),
+        'barbie dream barber',
+      );
+      expect(
+        SearchIntent.catalogSearchTerm(query: '', category: 'barbearia'),
+        'barbearia',
+      );
+    });
+
     test('narrows external search for maintenance services', () {
       expect(SearchIntent.fromQuery('cano').usesExternalNameFilter, isTrue);
       expect(SearchIntent.fromQuery('luz').usesExternalNameFilter, isTrue);

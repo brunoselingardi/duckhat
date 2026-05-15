@@ -225,7 +225,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ),
                 Text(
-                  'Acompanhe seus horarios e toque no dia para ver os compromissos.',
+                  'Acompanhe seus horários e toque no dia para ver os compromissos.',
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textRegular.withValues(alpha: 0.8),
@@ -547,7 +547,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Escolha outro dia no calendario para consultar seus horarios.',
+                  'Escolha outro dia no calendário para consultar seus horários.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 13, color: AppColors.textMuted),
                 ),
@@ -637,7 +637,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                 : (item.prestadorNome ??
                                       (item.prestadorId != null
                                           ? 'Prestador #${item.prestadorId}'
-                                          : 'Prestador nao informado')),
+                                          : 'Prestador não informado')),
                           ),
                           if (item.observacoes != null &&
                               item.observacoes!.trim().isNotEmpty) ...[
@@ -645,6 +645,45 @@ class _SchedulePageState extends State<SchedulePage> {
                             _AppointmentMeta(
                               icon: Icons.notes_outlined,
                               value: item.observacoes!,
+                            ),
+                          ],
+                          if (!_isPrestador && item.status == 'CONCLUIDO') ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.accent.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.18,
+                                  ),
+                                ),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.star_border_rounded,
+                                    size: 18,
+                                    color: AppColors.accent,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Toque no card para avaliar este atendimento.',
+                                      style: TextStyle(
+                                        color: AppColors.accent,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                           const SizedBox(height: 14),
@@ -667,7 +706,9 @@ class _SchedulePageState extends State<SchedulePage> {
                                 ),
                               const Spacer(),
                               Text(
-                                'Detalhes',
+                                !_isPrestador && item.status == 'CONCLUIDO'
+                                    ? 'Avaliar'
+                                    : 'Detalhes',
                                 style: TextStyle(
                                   color: AppColors.accent,
                                   fontWeight: FontWeight.w700,

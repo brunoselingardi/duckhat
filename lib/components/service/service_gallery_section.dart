@@ -40,7 +40,7 @@ class ServiceGallerySection extends StatelessWidget {
             ),
             SizedBox(height: 16),
             Text(
-              'Nenhuma imagem disponivel no momento.',
+              'Nenhuma imagem disponível no momento.',
               style: TextStyle(color: AppColors.textRegular),
             ),
           ],

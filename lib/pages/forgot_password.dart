@@ -23,7 +23,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   bool _hideConfirmPassword = true;
   bool _requested = false;
   String? _error;
-  String? _generatedCode;
 
   @override
   void dispose() {
@@ -44,25 +43,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      final response = await DuckHatApi.instance.solicitarRecuperacaoSenha(
-        email: _emailController.text,
+      await DuckHatApi.instance.solicitarRecuperacaoSenha(
+        email: _emailController.text.trim(),
       );
 
       if (!mounted) return;
-
-      setState(() {
-        _requested = true;
-        _generatedCode = response.codigoRecuperacao;
-      });
+      setState(() => _requested = true);
     } catch (error) {
       if (!mounted) return;
       setState(() {
         _error = error.toString().replaceFirst('Exception: ', '').trim();
       });
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -77,13 +70,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     try {
       await DuckHatApi.instance.redefinirSenha(
-        email: _emailController.text,
-        codigo: _codeController.text,
+        email: _emailController.text.trim(),
+        codigo: _codeController.text.trim(),
         novaSenha: _passwordController.text,
       );
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Senha redefinida com sucesso.'),
@@ -97,16 +89,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         _error = error.toString().replaceFirst('Exception: ', '').trim();
       });
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   void _restartFlow() {
     setState(() {
       _requested = false;
-      _generatedCode = null;
       _error = null;
       _codeController.clear();
       _passwordController.clear();
@@ -119,57 +108,49 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
+        statusBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
+        backgroundColor: const Color(0xFFFFFBF8),
         body: Stack(
-          fit: StackFit.expand,
           children: [
-            Image.asset('assets/ondas.jpg', fit: BoxFit.cover),
+            const Positioned.fill(child: _RecoveryBackground()),
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 28),
+                  padding: const EdgeInsets.fromLTRB(24, 18, 24, 28),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
+                    constraints: const BoxConstraints(maxWidth: 430),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _Header(onBack: () => Navigator.pop(context)),
-                        const SizedBox(height: 28),
-                        if (_requested)
-                          _ResetForm(
-                            formKey: _resetFormKey,
-                            emailController: _emailController,
-                            codeController: _codeController,
-                            passwordController: _passwordController,
-                            confirmPasswordController:
-                                _confirmPasswordController,
-                            generatedCode: _generatedCode,
-                            loading: _loading,
-                            hidePassword: _hidePassword,
-                            hideConfirmPassword: _hideConfirmPassword,
-                            error: _error,
-                            onTogglePassword: () {
-                              setState(() => _hidePassword = !_hidePassword);
-                            },
-                            onToggleConfirmPassword: () {
-                              setState(
-                                () => _hideConfirmPassword =
-                                    !_hideConfirmPassword,
-                              );
-                            },
-                            onSubmit: _resetPassword,
-                            onRestart: _restartFlow,
-                          )
-                        else
-                          _RequestForm(
-                            formKey: _requestFormKey,
-                            emailController: _emailController,
-                            loading: _loading,
-                            error: _error,
-                            onSubmit: _requestCode,
-                          ),
+                        _RecoveryHeader(onBack: () => Navigator.pop(context)),
+                        const SizedBox(height: 22),
+                        _RecoveryCard(
+                          requested: _requested,
+                          requestFormKey: _requestFormKey,
+                          resetFormKey: _resetFormKey,
+                          emailController: _emailController,
+                          codeController: _codeController,
+                          passwordController: _passwordController,
+                          confirmPasswordController: _confirmPasswordController,
+                          loading: _loading,
+                          hidePassword: _hidePassword,
+                          hideConfirmPassword: _hideConfirmPassword,
+                          error: _error,
+                          onRequestCode: _requestCode,
+                          onResetPassword: _resetPassword,
+                          onRestart: _restartFlow,
+                          onTogglePassword: () {
+                            setState(() => _hidePassword = !_hidePassword);
+                          },
+                          onToggleConfirmPassword: () {
+                            setState(
+                              () =>
+                                  _hideConfirmPassword = !_hideConfirmPassword,
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -183,20 +164,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 }
 
-class _Header extends StatelessWidget {
+class _RecoveryBackground extends StatelessWidget {
+  const _RecoveryBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFFFFCFA), Color(0xFFFFFBF8), Color(0xFFFDF8F3)],
+        ),
+      ),
+    );
+  }
+}
+
+class _RecoveryHeader extends StatelessWidget {
   final VoidCallback onBack;
 
-  const _Header({required this.onBack});
+  const _RecoveryHeader({required this.onBack});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.92),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.cardShadow,
+                blurRadius: 12,
+                offset: Offset(0, 5),
+              ),
+            ],
           ),
           child: IconButton(
             onPressed: onBack,
@@ -212,39 +218,106 @@ class _Header extends StatelessWidget {
               Text(
                 'Recuperar senha',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textBold,
                   fontSize: 30,
                   fontWeight: FontWeight.w800,
-                  height: 1,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black38,
-                      blurRadius: 12,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
+                  height: 1.05,
                 ),
               ),
               SizedBox(height: 8),
               Text(
-                'Solicite um código e redefina a senha pela API do backend.',
+                'Informe seu e-mail, valide o código recebido e defina uma nova senha.',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.textRegular,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black38,
-                      blurRadius: 10,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
+                  height: 1.35,
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _RecoveryCard extends StatelessWidget {
+  final bool requested;
+  final GlobalKey<FormState> requestFormKey;
+  final GlobalKey<FormState> resetFormKey;
+  final TextEditingController emailController;
+  final TextEditingController codeController;
+  final TextEditingController passwordController;
+  final TextEditingController confirmPasswordController;
+  final bool loading;
+  final bool hidePassword;
+  final bool hideConfirmPassword;
+  final String? error;
+  final VoidCallback onRequestCode;
+  final VoidCallback onResetPassword;
+  final VoidCallback onRestart;
+  final VoidCallback onTogglePassword;
+  final VoidCallback onToggleConfirmPassword;
+
+  const _RecoveryCard({
+    required this.requested,
+    required this.requestFormKey,
+    required this.resetFormKey,
+    required this.emailController,
+    required this.codeController,
+    required this.passwordController,
+    required this.confirmPasswordController,
+    required this.loading,
+    required this.hidePassword,
+    required this.hideConfirmPassword,
+    required this.error,
+    required this.onRequestCode,
+    required this.onResetPassword,
+    required this.onRestart,
+    required this.onTogglePassword,
+    required this.onToggleConfirmPassword,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.cardShadow,
+            blurRadius: 18,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: requested
+          ? _ResetForm(
+              formKey: resetFormKey,
+              emailController: emailController,
+              codeController: codeController,
+              passwordController: passwordController,
+              confirmPasswordController: confirmPasswordController,
+              loading: loading,
+              hidePassword: hidePassword,
+              hideConfirmPassword: hideConfirmPassword,
+              error: error,
+              onTogglePassword: onTogglePassword,
+              onToggleConfirmPassword: onToggleConfirmPassword,
+              onSubmit: onResetPassword,
+              onRestart: onRestart,
+            )
+          : _RequestForm(
+              formKey: requestFormKey,
+              emailController: emailController,
+              loading: loading,
+              error: error,
+              onSubmit: onRequestCode,
+            ),
     );
   }
 }
@@ -271,6 +344,27 @@ class _RequestForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const _StepBadge(label: 'Etapa 1 de 2'),
+          const SizedBox(height: 12),
+          const Text(
+            'Receba o código',
+            style: TextStyle(
+              color: AppColors.textBold,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Use o e-mail cadastrado na sua conta DuckHat.',
+            style: TextStyle(
+              color: AppColors.textRegular,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 18),
           _BaseField(
             controller: emailController,
             label: 'E-mail',
@@ -286,28 +380,10 @@ class _RequestForm extends StatelessWidget {
             _ErrorBanner(message: error!),
           ],
           const SizedBox(height: 18),
-          SizedBox(
-            height: 54,
-            child: FilledButton(
-              onPressed: loading ? null : onSubmit,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Gerar código de recuperação'),
-            ),
+          _PrimaryButton(
+            label: 'Enviar código',
+            loading: loading,
+            onPressed: onSubmit,
           ),
         ],
       ),
@@ -321,7 +397,6 @@ class _ResetForm extends StatelessWidget {
   final TextEditingController codeController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
-  final String? generatedCode;
   final bool loading;
   final bool hidePassword;
   final bool hideConfirmPassword;
@@ -337,7 +412,6 @@ class _ResetForm extends StatelessWidget {
     required this.codeController,
     required this.passwordController,
     required this.confirmPasswordController,
-    required this.generatedCode,
     required this.loading,
     required this.hidePassword,
     required this.hideConfirmPassword,
@@ -355,58 +429,27 @@ class _ResetForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.cardShadow,
-                  blurRadius: 14,
-                  offset: Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'E-mail: ${emailController.text.trim()}',
-                  style: const TextStyle(
-                    color: AppColors.textBold,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Digite o código recebido e a nova senha.',
-                  style: TextStyle(color: AppColors.textRegular),
-                ),
-                if (generatedCode != null) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.accent.withValues(alpha: 0.25),
-                      ),
-                    ),
-                    child: Text(
-                      'Código de demo: $generatedCode',
-                      style: const TextStyle(
-                        color: AppColors.textBold,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+          const _StepBadge(label: 'Etapa 2 de 2'),
+          const SizedBox(height: 12),
+          const Text(
+            'Defina a nova senha',
+            style: TextStyle(
+              color: AppColors.textBold,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Text(
+            'Código enviado para ${emailController.text.trim().toLowerCase()}.',
+            style: const TextStyle(
+              color: AppColors.textRegular,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 18),
           _BaseField(
             controller: codeController,
             label: 'Código',
@@ -468,7 +511,7 @@ class _ResetForm extends StatelessWidget {
             validator: (value) {
               if ((value ?? '').isEmpty) return 'Confirme a nova senha.';
               if (value != passwordController.text) {
-                return 'As senhas nao conferem.';
+                return 'As senhas não conferem.';
               }
               return null;
             },
@@ -478,39 +521,88 @@ class _ResetForm extends StatelessWidget {
             _ErrorBanner(message: error!),
           ],
           const SizedBox(height: 18),
-          SizedBox(
-            height: 54,
-            child: FilledButton(
-              onPressed: loading ? null : onSubmit,
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              child: loading
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.4,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Redefinir senha'),
-            ),
+          _PrimaryButton(
+            label: 'Redefinir senha',
+            loading: loading,
+            onPressed: onSubmit,
           ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: loading ? null : onRestart,
             style: TextButton.styleFrom(
-              foregroundColor: Colors.white,
+              foregroundColor: AppColors.textRegular,
               textStyle: const TextStyle(fontWeight: FontWeight.w800),
             ),
-            child: const Text('Solicitar novo código'),
+            child: const Text('Usar outro e-mail'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StepBadge extends StatelessWidget {
+  final String label;
+
+  const _StepBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.accent,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PrimaryButton extends StatelessWidget {
+  final String label;
+  final bool loading;
+  final VoidCallback onPressed;
+
+  const _PrimaryButton({
+    required this.label,
+    required this.loading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 54,
+      child: FilledButton(
+        onPressed: loading ? null : onPressed,
+        style: FilledButton.styleFrom(
+          backgroundColor: AppColors.accent,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: loading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: Colors.white,
+                ),
+              )
+            : Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
       ),
     );
   }
@@ -556,7 +648,7 @@ class _BaseField extends StatelessWidget {
         prefixIcon: Icon(icon, color: AppColors.accent),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color(0xFFF9FAFB),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -584,15 +676,15 @@ class _ErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.redAccent.withValues(alpha: 0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.4)),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
       ),
       child: Text(
         message,
         style: const TextStyle(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.w600,
+          color: AppColors.error,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -603,7 +695,7 @@ String? _validateEmail(String? value) {
   final email = value?.trim() ?? '';
   if (email.isEmpty) return 'Informe seu e-mail.';
   if (!email.contains('@') || !email.contains('.')) {
-    return 'Digite um e-mail valido.';
+    return 'Digite um e-mail válido.';
   }
   return null;
 }

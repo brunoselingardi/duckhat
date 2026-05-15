@@ -12,7 +12,7 @@ class ExternalContactLauncher {
     });
 
     if (opened != true) {
-      throw Exception('Nao foi possivel abrir o WhatsApp neste aparelho.');
+      throw Exception('Não foi possível abrir o WhatsApp neste aparelho.');
     }
   }
 }

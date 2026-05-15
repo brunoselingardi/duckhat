@@ -80,7 +80,7 @@ class _AccountTypeChoicePage extends StatelessWidget {
             child: _ChoiceButton(
               icon: Icons.person_outline,
               title: 'Sou cliente',
-              subtitle: 'Agende servicos e acompanhe seus horarios.',
+              subtitle: 'Agende serviços e acompanhe seus horários.',
               onTap: () => _open(context, const ClientSignupPage()),
             ),
           ),
@@ -470,8 +470,8 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
             destination: const ShopMainNavigator(),
             title: 'Estabelecimento criado',
             subtitle: vitrineCompleta
-                ? 'Sua vitrine e seus servicos iniciais ja estao prontos.'
-                : 'Sua conta foi criada. Revise a vitrine e os servicos no perfil.',
+                ? 'Sua vitrine e seus serviços iniciais já estão prontos.'
+                : 'Sua conta foi criada. Revise a vitrine e os serviços no perfil.',
           ),
         ),
         (_) => false,
@@ -812,7 +812,7 @@ class _BusinessDataStep extends StatelessWidget {
           const _StepTitle(
             title: 'Dados do estabelecimento',
             subtitle:
-                'Comece pela identidade publica e pelas imagens da vitrine.',
+                'Comece pela identidade pública e pelas imagens da vitrine.',
           ),
           const SizedBox(height: 20),
           Center(
@@ -861,14 +861,14 @@ class _BusinessProfileStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _StepTitle(
-            title: 'Descricao da vitrine',
+            title: 'Descrição da vitrine',
             subtitle:
                 'Escreva como o cliente vai entender seu estabelecimento.',
           ),
           const SizedBox(height: 20),
           _SignupTextField(
             controller: descriptionController,
-            label: 'Descricao do estabelecimento',
+            label: 'Descrição do estabelecimento',
             hint: 'Ambiente, especialidade e diferenciais',
             icon: Icons.notes_rounded,
             textInputAction: TextInputAction.next,
@@ -887,7 +887,7 @@ class _BusinessProfileStep extends StatelessWidget {
           const SizedBox(height: 14),
           _SignupTextField(
             controller: hoursController,
-            label: 'Horario de atendimento',
+            label: 'Horário de atendimento',
             hint: 'Segunda a sexta 9h - 20h',
             icon: Icons.access_time_rounded,
             textInputAction: TextInputAction.done,
@@ -919,9 +919,9 @@ class _BusinessServicesStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _StepTitle(
-            title: 'Servicos iniciais',
+            title: 'Serviços iniciais',
             subtitle:
-                'Cadastre os servicos que ja podem aparecer na sua vitrine.',
+                'Cadastre os serviços que já podem aparecer na sua vitrine.',
           ),
           const SizedBox(height: 18),
           _SignupServiceSummary(total: services.length),
@@ -2003,7 +2003,7 @@ class _SignupImageController {
       return _ImagePickResult(image: File(picked.path));
     } on PlatformException catch (error) {
       return _ImagePickResult(
-        error: error.message ?? 'Nao foi possivel abrir a galeria do aparelho.',
+        error: error.message ?? 'Não foi possível abrir a galeria do aparelho.',
       );
     }
   }
@@ -2121,7 +2121,7 @@ String? _validatePassword(String? value) {
 
 String? _validateConfirmPassword(String? value, String password) {
   if ((value ?? '').isEmpty) return 'Confirme sua senha.';
-  if (value != password) return 'As senhas nao conferem.';
+  if (value != password) return 'As senhas não conferem.';
   return null;
 }
 

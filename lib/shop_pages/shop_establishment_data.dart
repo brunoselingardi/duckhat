@@ -232,10 +232,10 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                             ? 'Nome do estabelecimento'
                             : _nameController.text.trim(),
                         address: _addressController.text.trim().isEmpty
-                            ? 'Endereco do estabelecimento'
+                            ? 'Endereço do estabelecimento'
                             : _addressController.text.trim(),
                         hours: _hoursController.text.trim().isEmpty
-                            ? 'Horarios de atendimento'
+                            ? 'Horários de atendimento'
                             : _hoursController.text.trim(),
                         description: _descriptionController.text.trim().isEmpty
                             ? 'Descreva a experiencia que o cliente encontra no seu estabelecimento.'
@@ -280,14 +280,14 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                           ),
                           const SizedBox(height: 14),
                           _buildTextField(
-                            'Horario de atendimento',
+                            'Horário de atendimento',
                             _hoursController,
                             Icons.access_time_rounded,
                             validator: _validateOptionalLongText,
                           ),
                           const SizedBox(height: 14),
                           _buildTextField(
-                            'Descricao para clientes',
+                            'Descrição para clientes',
                             _descriptionController,
                             Icons.notes_rounded,
                             maxLines: 4,
@@ -402,7 +402,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
       if (!mounted) return;
       setState(() {
         _error =
-            error.message ?? 'Nao foi possivel abrir a galeria do aparelho.';
+            error.message ?? 'Não foi possível abrir a galeria do aparelho.';
       });
     }
   }

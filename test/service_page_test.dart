@@ -42,6 +42,7 @@ void main() {
     expect(find.text('DuckHat Studio'), findsOneWidget);
     expect(find.text('Av. Central, 100'), findsOneWidget);
     expect(find.text('Corte social'), findsOneWidget);
+    expect(find.widgetWithText(ElevatedButton, 'Avaliar'), findsNothing);
     expect(find.text('Barbie Dream Barber'), findsNothing);
   });
 

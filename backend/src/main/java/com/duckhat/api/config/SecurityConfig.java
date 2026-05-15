@@ -46,7 +46,8 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.PATCH, "/api/agendamentos/{id}/confirmar").hasRole("PRESTADOR")
             .requestMatchers(HttpMethod.PATCH, "/api/agendamentos/{id}/concluir").hasRole("PRESTADOR")
             .requestMatchers("/api/agendamentos/**").hasRole("CLIENTE")
-            .requestMatchers("/api/avaliacoes/**").hasRole("CLIENTE")
+            .requestMatchers(HttpMethod.POST, "/api/avaliacoes").hasRole("CLIENTE")
+            .requestMatchers(HttpMethod.GET, "/api/avaliacoes/**").hasAnyRole("CLIENTE", "PRESTADOR")
             .requestMatchers("/api/chat/**").hasAnyRole("CLIENTE", "PRESTADOR")
             .requestMatchers("/api/notificacoes", "/api/notificacoes/**").hasAnyRole("CLIENTE", "PRESTADOR")
 

@@ -149,7 +149,14 @@ class DemoHomePage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(height: 8),
-                _PromoButton(),
+                Text(
+                  'Toque para pesquisar',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -358,29 +365,6 @@ class DemoHomePage extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PromoButton extends StatelessWidget {
-  const _PromoButton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Text(
-        "Ver promoções",
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppColors.accent,
-        ),
       ),
     );
   }

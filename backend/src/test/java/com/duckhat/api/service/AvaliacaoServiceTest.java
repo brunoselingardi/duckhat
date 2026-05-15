@@ -20,6 +20,7 @@ import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.AgendamentoRepository;
 import com.duckhat.api.repository.AvaliacaoRepository;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -133,6 +134,50 @@ class AvaliacaoServiceTest {
     assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
   }
 
+  @Test
+  void listarTodasRetornaAvaliacoesDoPrestadorAutenticado() {
+    Usuario prestador = usuario(3L, TipoUsuario.PRESTADOR);
+    Avaliacao avaliacao = avaliacao(agendamento(usuario(1L, TipoUsuario.CLIENTE), prestador,
+        StatusAgendamento.CONCLUIDO));
+    when(avaliacaoRepository.findByAgendamentoPrestadorId(3L)).thenReturn(List.of(avaliacao));
+
+    List<AvaliacaoResponse> response = service.listarTodas(prestador);
+
+    assertEquals(1, response.size());
+    assertEquals(9L, response.get(0).id());
+    assertEquals(3L, response.get(0).prestadorId());
+    assertEquals(1L, response.get(0).clienteId());
+    assertEquals("Usuario 1", response.get(0).clienteNome());
+  }
+
+  @Test
+  void buscarPorAgendamentoPermitePrestadorDoAtendimentoVerAvaliacao() {
+    Usuario prestador = usuario(3L, TipoUsuario.PRESTADOR);
+    Avaliacao avaliacao = avaliacao(agendamento(usuario(1L, TipoUsuario.CLIENTE), prestador,
+        StatusAgendamento.CONCLUIDO));
+    when(avaliacaoRepository.findByAgendamentoId(55L)).thenReturn(Optional.of(avaliacao));
+
+    AvaliacaoResponse response = service.buscarPorAgendamento(55L, prestador);
+
+    assertEquals(9L, response.id());
+    assertEquals(5, response.nota());
+    assertEquals("Bom atendimento", response.comentario());
+  }
+
+  @Test
+  void buscarPorAgendamentoBloqueiaPrestadorDeOutroAtendimento() {
+    Usuario outroPrestador = usuario(4L, TipoUsuario.PRESTADOR);
+    Avaliacao avaliacao = avaliacao(agendamento(usuario(1L, TipoUsuario.CLIENTE),
+        usuario(3L, TipoUsuario.PRESTADOR), StatusAgendamento.CONCLUIDO));
+    when(avaliacaoRepository.findByAgendamentoId(55L)).thenReturn(Optional.of(avaliacao));
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.buscarPorAgendamento(55L, outroPrestador));
+
+    assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
+  }
+
   private Usuario usuario(Long id, TipoUsuario tipo) {
     Usuario usuario = new Usuario();
     usuario.setId(id);
@@ -144,6 +189,10 @@ class AvaliacaoServiceTest {
 
   private Agendamento agendamento(Usuario cliente, StatusAgendamento status) {
     Usuario prestador = usuario(3L, TipoUsuario.PRESTADOR);
+    return agendamento(cliente, prestador, status);
+  }
+
+  private Agendamento agendamento(Usuario cliente, Usuario prestador, StatusAgendamento status) {
     Servico servico = new Servico();
     servico.setId(10L);
     servico.setNome("Corte");

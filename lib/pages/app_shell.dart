@@ -3,6 +3,7 @@ import 'package:duckhat/pages/chat.dart';
 import 'package:duckhat/pages/home.dart';
 import 'package:duckhat/pages/schedule.dart';
 import 'package:duckhat/pages/user.dart';
+import 'package:duckhat/services/chat_notification_service.dart';
 import 'package:flutter/material.dart';
 
 class MainNavigator extends StatefulWidget {
@@ -16,6 +17,8 @@ class _MainNavigatorState extends State<MainNavigator> {
   final PageStorageBucket _bucket = PageStorageBucket();
   final Set<int> _loadedIndexes = {0};
   int _currentIndex = 0;
+  final ChatNotificationService _chatNotifications =
+      ChatNotificationService.instance;
 
   static const List<Widget> _pages = [
     Home(),
@@ -23,6 +26,18 @@ class _MainNavigatorState extends State<MainNavigator> {
     ChatPage(),
     PerfilPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _chatNotifications.start();
+  }
+
+  @override
+  void dispose() {
+    _chatNotifications.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,14 +61,20 @@ class _MainNavigatorState extends State<MainNavigator> {
           }),
         ),
       ),
-      bottomNavigationBar: DuckHatBottomNav(
-        selectedIndex: _currentIndex,
-        onTap: (index) {
-          if (index == _currentIndex) return;
-          setState(() {
-            _currentIndex = index;
-            _loadedIndexes.add(index);
-          });
+      bottomNavigationBar: ValueListenableBuilder<int>(
+        valueListenable: _chatNotifications.unreadMessages,
+        builder: (context, unreadCount, _) {
+          return DuckHatBottomNav(
+            selectedIndex: _currentIndex,
+            unreadChatCount: unreadCount,
+            onTap: (index) {
+              if (index == _currentIndex) return;
+              setState(() {
+                _currentIndex = index;
+                _loadedIndexes.add(index);
+              });
+            },
+          );
         },
       ),
     );

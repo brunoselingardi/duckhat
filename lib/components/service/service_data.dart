@@ -2,7 +2,7 @@ import 'package:duckhat/components/service/service_models.dart';
 
 const serviceTabs = [
   'Experiencia',
-  'Servicos',
+  'Serviços',
   'Galeria',
   'Avaliacoes',
   'Perguntas',
@@ -69,7 +69,7 @@ const serviceReviews = [
     name: 'Theo Martins',
     rating: 4,
     comment:
-        'Gostei muito da proposta da casa. Tudo parece pensado para gerar experiencia, nao so um corte comum.',
+        'Gostei muito da proposta da casa. Tudo parece pensado para gerar experiência, não só um corte comum.',
     date: 'Fev 18, 2025',
   ),
   ServiceReview(

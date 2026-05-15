@@ -881,6 +881,35 @@ class DuckHatApi {
     return Avaliacao.fromJson(body);
   }
 
+  Future<List<Avaliacao>> listarAvaliacoes() async {
+    if (_devMode) {
+      return const [];
+    }
+
+    await ensureAuthenticated();
+
+    final response = await _client.get(
+      Uri.parse('${ApiConfig.baseUrl}/api/avaliacoes'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível carregar as avaliações.',
+      );
+    }
+
+    if (body is! List) {
+      throw Exception('Resposta inválida ao listar avaliações.');
+    }
+
+    return body
+        .map((item) => Avaliacao.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
   Future<Avaliacao> criarAvaliacao({
     int? prestadorId,
     required int nota,

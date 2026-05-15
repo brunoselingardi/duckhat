@@ -156,7 +156,7 @@ class GeoSearchService {
           fallbackFormattedAddress: fallbackFormattedAddress,
         );
       }
-      throw Exception('Nao foi possivel localizar o CEP informado no mapa.');
+      throw Exception('Não foi possível localizar o CEP informado no mapa.');
     }
 
     final first = Map<String, dynamic>.from(results.first as Map);
@@ -250,7 +250,7 @@ class GeoSearchService {
                   properties['city'],
                   properties['state'],
                 ]) ??
-                'Endereco indisponivel',
+                'Endereço indisponível',
             location: LatLng(lat, lon),
           );
         })

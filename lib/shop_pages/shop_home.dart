@@ -1,5 +1,7 @@
 import 'package:duckhat/models/agendamento.dart';
 import 'package:flutter/material.dart';
+import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/pages/appointment_detail.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
@@ -282,7 +284,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
           if (_pendingCount > 0) ...[
             const SizedBox(height: 6),
             Text(
-              '$_pendingCount pendente${_pendingCount == 1 ? '' : 's'} de confirmacao',
+              '$_pendingCount pendente${_pendingCount == 1 ? '' : 's'} de confirmação',
               style: const TextStyle(
                 color: AppColors.warning,
                 fontSize: 12,
@@ -301,9 +303,20 @@ class _ShopHomePageState extends State<ShopHomePage> {
           else if (appointments.isEmpty)
             const _HomeStateCard.empty()
           else
-            ...appointments.map((item) => _AppointmentCard(agendamento: item)),
+            ...appointments.map(
+              (item) => _AppointmentCard(
+                agendamento: item,
+                onTap: () => _abrirDetalheAgendamento(item),
+              ),
+            ),
         ],
       ),
+    );
+  }
+
+  Future<void> _abrirDetalheAgendamento(Agendamento agendamento) async {
+    await Navigator.of(context).push(
+      AppRoute(builder: (_) => AppointmentDetailPage(agendamento: agendamento)),
     );
   }
 
@@ -321,8 +334,9 @@ class _ShopHomePageState extends State<ShopHomePage> {
 
 class _AppointmentCard extends StatelessWidget {
   final Agendamento agendamento;
+  final VoidCallback onTap;
 
-  const _AppointmentCard({required this.agendamento});
+  const _AppointmentCard({required this.agendamento, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -330,64 +344,79 @@ class _AppointmentCard extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: buildShopCardDecoration(
-        radius: 14,
-        borderColor: statusColor.withValues(alpha: 0.16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              color: AppColors.inputBackground,
-              borderRadius: BorderRadius.circular(14),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Ink(
+            padding: const EdgeInsets.all(16),
+            decoration: buildShopCardDecoration(
+              radius: 14,
+              borderColor: statusColor.withValues(alpha: 0.16),
             ),
-            alignment: Alignment.center,
-            child: Text(
-              _formatTime(agendamento.inicioEm),
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: AppColors.accent,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  agendamento.clienteNome ??
-                      'Cliente #${agendamento.clienteId}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.darkAlt,
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    color: AppColors.inputBackground,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    _formatTime(agendamento.inicioEm),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.accent,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  agendamento.servicoNome ??
-                      'Servico #${agendamento.servicoId}',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w600,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        agendamento.clienteNome ??
+                            'Cliente #${agendamento.clienteId}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.darkAlt,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        agendamento.servicoNome ??
+                            'Servico #${agendamento.servicoId}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textMuted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                const SizedBox(width: 8),
+                _StatusChip(status: agendamento.status),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  color: AppColors.accent,
+                  size: 20,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          _StatusChip(status: agendamento.status),
-        ],
+        ),
       ),
     );
   }
@@ -422,7 +451,7 @@ class _StatusChip extends StatelessWidget {
     final label = switch (status) {
       'CONFIRMADO' => 'Confirmado',
       'CANCELADO' => 'Cancelado',
-      'CONCLUIDO' => 'Concluido',
+      'CONCLUIDO' => 'Concluído',
       _ => 'Pendente',
     };
 

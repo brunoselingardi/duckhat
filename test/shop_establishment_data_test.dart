@@ -25,11 +25,11 @@ void main() {
       'Av. Central, 100',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Horario de atendimento'),
+      find.widgetWithText(TextFormField, 'Horário de atendimento'),
       'Segunda a sexta 8h - 18h',
     );
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Descricao para clientes'),
+      find.widgetWithText(TextFormField, 'Descrição para clientes'),
       'Atendimento atualizado para clientes.',
     );
     await tester.enterText(

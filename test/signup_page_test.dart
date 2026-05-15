@@ -73,17 +73,17 @@ void main() {
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Descricao da vitrine'), findsOneWidget);
-    expect(find.text('Descricao do estabelecimento'), findsOneWidget);
+    expect(find.text('Descrição da vitrine'), findsOneWidget);
+    expect(find.text('Descrição do estabelecimento'), findsOneWidget);
 
     await tester.enterText(
-      find.widgetWithText(TextFormField, 'Descricao do estabelecimento'),
+      find.widgetWithText(TextFormField, 'Descrição do estabelecimento'),
       'Atendimento profissional com horario marcado.',
     );
     await tester.tap(find.text('Next'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Servicos iniciais'), findsOneWidget);
+    expect(find.text('Serviços iniciais'), findsOneWidget);
     expect(find.text('Serviço ativo'), findsOneWidget);
     expect(find.text('Duração e preço'), findsOneWidget);
     expect(find.text('Nome do serviço'), findsOneWidget);

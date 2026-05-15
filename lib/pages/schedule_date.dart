@@ -277,10 +277,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
           const SizedBox(height: 6),
           const Text(
             'Selecione primeiro o serviço desejado para liberar os horários disponíveis.',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.textMuted,
-            ),
+            style: TextStyle(fontSize: 12, color: AppColors.textMuted),
           ),
           const SizedBox(height: 14),
           if (widget.serviceOffers.isEmpty)
@@ -289,7 +286,11 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               style: TextStyle(color: AppColors.textRegular),
             )
           else
-            for (var index = 0; index < widget.serviceOffers.length; index++) ...[
+            for (
+              var index = 0;
+              index < widget.serviceOffers.length;
+              index++
+            ) ...[
               _ServiceOptionTile(
                 offer: widget.serviceOffers[index],
                 selected:
@@ -596,10 +597,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _slotsError!,
-              style: const TextStyle(color: AppColors.error),
-            ),
+            Text(_slotsError!, style: const TextStyle(color: AppColors.error)),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _loadDisponibilidades,
@@ -647,7 +645,7 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Horarios disponiveis',
+            'Horários disponíveis',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: AppColors.textBold,
@@ -671,14 +669,14 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
               final isAvailable = slot.available;
 
               return GestureDetector(
-                onTap: isAvailable && !_saving
-                    ? () => _selectTime(slot)
-                    : null,
+                onTap: isAvailable && !_saving ? () => _selectTime(slot) : null,
                 child: Container(
                   decoration: BoxDecoration(
                     color: isSelected
                         ? AppColors.accent
-                        : (isAvailable ? AppColors.primary : AppColors.inputFill),
+                        : (isAvailable
+                              ? AppColors.primary
+                              : AppColors.inputFill),
                     borderRadius: BorderRadius.circular(8),
                     border: isAvailable && !isSelected
                         ? Border.all(color: AppColors.border)
@@ -708,7 +706,9 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
 
   Widget _buildConfirmButton() {
     final canConfirm =
-        _selectedOffer != null && _selectedDate != null && _selectedTime != null;
+        _selectedOffer != null &&
+        _selectedDate != null &&
+        _selectedTime != null;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -749,11 +749,12 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   }
 
   List<TimeSlot> _slotsForDate(DateTime date) {
-    final daySlots = _disponibilidades
-        .where((item) => item.ativo && item.diaSemana == date.weekday)
-        .expand((item) => _slotsFromDisponibilidade(date, item))
-        .toList()
-      ..sort((a, b) => a.start.compareTo(b.start));
+    final daySlots =
+        _disponibilidades
+            .where((item) => item.ativo && item.diaSemana == date.weekday)
+            .expand((item) => _slotsFromDisponibilidade(date, item))
+            .toList()
+          ..sort((a, b) => a.start.compareTo(b.start));
 
     return daySlots;
   }
@@ -767,7 +768,9 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
 
     final start = _dateTimeWithTime(date, disponibilidade.horaInicio);
     final end = _dateTimeWithTime(date, disponibilidade.horaFim);
-    final lastStart = end.subtract(Duration(minutes: selectedOffer.durationMin));
+    final lastStart = end.subtract(
+      Duration(minutes: selectedOffer.durationMin),
+    );
     final today = DateTime.now();
 
     if (lastStart.isBefore(start)) return [];

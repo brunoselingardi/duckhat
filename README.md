@@ -1,46 +1,61 @@
 # DuckHat
 
-Aplicativo acadêmico com frontend Flutter, backend Spring Boot e banco MySQL.
+DuckHat é um aplicativo acadêmico de agendamento de serviços. O projeto reúne um app Flutter, uma API Spring Boot e um banco MySQL local para validar fluxos reais de cliente e estabelecimento: cadastro, login, busca, página pública, chat, serviços, agenda e notificações.
 
 ## Stack
 
-- Flutter
-- Java 17
-- Spring Boot
-- MySQL 8.4 via Docker Compose
+- Flutter e Dart para o aplicativo mobile.
+- Spring Boot, Spring Security, JWT e Spring Data JPA para a API.
+- MySQL 8.4 via Docker Compose para desenvolvimento local.
+- Maven Wrapper para build e testes do backend.
+- Testes Flutter em `test/` e testes backend com perfil `test` usando H2.
 
 ## Estrutura
 
 ```text
 duckhat/
-├── AGENTS.md              # instrucoes locais para revisao e manutencao
-├── docs/                  # documentacao complementar do projeto
-├── lib/                  # frontend Flutter
-├── backend/              # API Spring Boot
-├── database/             # compose, schema, migration e seed
-├── assets/               # imagens, fontes e ícones
-└── test/                 # testes Flutter
+├── AGENTS.md       # instruções locais para agentes e manutenção
+├── assets/         # imagens, fontes e ícones do app
+├── backend/        # API Spring Boot
+├── database/       # Docker Compose, migrations e seeds SQL
+├── docs/           # documentação funcional e planos técnicos
+├── lib/            # frontend Flutter
+├── test/           # testes automatizados do Flutter
+├── pubspec.yaml    # dependências e assets do app
+└── README.md
 ```
 
-## Leitura funcional recomendada
+## Estado funcional
 
-Antes de revisar funcionalidades do projeto, ler:
+Fluxos principais já integrados com API:
 
-```text
-AGENTS.md
-docs/funcionalidades-por-arquivo.md
-```
+- Login real por tipo de conta: cliente ou prestador.
+- Cadastro de cliente e estabelecimento.
+- Edição de perfil do cliente.
+- Edição da vitrine pública do estabelecimento.
+- Cadastro e edição de serviços/preços do estabelecimento.
+- Busca por categoria, termo, endereço, CEP ou localização atual.
+- Página pública do estabelecimento com dados reais do catálogo.
+- Chat entre cliente e prestador.
+- Agendamento com serviço, data, horário e disponibilidade.
+- Agenda do cliente e agenda do estabelecimento.
+- Notificações e preferências de notificação.
+- Recuperação de senha via API.
 
-Esse material resume a responsabilidade dos arquivos principais, telas, botoes, fluxos e pontos integrados com API.
+Conteúdos ainda tratados como fase futura ou fallback controlado:
+
+- Galeria, avaliações e FAQ reais do estabelecimento.
+- Estratégia definitiva de upload/armazenamento de imagens.
+- Favoritos persistidos no backend.
 
 ## Requisitos
 
-- Flutter instalado e disponível no PATH
-- Java 17
-- Docker + Docker Compose
-- Android Studio ou dispositivo Android para rodar o app mobile
+- Flutter disponível no `PATH`.
+- Java 17 ou compatível com o backend do projeto.
+- Docker e Docker Compose.
+- Android SDK/ADB para rodar em emulador ou dispositivo físico.
 
-## Banco local
+## Configuração do banco
 
 Crie o arquivo de ambiente do banco:
 
@@ -48,36 +63,30 @@ Crie o arquivo de ambiente do banco:
 cp database/.env.example database/.env
 ```
 
-Suba o MySQL:
+Suba MySQL e Adminer:
 
 ```bash
 docker compose -f database/compose.yaml --env-file database/.env up -d
 ```
 
-Se precisar de dados de desenvolvimento:
+Aplicar seeds de desenvolvimento, quando necessário:
 
 ```bash
 docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
   mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/001_seed_dev.sql
-```
 
-Para os serviços reais da Barbie Dream Barber usados no fluxo de agendamento:
-
-```bash
 docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
   mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/002_seed_barbie_services.sql
-```
 
-Para atualizar um banco local existente com notificações in-app e preferências:
-
-```bash
 docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
-  mysql -u duckhat_user -pduckhat_pass duckhat < database/migrations/V6__notification_feed_and_preferences.sql
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/003_seed_plumbing_provider.sql
 ```
+
+O banco local padrão fica em `localhost:3307`.
 
 ## Backend
 
-Crie um ambiente local opcional para sobrescrever as configurações padrão:
+O backend possui defaults locais suficientes para desenvolvimento. Para sobrescrever configurações, crie `backend/.env`:
 
 ```bash
 cp backend/.env.example backend/.env
@@ -86,7 +95,7 @@ source backend/.env
 set +a
 ```
 
-As variáveis suportadas são:
+Variáveis aceitas:
 
 - `SERVER_PORT`
 - `SPRING_DATASOURCE_URL`
@@ -98,23 +107,21 @@ As variáveis suportadas são:
 - `JWT_SECRET`
 - `JWT_EXPIRATION`
 
-Se nenhuma variável for exportada, o backend continua funcionando com os defaults locais atuais.
-
-Rodar testes do backend:
+Rodar testes:
 
 ```bash
 cd backend
 ./mvnw test
 ```
 
-Subir a API:
+Subir API:
 
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-Health check esperado:
+Health check:
 
 ```text
 GET http://localhost:8081/api/health
@@ -122,20 +129,20 @@ GET http://localhost:8081/api/health
 
 ## Flutter
 
-Instalar dependências:
+Instale dependências:
 
 ```bash
 flutter pub get
 ```
 
-Verificações:
+Valide o frontend:
 
 ```bash
 flutter analyze
 flutter test
 ```
 
-Rodar no host local:
+Rodar no desktop/emulador com API local:
 
 ```bash
 flutter run \
@@ -144,7 +151,7 @@ flutter run \
   --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
 ```
 
-Rodar no emulador Android:
+No emulador Android, use `10.0.2.2` para acessar a API do host:
 
 ```bash
 flutter run \
@@ -153,47 +160,91 @@ flutter run \
   --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
 ```
 
-Rodar no celular físico via USB.
+## Celular físico
 
-Observação: em celular físico, `localhost` dentro do app aponta para o próprio celular, não para o computador. Para usar a API local do computador em `8081`, primeiro crie o túnel USB com `adb reverse` e rode o app usando `http://127.0.0.1:8081`.
-
-Dispositivo validado nesta máquina:
-
-```text
-SM G770F (RX8N309MYQA)
-```
+Em celular físico, `localhost` aponta para o próprio aparelho. Para usar a API da máquina em `8081`, aplique o túnel USB:
 
 ```bash
 adb -s RX8N309MYQA reverse tcp:8081 tcp:8081
+```
+
+Depois rode:
+
+```bash
 flutter run -d RX8N309MYQA \
   --dart-define=API_BASE_URL=http://127.0.0.1:8081 \
   --dart-define=DUCKHAT_LOGIN_EMAIL=login@duckhat.com \
   --dart-define=DUCKHAT_LOGIN_PASSWORD=123456
 ```
 
-## Fluxo real validado
+Dispositivo validado neste ambiente:
 
-Fluxo principal integrado atualmente:
+```text
+SM G770F - RX8N309MYQA
+```
 
-1. Abrir a página do estabelecimento
-2. Entrar em `Serviços`
-3. Selecionar um serviço real
-4. Ir para `Agendar`
-5. Escolher data e horário em `schedule_date.dart`
-6. Criar agendamento via API Spring Boot
-7. Ver o item refletido na agenda integrada
+## Variáveis do app
 
-Também estão integrados com API e MySQL:
+- `API_BASE_URL`: URL base da API.
+- `DUCKHAT_LOGIN_EMAIL`: e-mail usado por autenticação automática em fluxos que exigem token.
+- `DUCKHAT_LOGIN_PASSWORD`: senha usada por autenticação automática.
+- `GEOAPIFY_API_KEY`: chave para geocodificação e busca externa por localização.
+- `DUCKHAT_ENABLE_DEV_LOGIN`: quando `true`, exibe os botões de login de desenvolvimento. Deve ficar desativado em execução normal.
 
-- chat real entre cliente e prestador
-- notificações in-app geradas por agenda e chat
-- preferências persistidas de notificações
-- leitura individual e leitura em massa de notificações
+Exemplo com Geoapify:
 
-## Observações técnicas
+```bash
+flutter run -d RX8N309MYQA \
+  --dart-define=API_BASE_URL=http://127.0.0.1:8081 \
+  --dart-define=DUCKHAT_LOGIN_EMAIL=login@duckhat.com \
+  --dart-define=DUCKHAT_LOGIN_PASSWORD=123456 \
+  --dart-define=GEOAPIFY_API_KEY=SUA_CHAVE
+```
 
-- O backend escuta por padrão em `8081`.
-- O banco local esperado fica em `localhost:3307`.
-- O app depende de `DUCKHAT_LOGIN_EMAIL` e `DUCKHAT_LOGIN_PASSWORD` para autenticar na API.
-- Parte do app ainda usa dados mockados, mas agenda, chat, autenticação e notificações estão integrados com API e MySQL.
-- O arquivo `backend/.env` é local e não deve ser versionado.
+## Fluxos de validação recomendados
+
+Cliente:
+
+1. Entrar como cliente.
+2. Pesquisar por `encanador`.
+3. Abrir `Jorje Encanamentos`.
+4. Conferir serviços e página pública.
+5. Abrir chat.
+6. Criar agendamento.
+7. Conferir o agendamento na agenda.
+
+Estabelecimento:
+
+1. Entrar como prestador.
+2. Abrir perfil do estabelecimento.
+3. Editar vitrine pública.
+4. Editar serviços e preços.
+5. Conferir agenda do prestador.
+6. Confirmar ou concluir agendamentos quando houver itens pendentes.
+
+## Qualidade
+
+Antes de concluir qualquer alteração:
+
+```bash
+dart format lib test
+flutter analyze
+flutter test
+git diff --check
+```
+
+Para alterações no backend:
+
+```bash
+cd backend
+./mvnw test
+```
+
+## Observações de manutenção
+
+- Leia `AGENTS.md` antes de mudanças relevantes.
+- Preserve alterações locais do usuário.
+- Prefira os padrões existentes de `lib/theme.dart`, `DuckHatApi` e componentes próximos.
+- Não exponha fluxos de desenvolvimento na UI normal.
+- Quando o schema do backend mudar, adicione migration em `database/migrations`.
+- Para bancos locais antigos, aplique migrations pendentes antes de investigar falhas de `ddl-auto=validate`.

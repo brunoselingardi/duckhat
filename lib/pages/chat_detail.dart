@@ -1,4 +1,5 @@
 import 'package:duckhat/models/chat_mensagem.dart';
+import 'package:duckhat/services/chat_notification_service.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors;
 import 'package:flutter/material.dart';
@@ -51,6 +52,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         _messages = messages;
         _loading = false;
       });
+      await ChatNotificationService.instance.markConversationRead(
+        widget.conversaId,
+      );
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -76,6 +80,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         _messages = [..._messages, message];
         _messageController.clear();
       });
+      await ChatNotificationService.instance.refresh();
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/models/avaliacao.dart';
 import 'package:duckhat/pages/login.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
@@ -15,6 +16,8 @@ class ShopProfilePage extends StatefulWidget {
 
 class _ShopProfilePageState extends State<ShopProfilePage> {
   final DuckHatApi _api = DuckHatApi.instance;
+  bool _loadingReviews = true;
+  List<Avaliacao> _reviews = const [];
 
   @override
   void initState() {
@@ -27,6 +30,25 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
     try {
       await _api.carregarMeuPerfil();
     } catch (_) {}
+    await _loadReviews();
+  }
+
+  Future<void> _loadReviews() async {
+    setState(() => _loadingReviews = true);
+    try {
+      final reviews = await _api.listarAvaliacoes();
+      if (!mounted) return;
+      setState(() {
+        _reviews = reviews;
+        _loadingReviews = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _reviews = const [];
+        _loadingReviews = false;
+      });
+    }
   }
 
   @override
@@ -54,6 +76,11 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                     ),
                     const SizedBox(height: 18),
                     _buildMenuSection(ctx),
+                    const SizedBox(height: 18),
+                    _ShopReviewsSection(
+                      loading: _loadingReviews,
+                      reviews: _reviews,
+                    ),
                   ],
                 ),
               ),
@@ -223,7 +250,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Atualize sua vitrine publica e os servicos oferecidos pelo estabelecimento.',
+                      'Atualize sua vitrine pública e os serviços oferecidos pelo estabelecimento.',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -250,7 +277,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
           _buildMenuItem(
             icon: Icons.storefront_outlined,
             title: 'Editar perfil público',
-            subtitle: 'Capa, logo, nome, endereco e descricao',
+            subtitle: 'Capa, logo, nome, endereço e descrição',
             onTap: () async {
               final updated = await Navigator.push<bool>(
                 context,
@@ -269,7 +296,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
           _buildMenuItem(
             icon: Icons.logout,
             title: 'Sair da conta',
-            subtitle: 'Encerrar a sessao neste dispositivo',
+            subtitle: 'Encerrar a sessão neste dispositivo',
             titleColor: AppColors.error,
             onTap: () => _showLogoutDialog(context),
           ),
@@ -418,7 +445,7 @@ class _ShopQuickStats extends StatelessWidget {
         ? resumo
         : (descricao != null && descricao.isNotEmpty)
         ? descricao
-        : 'Organize dados, fotos, agenda e servicos do estabelecimento.';
+        : 'Organize dados, fotos, agenda e serviços do estabelecimento.';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -480,6 +507,158 @@ class _ShopQuickStats extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShopReviewsSection extends StatelessWidget {
+  final bool loading;
+  final List<Avaliacao> reviews;
+
+  const _ShopReviewsSection({required this.loading, required this.reviews});
+
+  @override
+  Widget build(BuildContext context) {
+    final total = reviews.length;
+    final average = total == 0
+        ? 0.0
+        : reviews.fold<int>(0, (sum, item) => sum + item.nota) / total;
+    final recent = reviews.take(3).toList();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: buildShopCardDecoration(radius: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.star.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.star_rounded, color: AppColors.star),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Avaliações do estabelecimento',
+                      style: TextStyle(
+                        color: AppColors.textBold,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      total == 0
+                          ? 'Nenhuma avaliação publicada ainda'
+                          : '${average.toStringAsFixed(1)} de 5,0 · $total avaliação${total == 1 ? '' : 'ões'}',
+                      style: const TextStyle(
+                        color: AppColors.textRegular,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          if (loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: LinearProgressIndicator(color: AppColors.accent),
+            )
+          else if (recent.isEmpty)
+            const Text(
+              'As avaliações aparecerão aqui depois que clientes concluírem serviços e enviarem uma nota.',
+              style: TextStyle(
+                color: AppColors.textRegular,
+                fontSize: 12,
+                height: 1.45,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          else
+            ...recent.map((review) => _ShopReviewTile(review: review)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShopReviewTile extends StatelessWidget {
+  final Avaliacao review;
+
+  const _ShopReviewTile({required this.review});
+
+  @override
+  Widget build(BuildContext context) {
+    final cliente = review.clienteNome?.trim();
+    final comentario = review.comentario?.trim();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.inputBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  cliente == null || cliente.isEmpty ? 'Cliente' : cliente,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textBold,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Row(
+                children: List.generate(5, (index) {
+                  final value = index + 1;
+                  return Icon(
+                    value <= review.nota ? Icons.star : Icons.star_border,
+                    color: AppColors.star,
+                    size: 15,
+                  );
+                }),
+              ),
+            ],
+          ),
+          if (comentario != null && comentario.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              comentario,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.textRegular,
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
