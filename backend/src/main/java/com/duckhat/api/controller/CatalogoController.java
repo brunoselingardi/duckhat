@@ -3,10 +3,12 @@ package com.duckhat.api.controller;
 import com.duckhat.api.dto.CatalogoPrestadorBuscaResponse;
 import com.duckhat.api.dto.OcupacaoPrestadorResponse;
 import com.duckhat.api.dto.PrestadorPublicoResponse;
+import com.duckhat.api.dto.AvaliacaoPublicaResponse;
 import com.duckhat.api.dto.DisponibilidadeResponse;
 import com.duckhat.api.dto.EstabelecimentoCatalogoResponse;
 import com.duckhat.api.dto.ServicoResponse;
 import com.duckhat.api.service.AgendamentoService;
+import com.duckhat.api.service.AvaliacaoService;
 import com.duckhat.api.service.CatalogoService;
 import com.duckhat.api.service.DisponibilidadeService;
 import com.duckhat.api.service.ServicoService;
@@ -26,17 +28,20 @@ public class CatalogoController {
   private final DisponibilidadeService disponibilidadeService;
   private final AgendamentoService agendamentoService;
   private final UsuarioService usuarioService;
+  private final AvaliacaoService avaliacaoService;
 
   public CatalogoController(ServicoService servicoService,
       CatalogoService catalogoService,
       DisponibilidadeService disponibilidadeService,
       AgendamentoService agendamentoService,
-      UsuarioService usuarioService) {
+      UsuarioService usuarioService,
+      AvaliacaoService avaliacaoService) {
     this.servicoService = servicoService;
     this.catalogoService = catalogoService;
     this.disponibilidadeService = disponibilidadeService;
     this.agendamentoService = agendamentoService;
     this.usuarioService = usuarioService;
+    this.avaliacaoService = avaliacaoService;
   }
 
   @GetMapping("/api/catalogo/estabelecimentos")
@@ -88,6 +93,12 @@ public class CatalogoController {
   @GetMapping("/api/catalogo/prestadores/{prestadorId}")
   public PrestadorPublicoResponse buscarPrestadorPublico(@PathVariable Long prestadorId) {
     return usuarioService.buscarPrestadorPublico(prestadorId);
+  }
+
+  @GetMapping("/api/catalogo/prestadores/{prestadorId}/avaliacoes")
+  public List<AvaliacaoPublicaResponse> listarAvaliacoesPublicasPorPrestador(
+      @PathVariable Long prestadorId) {
+    return avaliacaoService.listarPublicasPorPrestador(prestadorId);
   }
 
   @GetMapping("/api/catalogo/disponibilidades/prestador/{prestadorId}")

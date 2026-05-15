@@ -1,5 +1,6 @@
 import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/estabelecimento_publico.dart';
+import 'package:duckhat/models/avaliacao.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
 import 'package:duckhat/pages/service.dart';
 import 'package:flutter/material.dart';
@@ -95,5 +96,71 @@ void main() {
     expect(find.text('Nenhuma pergunta frequente cadastrada.'), findsOneWidget);
     expect(find.text('Barbie Dream Barber'), findsNothing);
     expect(find.text('Mostrar mais detalhes'), findsNothing);
+  });
+
+  testWidgets('ServicePage uses real reviews for public rating and comments', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ServicePage(
+          prestadorId: 13,
+          profileLoader: (_) async => const EstabelecimentoPublico(
+            id: 13,
+            nome: 'Jorje Encanamentos',
+            telefone: '62999990013',
+            endereco: 'Rua dos Canos, 45 - Setor Oeste',
+            descricaoPublica: 'Atendimento hidraulico residencial.',
+            horarioAtendimento: 'Segunda a sabado 7h - 19h',
+            imagemCapa: null,
+            imagemLogo: null,
+          ),
+          servicesLoader: (_) async => [
+            ServicoCatalogo(
+              id: 5,
+              prestadorId: 13,
+              nome: 'Visita tecnica de encanador',
+              descricao: 'Diagnostico inicial para canos e vazamentos.',
+              duracaoMin: 45,
+              preco: 90,
+              ativo: true,
+            ),
+          ],
+          reviewsLoader: (_) async => [
+            Avaliacao(
+              id: 1,
+              agendamentoId: 101,
+              prestadorId: 13,
+              clienteId: 7,
+              clienteNome: 'Maria Duck',
+              nota: 5,
+              comentario: 'Resolveu o vazamento no mesmo dia.',
+              criadoEm: DateTime(2026, 5, 10, 14, 30),
+            ),
+            Avaliacao(
+              id: 2,
+              agendamentoId: 102,
+              prestadorId: 13,
+              clienteId: 8,
+              clienteNome: 'Joao Duck',
+              nota: 4,
+              comentario: 'Explicou tudo antes de começar.',
+              criadoEm: DateTime(2026, 5, 11, 9),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.text('4.5'), findsOneWidget);
+    expect(find.text('(2 avaliacoes)'), findsOneWidget);
+    expect(find.text('Resolveu o vazamento no mesmo dia.'), findsOneWidget);
+    expect(find.text('Explicou tudo antes de começar.'), findsOneWidget);
+    expect(find.text('Maria Duck'), findsOneWidget);
+    expect(find.text('Joao Duck'), findsOneWidget);
+    expect(find.text('Nenhuma avaliação publicada ainda.'), findsNothing);
   });
 }

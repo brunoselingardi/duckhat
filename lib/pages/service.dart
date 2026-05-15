@@ -6,6 +6,7 @@ import 'package:duckhat/components/service/service_profile_fallbacks.dart';
 import 'package:duckhat/components/service/service_sections.dart';
 import 'package:duckhat/components/service/service_tab_menu.dart';
 import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/models/avaliacao.dart';
 import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/estabelecimento_publico.dart';
 import 'package:duckhat/models/servico_catalogo.dart';
@@ -18,12 +19,15 @@ typedef ServiceProfileLoader =
     Future<EstabelecimentoPublico> Function(int prestadorId);
 typedef ServiceOffersLoader =
     Future<List<ServicoCatalogo>> Function(int prestadorId);
+typedef ServiceReviewsLoader =
+    Future<List<Avaliacao>> Function(int prestadorId);
 
 class ServicePage extends StatefulWidget {
   final int prestadorId;
   final EstabelecimentoCatalogo? estabelecimento;
   final ServiceProfileLoader? profileLoader;
   final ServiceOffersLoader? servicesLoader;
+  final ServiceReviewsLoader? reviewsLoader;
 
   const ServicePage({
     super.key,
@@ -31,6 +35,7 @@ class ServicePage extends StatefulWidget {
     this.estabelecimento,
     this.profileLoader,
     this.servicesLoader,
+    this.reviewsLoader,
   });
 
   @override
@@ -55,6 +60,7 @@ class _ServicePageState extends State<ServicePage> {
   EstabelecimentoPublico? _profile;
   ServicePublicPageFallback? _fallback;
   List<ServiceOffer> _offers = const [];
+  List<Avaliacao> _publicReviews = const [];
 
   @override
   void initState() {
@@ -134,9 +140,14 @@ class _ServicePageState extends State<ServicePage> {
       _loadingServices = true;
       _profileError = null;
       _servicesError = null;
+      _publicReviews = const [];
     });
 
-    await Future.wait([_loadProfile(fallback), _loadServices()]);
+    await Future.wait([
+      _loadProfile(fallback),
+      _loadServices(),
+      _loadReviews(),
+    ]);
   }
 
   Future<void> _loadProfile(ServicePublicPageFallback? fallback) async {
@@ -209,6 +220,21 @@ class _ServicePageState extends State<ServicePage> {
     }
   }
 
+  Future<void> _loadReviews() async {
+    try {
+      final loader =
+          widget.reviewsLoader ??
+          DuckHatApi.instance.listarAvaliacoesPublicasPorPrestador;
+      final reviews = await loader(widget.prestadorId);
+      if (!mounted) return;
+
+      setState(() => _publicReviews = reviews);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _publicReviews = const []);
+    }
+  }
+
   EstabelecimentoPublico? get _effectiveProfile =>
       _profile ?? _profileFromCatalog(_catalog) ?? _fallback?.profile;
 
@@ -217,9 +243,12 @@ class _ServicePageState extends State<ServicePage> {
 
   List<String> get _galleryImages => _fallback?.galleryImages ?? const [];
 
-  List<ServiceReview> get _reviews => _fallback?.reviews ?? const [];
+  List<ServiceReview> get _reviews => _publicReviews
+      .where((review) => review.comentario?.trim().isNotEmpty ?? false)
+      .map(_reviewFromAvaliacao)
+      .toList();
 
-  List<ServiceFaq> get _faqs => _fallback?.faqs ?? const [];
+  List<ServiceFaq> get _faqs => const [];
 
   ServiceExperienceData get _experience =>
       _fallback?.experience ??
@@ -235,9 +264,9 @@ class _ServicePageState extends State<ServicePage> {
       );
 
   double get _averageRating {
-    if (_reviews.isEmpty) return 0;
-    final total = _reviews.fold<int>(0, (sum, item) => sum + item.rating);
-    return total / _reviews.length;
+    if (_publicReviews.isEmpty) return 0;
+    final total = _publicReviews.fold<int>(0, (sum, item) => sum + item.nota);
+    return total / _publicReviews.length;
   }
 
   EstabelecimentoPublico? _profileFromCatalog(
@@ -267,6 +296,24 @@ class _ServicePageState extends State<ServicePage> {
       durationMin: service.duracaoMin,
       priceValue: service.preco,
     );
+  }
+
+  ServiceReview _reviewFromAvaliacao(Avaliacao review) {
+    return ServiceReview(
+      name: review.clienteNome?.trim().isNotEmpty == true
+          ? review.clienteNome!.trim()
+          : 'Cliente DuckHat',
+      rating: review.nota,
+      comment: review.comentario!.trim(),
+      date: _formatReviewDate(review.criadoEm),
+    );
+  }
+
+  String _formatReviewDate(DateTime? date) {
+    if (date == null) return '';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day/$month/${date.year}';
   }
 
   Future<void> _selectGalleryImage(int index) async {
@@ -415,7 +462,7 @@ class _ServicePageState extends State<ServicePage> {
                           onMessageTap: _openChat,
                           name: profile.nome,
                           ratingValue: _averageRating,
-                          reviewCount: _reviews.length,
+                          reviewCount: _publicReviews.length,
                           logoSource: profile.imagemLogo,
                           address: profile.endereco,
                           schedule: profile.horarioAtendimento,

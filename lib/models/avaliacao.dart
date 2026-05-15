@@ -26,8 +26,10 @@ class Avaliacao {
         value is int ? value : int.parse(value.toString());
 
     return Avaliacao(
-      id: parseInt(json['id']),
-      agendamentoId: parseInt(json['agendamentoId']),
+      id: json['id'] == null ? 0 : parseInt(json['id']),
+      agendamentoId: json['agendamentoId'] == null
+          ? 0
+          : parseInt(json['agendamentoId']),
       prestadorId: json['prestadorId'] == null
           ? null
           : parseInt(json['prestadorId']),

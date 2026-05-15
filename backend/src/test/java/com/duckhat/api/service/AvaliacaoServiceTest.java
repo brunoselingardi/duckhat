@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.duckhat.api.dto.AvaliacaoResponse;
+import com.duckhat.api.dto.AvaliacaoPublicaResponse;
 import com.duckhat.api.dto.CreateAvaliacaoRequest;
 import com.duckhat.api.entity.Agendamento;
 import com.duckhat.api.entity.Avaliacao;
@@ -148,6 +149,21 @@ class AvaliacaoServiceTest {
     assertEquals(3L, response.get(0).prestadorId());
     assertEquals(1L, response.get(0).clienteId());
     assertEquals("Usuario 1", response.get(0).clienteNome());
+  }
+
+  @Test
+  void listarPublicasPorPrestadorRetornaAvaliacoesDoEstabelecimento() {
+    Usuario prestador = usuario(3L, TipoUsuario.PRESTADOR);
+    Avaliacao avaliacao = avaliacao(agendamento(usuario(1L, TipoUsuario.CLIENTE), prestador,
+        StatusAgendamento.CONCLUIDO));
+    when(avaliacaoRepository.findByAgendamentoPrestadorId(3L)).thenReturn(List.of(avaliacao));
+
+    List<AvaliacaoPublicaResponse> response = service.listarPublicasPorPrestador(3L);
+
+    assertEquals(1, response.size());
+    assertEquals(3L, response.get(0).prestadorId());
+    assertEquals("Usuario 1", response.get(0).clienteNome());
+    assertEquals("Bom atendimento", response.get(0).comentario());
   }
 
   @Test

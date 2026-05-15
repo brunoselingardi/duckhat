@@ -1,6 +1,7 @@
 package com.duckhat.api.service;
 
 import com.duckhat.api.dto.AvaliacaoResponse;
+import com.duckhat.api.dto.AvaliacaoPublicaResponse;
 import com.duckhat.api.dto.CreateAvaliacaoRequest;
 import com.duckhat.api.entity.Agendamento;
 import com.duckhat.api.entity.Avaliacao;
@@ -81,6 +82,14 @@ public class AvaliacaoService {
     return avaliacoes
         .stream()
         .map(AvaliacaoResponse::fromEntity)
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public List<AvaliacaoPublicaResponse> listarPublicasPorPrestador(Long prestadorId) {
+    return avaliacaoRepository.findByAgendamentoPrestadorId(prestadorId)
+        .stream()
+        .map(AvaliacaoPublicaResponse::fromEntity)
         .toList();
   }
 
