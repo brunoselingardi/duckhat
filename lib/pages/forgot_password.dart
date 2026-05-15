@@ -23,6 +23,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   bool _hideConfirmPassword = true;
   bool _requested = false;
   String? _error;
+  String? _demoRecoveryCode;
 
   @override
   void dispose() {
@@ -43,12 +44,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     });
 
     try {
-      await DuckHatApi.instance.solicitarRecuperacaoSenha(
+      final response = await DuckHatApi.instance.solicitarRecuperacaoSenha(
         email: _emailController.text.trim(),
       );
+      final demoCode = response.codigoRecuperacao;
 
       if (!mounted) return;
-      setState(() => _requested = true);
+      setState(() {
+        _requested = true;
+        _demoRecoveryCode = demoCode;
+        if (demoCode != null && demoCode.isNotEmpty) {
+          _codeController.text = demoCode;
+        }
+      });
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -97,6 +105,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     setState(() {
       _requested = false;
       _error = null;
+      _demoRecoveryCode = null;
       _codeController.clear();
       _passwordController.clear();
       _confirmPasswordController.clear();
@@ -134,6 +143,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           codeController: _codeController,
                           passwordController: _passwordController,
                           confirmPasswordController: _confirmPasswordController,
+                          demoRecoveryCode: _demoRecoveryCode,
                           loading: _loading,
                           hidePassword: _hidePassword,
                           hideConfirmPassword: _hideConfirmPassword,
@@ -250,6 +260,7 @@ class _RecoveryCard extends StatelessWidget {
   final TextEditingController codeController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final String? demoRecoveryCode;
   final bool loading;
   final bool hidePassword;
   final bool hideConfirmPassword;
@@ -268,6 +279,7 @@ class _RecoveryCard extends StatelessWidget {
     required this.codeController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.demoRecoveryCode,
     required this.loading,
     required this.hidePassword,
     required this.hideConfirmPassword,
@@ -302,6 +314,7 @@ class _RecoveryCard extends StatelessWidget {
               codeController: codeController,
               passwordController: passwordController,
               confirmPasswordController: confirmPasswordController,
+              demoRecoveryCode: demoRecoveryCode,
               loading: loading,
               hidePassword: hidePassword,
               hideConfirmPassword: hideConfirmPassword,
@@ -397,6 +410,7 @@ class _ResetForm extends StatelessWidget {
   final TextEditingController codeController;
   final TextEditingController passwordController;
   final TextEditingController confirmPasswordController;
+  final String? demoRecoveryCode;
   final bool loading;
   final bool hidePassword;
   final bool hideConfirmPassword;
@@ -412,6 +426,7 @@ class _ResetForm extends StatelessWidget {
     required this.codeController,
     required this.passwordController,
     required this.confirmPasswordController,
+    required this.demoRecoveryCode,
     required this.loading,
     required this.hidePassword,
     required this.hideConfirmPassword,
@@ -449,6 +464,10 @@ class _ResetForm extends StatelessWidget {
               height: 1.35,
             ),
           ),
+          if (demoRecoveryCode != null && demoRecoveryCode!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _DemoCodeBanner(code: demoRecoveryCode!),
+          ],
           const SizedBox(height: 18),
           _BaseField(
             controller: codeController,
@@ -686,6 +705,39 @@ class _ErrorBanner extends StatelessWidget {
           color: AppColors.error,
           fontWeight: FontWeight.w700,
         ),
+      ),
+    );
+  }
+}
+
+class _DemoCodeBanner extends StatelessWidget {
+  final String code;
+
+  const _DemoCodeBanner({required this.code});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.info_outline, color: AppColors.accent, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Modo demo: código $code',
+              style: const TextStyle(
+                color: AppColors.accent,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

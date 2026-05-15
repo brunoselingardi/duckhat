@@ -31,7 +31,13 @@ database/
 │   ├── V4__password_reset_attempt_limits.sql
 │   ├── V5__chat_conversations_and_messages.sql
 │   ├── V6__notification_feed_and_preferences.sql
-│   └── V7__user_profile_fields.sql
+│   ├── V7__user_profile_fields.sql
+│   ├── V8__establishment_profiles.sql
+│   ├── V8__public_provider_profile_fields.sql
+│   ├── V9__establishment_banner_image.sql
+│   ├── V10__default_provider_availability.sql
+│   ├── V11__establishment_category.sql
+│   └── V12__password_reset_token_hash.sql
 ├── seed/
 │   └── 001_seed_dev.sql
 ├── compose.yaml
@@ -64,6 +70,24 @@ Evolui `notificacao_eventos` para feed por usuário, adiciona vínculo opcional 
 
 ### `migrations/V7__user_profile_fields.sql`
 Adiciona `data_nascimento` e `endereco` em `usuarios` para persistência real da tela de perfil.
+
+### `migrations/V8__establishment_profiles.sql`
+Cria perfis persistidos de estabelecimento vinculados a `usuarios`.
+
+### `migrations/V8__public_provider_profile_fields.sql`
+Migração legada de campos públicos de prestador.
+
+### `migrations/V9__establishment_banner_image.sql`
+Adiciona banner em Base64 para a vitrine do estabelecimento.
+
+### `migrations/V10__default_provider_availability.sql`
+Garante disponibilidade padrão para prestadores existentes.
+
+### `migrations/V11__establishment_category.sql`
+Adiciona categoria do estabelecimento e normaliza registros existentes.
+
+### `migrations/V12__password_reset_token_hash.sql`
+Aumenta `recuperacao_senha_tokens.codigo` para armazenar hash do código de recuperação, não o código puro.
 
 ### `seed/001_seed_dev.sql`
 Carga opcional de dados de desenvolvimento.

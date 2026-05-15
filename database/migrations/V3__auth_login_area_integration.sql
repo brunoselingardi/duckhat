@@ -8,7 +8,7 @@ ALTER TABLE usuarios
 CREATE TABLE recuperacao_senha_tokens (
     id BIGINT NOT NULL AUTO_INCREMENT,
     usuario_id BIGINT NOT NULL,
-    codigo VARCHAR(12) NOT NULL,
+    codigo VARCHAR(255) NOT NULL,
     expira_em DATETIME NOT NULL,
     usado_em DATETIME NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
