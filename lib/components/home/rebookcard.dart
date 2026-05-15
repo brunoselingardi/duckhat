@@ -7,16 +7,14 @@ class RebookCard extends StatelessWidget {
   final String name;
   final int? prestadorId;
   final String image;
-  final double rating;
-  final int reviews;
+  final double? rating;
 
   const RebookCard({
     super.key,
     required this.name,
     this.prestadorId,
     required this.image,
-    this.rating = 0.0,
-    this.reviews = 0,
+    this.rating,
   });
 
   void _navigateToEstabelecimento(BuildContext context) {
@@ -53,29 +51,22 @@ class RebookCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.star, size: 12, color: Colors.amber),
-                        const SizedBox(width: 2),
-                        Text(
-                          rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.dark,
+                    if (rating != null)
+                      Row(
+                        children: [
+                          const Icon(Icons.star, size: 12, color: Colors.amber),
+                          const SizedBox(width: 2),
+                          Text(
+                            rating!.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.dark,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        Text(
-                          "($reviews)",
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
+                        ],
+                      ),
+                    if (rating != null) const SizedBox(height: 4),
                     Text(
                       name,
                       style: const TextStyle(

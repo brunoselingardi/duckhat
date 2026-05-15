@@ -675,7 +675,7 @@ class _HeaderBlock extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Image.asset('assets/Ducklogo.jpg', fit: BoxFit.cover),
+            child: Image.asset('assets/logologo.png', fit: BoxFit.cover),
           ),
         ),
         const SizedBox(height: 20),

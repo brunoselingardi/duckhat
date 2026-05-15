@@ -81,8 +81,9 @@ class RebookSection extends StatelessWidget {
                       name: service["name"],
                       prestadorId: service["prestadorId"],
                       image: service["image"],
-                      rating: (service["rating"] ?? 0).toDouble(),
-                      reviews: service["reviews"] ?? 0,
+                      rating: service["rating"] == null
+                          ? null
+                          : (service["rating"] as num).toDouble(),
                     ),
                   ),
               ],

@@ -199,7 +199,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.asset('assets/Ducklogo.jpg', fit: BoxFit.cover),
+                  child: Image.asset('assets/logologo.png', fit: BoxFit.cover),
                 ),
               ),
             ),

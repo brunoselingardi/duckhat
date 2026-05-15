@@ -904,7 +904,7 @@ class _SchedulePageState extends State<SchedulePage> {
       return 'assets/salao.jpg';
     }
 
-    return 'assets/Ducklogo.jpg';
+    return 'assets/logologo.png';
   }
 
   Color _statusColor(String status) {

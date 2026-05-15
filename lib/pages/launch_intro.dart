@@ -212,7 +212,7 @@ class _LogoMark extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(27),
         child: Image.asset(
-          'assets/duckhat_detective.png',
+          'assets/logologo.png',
           key: const ValueKey('launchIntroDetectiveLogo'),
           fit: BoxFit.cover,
           gaplessPlayback: true,

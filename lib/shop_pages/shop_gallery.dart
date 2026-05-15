@@ -12,8 +12,8 @@ class ShopGalleryPage extends StatefulWidget {
 class _ShopGalleryPageState extends State<ShopGalleryPage> {
   final List<String> _photos = [
     'assets/ondas.jpg',
-    'assets/Ducklogo.jpg',
-    'assets/Ducklogo.jpg',
+    'assets/logologo.png',
+    'assets/logologo.png',
     'assets/barbiesalon.jpg',
     'assets/jamessalon.jpg',
   ];

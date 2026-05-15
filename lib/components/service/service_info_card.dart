@@ -77,7 +77,7 @@ class ServiceInfoCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '($reviewCount avaliacoes)',
+                          '($reviewCount avaliações)',
                           style: const TextStyle(
                             color: AppColors.accent,
                             fontSize: 15,

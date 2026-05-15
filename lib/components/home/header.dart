@@ -20,7 +20,7 @@ class HomeHeader extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Image.asset(
-              "assets/Ducklogo.jpg",
+              "assets/logologo.png",
               width: 80,
               height: 80,
               fit: BoxFit.cover,

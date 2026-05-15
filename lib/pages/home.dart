@@ -102,51 +102,7 @@ class _HomeState extends State<Home> {
   }
 
   List<Map<String, dynamic>> get _favoriteServices {
-    final counts = <String, _FavoriteAggregate>{};
-
-    for (final item in _agendamentos.where(
-      (entry) => entry.status != 'CANCELADO',
-    )) {
-      final place = item.prestadorNome ?? 'Prestador #${item.prestadorId}';
-      final key = '${item.prestadorId ?? 0}::$place';
-      final current = counts[key];
-
-      if (current == null) {
-        counts[key] = _FavoriteAggregate(
-          place: place,
-          prestadorId: item.prestadorId,
-          image: _imageForAppointment(item),
-          lastUsedAt: item.inicioEm,
-          uses: 1,
-        );
-        continue;
-      }
-
-      counts[key] = current.copyWith(
-        uses: current.uses + 1,
-        lastUsedAt: item.inicioEm.isAfter(current.lastUsedAt)
-            ? item.inicioEm
-            : current.lastUsedAt,
-      );
-    }
-
-    final sorted = counts.values.toList()
-      ..sort((a, b) {
-        final usageCompare = b.uses.compareTo(a.uses);
-        if (usageCompare != 0) return usageCompare;
-        return b.lastUsedAt.compareTo(a.lastUsedAt);
-      });
-
-    return sorted.take(3).map((item) {
-      final rating = 4.4 + (item.uses.clamp(0, 5) * 0.1);
-      return {
-        'name': item.place,
-        'prestadorId': item.prestadorId,
-        'image': item.image,
-        'rating': rating.clamp(0, 5),
-        'reviews': item.uses * 7,
-      };
-    }).toList();
+    return const [];
   }
 
   String _imageForAppointment(Agendamento item) {
@@ -161,7 +117,7 @@ class _HomeState extends State<Home> {
     if (source.contains('manicure') || source.contains('unha')) {
       return 'assets/salao.jpg';
     }
-    return 'assets/Ducklogo.jpg';
+    return 'assets/logologo.png';
   }
 
   String _formatTime(DateTime date) {
@@ -217,8 +173,7 @@ class _HomeState extends State<Home> {
                   RebookSection(
                     rebookServices: _favoriteServices,
                     title: 'Seus favoritos:',
-                    emptyMessage:
-                        'Seus favoritos aparecerão aqui conforme você usar mais os mesmos estabelecimentos.',
+                    emptyMessage: 'Seus favoritos salvos aparecerão aqui.',
                   ),
                   const SizedBox(height: 20),
                   AppointmentSection(
@@ -355,7 +310,7 @@ class _PromoBanner extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(35),
-                  child: Image.asset("assets/Ducklogo.jpg", fit: BoxFit.cover),
+                  child: Image.asset("assets/logologo.png", fit: BoxFit.cover),
                 ),
               ),
               const SizedBox(width: 6),
@@ -426,38 +381,6 @@ class _HomeErrorState extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _FavoriteAggregate {
-  final String place;
-  final int? prestadorId;
-  final String image;
-  final DateTime lastUsedAt;
-  final int uses;
-
-  const _FavoriteAggregate({
-    required this.place,
-    required this.prestadorId,
-    required this.image,
-    required this.lastUsedAt,
-    required this.uses,
-  });
-
-  _FavoriteAggregate copyWith({
-    String? place,
-    int? prestadorId,
-    String? image,
-    DateTime? lastUsedAt,
-    int? uses,
-  }) {
-    return _FavoriteAggregate(
-      place: place ?? this.place,
-      prestadorId: prestadorId ?? this.prestadorId,
-      image: image ?? this.image,
-      lastUsedAt: lastUsedAt ?? this.lastUsedAt,
-      uses: uses ?? this.uses,
     );
   }
 }

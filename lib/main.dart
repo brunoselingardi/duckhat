@@ -28,7 +28,7 @@ class _MyAppState extends State<MyApp> {
 
     for (final asset in const [
       'assets/ondas.jpg',
-      'assets/Ducklogo.jpg',
+      'assets/logologo.png',
       'assets/niceduck.jpg',
       'assets/barbiesalon.jpg',
       'assets/jamessalon.jpg',

@@ -156,7 +156,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
 
     expect(find.text('4.5'), findsOneWidget);
-    expect(find.text('(2 avaliacoes)'), findsOneWidget);
+    expect(find.text('(2 avaliações)'), findsOneWidget);
     expect(find.text('Resolveu o vazamento no mesmo dia.'), findsOneWidget);
     expect(find.text('Explicou tudo antes de começar.'), findsOneWidget);
     expect(find.text('Maria Duck'), findsOneWidget);
