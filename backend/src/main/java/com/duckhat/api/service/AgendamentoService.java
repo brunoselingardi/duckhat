@@ -8,10 +8,12 @@ import com.duckhat.api.dto.AgendamentoResponse;
 import com.duckhat.api.dto.CreateAgendamentoRequest;
 import com.duckhat.api.dto.OcupacaoPrestadorResponse;
 import com.duckhat.api.entity.Agendamento;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Servico;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.AgendamentoRepository;
+import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.ServicoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import com.duckhat.api.entity.enums.StatusAgendamento;
 import java.util.List;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class AgendamentoService {
@@ -28,17 +33,20 @@ public class AgendamentoService {
   private final UsuarioRepository usuarioRepository;
   private final ServicoRepository servicoRepository;
   private final DisponibilidadeRepository disponibilidadeRepository;
+  private final EstabelecimentoRepository estabelecimentoRepository;
   private final NotificacaoEventoService notificacaoEventoService;
 
   public AgendamentoService(AgendamentoRepository agendamentoRepository,
       UsuarioRepository usuarioRepository,
       ServicoRepository servicoRepository,
       DisponibilidadeRepository disponibilidadeRepository,
+      EstabelecimentoRepository estabelecimentoRepository,
       NotificacaoEventoService notificacaoEventoService) {
     this.agendamentoRepository = agendamentoRepository;
     this.usuarioRepository = usuarioRepository;
     this.servicoRepository = servicoRepository;
     this.disponibilidadeRepository = disponibilidadeRepository;
+    this.estabelecimentoRepository = estabelecimentoRepository;
     this.notificacaoEventoService = notificacaoEventoService;
   }
 
@@ -108,7 +116,7 @@ public class AgendamentoService {
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
     notificacaoEventoService.registrarAgendamentoCriado(salvo);
-    return AgendamentoResponse.fromEntity(salvo);
+    return toResponse(salvo);
   }
 
   private Servico buscarServicoAgendavel(Long servicoId) {
@@ -133,10 +141,7 @@ public class AgendamentoService {
           "O usuário autenticado não é um cliente");
     }
 
-    return agendamentoRepository.findByClienteId(cliente.getId())
-        .stream()
-        .map(AgendamentoResponse::fromEntity)
-        .toList();
+    return toResponses(agendamentoRepository.findByClienteId(cliente.getId()));
   }
 
   @Transactional(readOnly = true)
@@ -153,10 +158,7 @@ public class AgendamentoService {
           "Você não pode acessar agendamentos de outro cliente");
     }
 
-    return agendamentoRepository.findByClienteId(clienteId)
-        .stream()
-        .map(AgendamentoResponse::fromEntity)
-        .toList();
+    return toResponses(agendamentoRepository.findByClienteId(clienteId));
   }
 
   @Transactional(readOnly = true)
@@ -167,10 +169,7 @@ public class AgendamentoService {
           "O usuário autenticado não é um cliente");
     }
 
-    return agendamentoRepository.findByClienteIdAndServicoId(usuario.getId(), servicoId)
-        .stream()
-        .map(AgendamentoResponse::fromEntity)
-        .toList();
+    return toResponses(agendamentoRepository.findByClienteIdAndServicoId(usuario.getId(), servicoId));
   }
 
   @Transactional(readOnly = true)
@@ -181,10 +180,7 @@ public class AgendamentoService {
           "O usuário autenticado não é um cliente");
     }
 
-    return agendamentoRepository.findByClienteIdAndStatus(usuario.getId(), status)
-        .stream()
-        .map(AgendamentoResponse::fromEntity)
-        .toList();
+    return toResponses(agendamentoRepository.findByClienteIdAndStatus(usuario.getId(), status));
   }
 
   @Transactional(readOnly = true)
@@ -205,7 +201,7 @@ public class AgendamentoService {
           "Você não pode acessar um agendamento que não é seu");
     }
 
-    return AgendamentoResponse.fromEntity(agendamento);
+    return toResponse(agendamento);
   }
 
   @Transactional
@@ -242,7 +238,7 @@ public class AgendamentoService {
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
     notificacaoEventoService.registrarAgendamentoCancelado(salvo, usuario);
-    return AgendamentoResponse.fromEntity(salvo);
+    return toResponse(salvo);
   }
 
   @Transactional(readOnly = true)
@@ -253,10 +249,7 @@ public class AgendamentoService {
           "O usuário autenticado não é um prestador");
     }
 
-    return agendamentoRepository.findByPrestadorId(prestador.getId())
-        .stream()
-        .map(AgendamentoResponse::fromEntity)
-        .toList();
+    return toResponses(agendamentoRepository.findByPrestadorId(prestador.getId()));
   }
 
   @Transactional(readOnly = true)
@@ -311,7 +304,7 @@ public class AgendamentoService {
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
     notificacaoEventoService.registrarAgendamentoConfirmado(salvo);
-    return AgendamentoResponse.fromEntity(salvo);
+    return toResponse(salvo);
   }
 
   @Transactional
@@ -354,6 +347,45 @@ public class AgendamentoService {
 
     Agendamento salvo = agendamentoRepository.save(agendamento);
     notificacaoEventoService.registrarAgendamentoConcluido(salvo);
-    return AgendamentoResponse.fromEntity(salvo);
+    return toResponse(salvo);
+  }
+
+  private AgendamentoResponse toResponse(Agendamento agendamento) {
+    String fotoPerfilBase64 = estabelecimentoRepository
+        .findByUsuarioId(agendamento.getPrestador().getId())
+        .map(Estabelecimento::getFotoPerfilBase64)
+        .orElse(null);
+    return AgendamentoResponse.fromEntity(agendamento, fotoPerfilBase64);
+  }
+
+  private List<AgendamentoResponse> toResponses(List<Agendamento> agendamentos) {
+    if (agendamentos.isEmpty()) {
+      return List.of();
+    }
+
+    Map<Long, String> fotosPerfil = buscarFotosPerfilPorPrestador(agendamentos);
+    return agendamentos.stream()
+        .map(agendamento -> AgendamentoResponse.fromEntity(
+            agendamento,
+            fotosPerfil.get(agendamento.getPrestador().getId())))
+        .toList();
+  }
+
+  private Map<Long, String> buscarFotosPerfilPorPrestador(List<Agendamento> agendamentos) {
+    if (agendamentos.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    List<Long> prestadorIds = agendamentos.stream()
+        .map(agendamento -> agendamento.getPrestador().getId())
+        .distinct()
+        .toList();
+
+    return estabelecimentoRepository.findByUsuarioIdIn(prestadorIds)
+        .stream()
+        .filter(estabelecimento -> estabelecimento.getFotoPerfilBase64() != null)
+        .collect(Collectors.toMap(
+            Estabelecimento::getUsuarioId,
+            Estabelecimento::getFotoPerfilBase64));
   }
 }

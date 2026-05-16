@@ -13,13 +13,15 @@ public record ChatConversaResponse(
     String prestadorNome,
     Long participanteId,
     String participanteNome,
+    String participanteFotoPerfilBase64,
     String ultimaMensagem,
     LocalDateTime ultimaMensagemEm
 ) {
   public static ChatConversaResponse fromEntity(
       ChatConversa conversa,
       Usuario usuario,
-      ChatMensagem ultimaMensagem) {
+      ChatMensagem ultimaMensagem,
+      String participanteFotoPerfilBase64) {
     boolean usuarioEhCliente = conversa.getCliente().getId().equals(usuario.getId());
     Usuario participante = usuarioEhCliente ? conversa.getPrestador() : conversa.getCliente();
 
@@ -31,6 +33,7 @@ public record ChatConversaResponse(
         conversa.getPrestador().getNome(),
         participante.getId(),
         participante.getNome(),
+        participanteFotoPerfilBase64,
         ultimaMensagem == null ? null : ultimaMensagem.getConteudo(),
         conversa.getUltimaMensagemEm());
   }

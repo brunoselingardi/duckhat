@@ -37,7 +37,8 @@ database/
 │   ├── V9__establishment_banner_image.sql
 │   ├── V10__default_provider_availability.sql
 │   ├── V11__establishment_category.sql
-│   └── V12__password_reset_token_hash.sql
+│   ├── V12__password_reset_token_hash.sql
+│   └── V13__establishment_profile_image.sql
 ├── seed/
 │   └── 001_seed_dev.sql
 ├── compose.yaml
@@ -88,6 +89,9 @@ Adiciona categoria do estabelecimento e normaliza registros existentes.
 
 ### `migrations/V12__password_reset_token_hash.sql`
 Aumenta `recuperacao_senha_tokens.codigo` para armazenar hash do código de recuperação, não o código puro.
+
+### `migrations/V13__establishment_profile_image.sql`
+Adiciona foto/logo de perfil em Base64 para a vitrine pública do estabelecimento.
 
 ### `seed/001_seed_dev.sql`
 Carga opcional de dados de desenvolvimento.

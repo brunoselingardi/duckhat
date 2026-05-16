@@ -28,6 +28,7 @@ CREATE TABLE estabelecimentos (
     descricao TEXT NULL,
     horario_atendimento VARCHAR(160) NULL,
     banner_imagem_base64 MEDIUMTEXT NULL,
+    foto_perfil_base64 MEDIUMTEXT NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT pk_estabelecimentos PRIMARY KEY (usuario_id),

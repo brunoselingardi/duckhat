@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/avaliacao.dart';
@@ -199,7 +201,9 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
-                  child: Image.asset('assets/logologo.png', fit: BoxFit.cover),
+                  child: _ShopProfileLogo(
+                    imageBase64: session?.fotoPerfilBase64,
+                  ),
                 ),
               ),
             ),
@@ -595,6 +599,30 @@ class _ShopReviewsSection extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ShopProfileLogo extends StatelessWidget {
+  final String? imageBase64;
+
+  const _ShopProfileLogo({required this.imageBase64});
+
+  @override
+  Widget build(BuildContext context) {
+    final value = imageBase64?.trim();
+    if (value != null && value.isNotEmpty) {
+      try {
+        return Image.memory(
+          base64Decode(value),
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        );
+      } on FormatException {
+        return Image.asset('assets/logologo.png', fit: BoxFit.cover);
+      }
+    }
+
+    return Image.asset('assets/logologo.png', fit: BoxFit.cover);
   }
 }
 

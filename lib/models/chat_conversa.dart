@@ -6,6 +6,7 @@ class ChatConversa {
   final String prestadorNome;
   final int participanteId;
   final String participanteNome;
+  final String? participanteFotoPerfilBase64;
   final String? ultimaMensagem;
   final DateTime? ultimaMensagemEm;
 
@@ -17,6 +18,7 @@ class ChatConversa {
     required this.prestadorNome,
     required this.participanteId,
     required this.participanteNome,
+    required this.participanteFotoPerfilBase64,
     required this.ultimaMensagem,
     required this.ultimaMensagemEm,
   });
@@ -30,6 +32,8 @@ class ChatConversa {
       prestadorNome: json['prestadorNome'] as String? ?? '',
       participanteId: _parseInt(json['participanteId']),
       participanteNome: json['participanteNome'] as String? ?? '',
+      participanteFotoPerfilBase64:
+          json['participanteFotoPerfilBase64'] as String?,
       ultimaMensagem: json['ultimaMensagem'] as String?,
       ultimaMensagemEm: _parseDate(json['ultimaMensagemEm']),
     );

@@ -21,6 +21,7 @@ void main() {
             horarioAtendimento: 'Segunda a sexta 9h - 20h',
             imagemCapa: 'assets/barbie.jpg',
             imagemLogo: 'assets/barbielogo.jpg',
+            fotoPerfilBase64: null,
           ),
           servicesLoader: (_) async => [
             ServicoCatalogo(
@@ -65,6 +66,7 @@ void main() {
                 'Atendimento rapido para vazamentos, pias, ralos e manutencao hidraulica.',
             horarioAtendimento: 'Segunda a sabado 7h - 19h',
             bannerImagemBase64: null,
+            fotoPerfilBase64: null,
             totalServicos: 1,
             precoInicial: 90,
             servicos: [
@@ -114,6 +116,7 @@ void main() {
             horarioAtendimento: 'Segunda a sabado 7h - 19h',
             imagemCapa: null,
             imagemLogo: null,
+            fotoPerfilBase64: null,
           ),
           servicesLoader: (_) async => [
             ServicoCatalogo(

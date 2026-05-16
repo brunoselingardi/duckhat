@@ -7,6 +7,7 @@ class EstabelecimentoPublico {
   final String? horarioAtendimento;
   final String? imagemCapa;
   final String? imagemLogo;
+  final String? fotoPerfilBase64;
 
   const EstabelecimentoPublico({
     required this.id,
@@ -17,6 +18,7 @@ class EstabelecimentoPublico {
     required this.horarioAtendimento,
     required this.imagemCapa,
     required this.imagemLogo,
+    required this.fotoPerfilBase64,
   });
 
   factory EstabelecimentoPublico.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class EstabelecimentoPublico {
       horarioAtendimento: json['horarioAtendimento'] as String?,
       imagemCapa: json['imagemCapa'] as String?,
       imagemLogo: json['imagemLogo'] as String?,
+      fotoPerfilBase64: json['fotoPerfilBase64'] as String?,
     );
   }
 
@@ -45,6 +48,7 @@ class EstabelecimentoPublico {
       ),
       imagemCapa: _pickValue(imagemCapa, fallback.imagemCapa),
       imagemLogo: _pickValue(imagemLogo, fallback.imagemLogo),
+      fotoPerfilBase64: _pickValue(fotoPerfilBase64, fallback.fotoPerfilBase64),
     );
   }
 

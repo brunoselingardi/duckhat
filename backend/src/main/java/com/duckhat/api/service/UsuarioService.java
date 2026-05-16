@@ -74,7 +74,7 @@ public class UsuarioService {
 
         Usuario salvo = usuarioRepository.save(usuario);
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
-            salvarEstabelecimento(salvo, null, categoria, null, null, null);
+            salvarEstabelecimento(salvo, null, categoria, null, null, null, null);
             disponibilidadePadraoService.garantirDisponibilidadePadrao(salvo);
         }
         return UsuarioResponse.fromEntity(salvo);
@@ -176,6 +176,7 @@ public class UsuarioService {
                 160,
                 "Horário de atendimento deve ter no máximo 160 caracteres");
         String bannerImagemBase64 = normalizarImagemBase64(request.bannerImagemBase64());
+        String fotoPerfilBase64 = normalizarImagemBase64(request.fotoPerfilBase64());
         validarDataNascimento(request.dataNascimento());
 
         if (!emailNormalizado.equals(usuario.getEmail()) && usuarioRepository.existsByEmail(emailNormalizado)) {
@@ -205,14 +206,21 @@ public class UsuarioService {
         Usuario salvo = usuarioRepository.save(usuario);
         Estabelecimento estabelecimento = null;
         if (salvo.getTipo() == TipoUsuario.PRESTADOR) {
-            estabelecimento = salvarEstabelecimento(salvo, endereco, categoria, descricao, horarioAtendimento, bannerImagemBase64);
+            estabelecimento = salvarEstabelecimento(
+                    salvo,
+                    endereco,
+                    categoria,
+                    descricao,
+                    horarioAtendimento,
+                    bannerImagemBase64,
+                    fotoPerfilBase64);
         }
 
         return UsuarioResponse.fromEntity(salvo, estabelecimento);
     }
 
     private Estabelecimento salvarEstabelecimento(Usuario prestador, String endereco) {
-        return salvarEstabelecimento(prestador, endereco, null, null, null, null);
+        return salvarEstabelecimento(prestador, endereco, null, null, null, null, null);
     }
 
     private Estabelecimento salvarEstabelecimento(
@@ -221,7 +229,8 @@ public class UsuarioService {
             String categoria,
             String descricao,
             String horarioAtendimento,
-            String bannerImagemBase64
+            String bannerImagemBase64,
+            String fotoPerfilBase64
     ) {
         Estabelecimento estabelecimento = estabelecimentoRepository.findByUsuarioId(prestador.getId())
                 .orElseGet(Estabelecimento::new);
@@ -239,6 +248,9 @@ public class UsuarioService {
         estabelecimento.setHorarioAtendimento(horarioAtendimento);
         if (bannerImagemBase64 != null) {
             estabelecimento.setBannerImagemBase64(bannerImagemBase64);
+        }
+        if (fotoPerfilBase64 != null) {
+            estabelecimento.setFotoPerfilBase64(fotoPerfilBase64);
         }
 
         return estabelecimentoRepository.save(estabelecimento);
@@ -340,7 +352,7 @@ public class UsuarioService {
         if (normalizado.length() > 1_200_000) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Imagem de banner deve ter no máximo 1.200.000 caracteres em Base64");
+                    "Imagem deve ter no máximo 1.200.000 caracteres em Base64");
         }
         return normalizado;
     }

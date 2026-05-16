@@ -411,6 +411,7 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
       final bannerBase64 = await encodeImageFileAsBase64(
         _bannerController.image,
       );
+      final logoBase64 = await encodeImageFileAsBase64(_logoController.image);
       await DuckHatApi.instance.criarUsuario(
         nome: _nomeController.text,
         email: _emailController.text,
@@ -445,6 +446,7 @@ class _BusinessSignupPageState extends State<BusinessSignupPage> {
               descricao: _descriptionController.text,
               horarioAtendimento: _hoursController.text,
               bannerImagemBase64: bannerBase64,
+              fotoPerfilBase64: logoBase64,
               tipo: 'PRESTADOR',
             ),
           );

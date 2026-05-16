@@ -17,6 +17,7 @@ public record LoginResponse(
     String descricao,
     String horarioAtendimento,
     String bannerImagemBase64,
+    String fotoPerfilBase64,
     TipoUsuario tipo,
     String token,
     String mensagem) {

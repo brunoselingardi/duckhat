@@ -11,7 +11,8 @@ public record PrestadorPublicoResponse(
     String descricaoPublica,
     String horarioAtendimento,
     String imagemCapa,
-    String imagemLogo
+    String imagemLogo,
+    String fotoPerfilBase64
 ) {
   public static PrestadorPublicoResponse fromEntity(
       Usuario usuario,
@@ -31,6 +32,7 @@ public record PrestadorPublicoResponse(
         estabelecimento == null ? null : estabelecimento.getDescricao(),
         estabelecimento == null ? null : estabelecimento.getHorarioAtendimento(),
         null,
-        null);
+        null,
+        estabelecimento == null ? null : estabelecimento.getFotoPerfilBase64());
   }
 }

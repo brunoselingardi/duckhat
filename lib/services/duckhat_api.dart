@@ -74,6 +74,7 @@ class DuckHatApi {
             ? 'Segunda a sexta 9h - 20h'
             : null,
         bannerImagemBase64: null,
+        fotoPerfilBase64: null,
         tipo: tipo,
         token: _token!,
       ),
@@ -302,6 +303,7 @@ class DuckHatApi {
       descricao: body['descricao'] as String?,
       horarioAtendimento: body['horarioAtendimento'] as String?,
       bannerImagemBase64: body['bannerImagemBase64'] as String?,
+      fotoPerfilBase64: body['fotoPerfilBase64'] as String?,
       tipo: body['tipo'] as String? ?? '',
       token: token,
     );
@@ -1315,6 +1317,7 @@ class DuckHatApi {
         descricao: perfil.descricao,
         horarioAtendimento: perfil.horarioAtendimento,
         bannerImagemBase64: perfil.bannerImagemBase64,
+        fotoPerfilBase64: perfil.fotoPerfilBase64,
         tipo: perfil.tipo,
       ),
     );
@@ -1335,6 +1338,7 @@ class DuckHatApi {
       descricao: session.descricao,
       horarioAtendimento: session.horarioAtendimento,
       bannerImagemBase64: session.bannerImagemBase64,
+      fotoPerfilBase64: session.fotoPerfilBase64,
       tipo: session.tipo,
     );
   }
@@ -1454,6 +1458,7 @@ class LoginSession {
   final String? descricao;
   final String? horarioAtendimento;
   final String? bannerImagemBase64;
+  final String? fotoPerfilBase64;
   final String tipo;
   final String token;
 
@@ -1471,6 +1476,7 @@ class LoginSession {
     required this.descricao,
     required this.horarioAtendimento,
     required this.bannerImagemBase64,
+    required this.fotoPerfilBase64,
     required this.tipo,
     required this.token,
   });
@@ -1489,6 +1495,7 @@ class LoginSession {
     String? descricao,
     String? horarioAtendimento,
     String? bannerImagemBase64,
+    String? fotoPerfilBase64,
     String? tipo,
     String? token,
   }) {
@@ -1506,6 +1513,7 @@ class LoginSession {
       descricao: descricao,
       horarioAtendimento: horarioAtendimento,
       bannerImagemBase64: bannerImagemBase64,
+      fotoPerfilBase64: fotoPerfilBase64,
       tipo: tipo ?? this.tipo,
       token: token ?? this.token,
     );

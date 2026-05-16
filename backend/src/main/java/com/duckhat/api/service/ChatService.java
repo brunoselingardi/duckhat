@@ -6,10 +6,12 @@ import com.duckhat.api.dto.CreateChatConversaRequest;
 import com.duckhat.api.dto.CreateChatMensagemRequest;
 import com.duckhat.api.entity.ChatConversa;
 import com.duckhat.api.entity.ChatMensagem;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.ChatConversaRepository;
 import com.duckhat.api.repository.ChatMensagemRepository;
+import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -32,16 +34,19 @@ public class ChatService {
   private final ChatConversaRepository conversaRepository;
   private final ChatMensagemRepository mensagemRepository;
   private final UsuarioRepository usuarioRepository;
+  private final EstabelecimentoRepository estabelecimentoRepository;
   private final NotificacaoEventoService notificacaoEventoService;
 
   public ChatService(
       ChatConversaRepository conversaRepository,
       ChatMensagemRepository mensagemRepository,
       UsuarioRepository usuarioRepository,
+      EstabelecimentoRepository estabelecimentoRepository,
       NotificacaoEventoService notificacaoEventoService) {
     this.conversaRepository = conversaRepository;
     this.mensagemRepository = mensagemRepository;
     this.usuarioRepository = usuarioRepository;
+    this.estabelecimentoRepository = estabelecimentoRepository;
     this.notificacaoEventoService = notificacaoEventoService;
   }
 
@@ -66,7 +71,7 @@ public class ChatService {
             prestador(usuario, participante).getId())
         .orElseGet(() -> criarConversa(usuario, participante));
 
-    return toConversaResponse(conversa, usuario, buscarUltimaMensagem(conversa));
+    return toConversaResponse(conversa, usuario, buscarUltimaMensagem(conversa), buscarFotosPerfilPorPrestador(List.of(conversa)));
   }
 
   @Transactional(readOnly = true)
@@ -77,12 +82,14 @@ public class ChatService {
     };
 
     Map<Long, ChatMensagem> ultimasMensagens = buscarUltimasMensagens(conversas);
+    Map<Long, String> fotosPerfil = buscarFotosPerfilPorPrestador(conversas);
 
     return conversas.stream()
         .map(conversa -> toConversaResponse(
             conversa,
             usuario,
-            ultimasMensagens.get(conversa.getId())))
+            ultimasMensagens.get(conversa.getId()),
+            fotosPerfil))
         .toList();
   }
 
@@ -170,8 +177,17 @@ public class ChatService {
   private ChatConversaResponse toConversaResponse(
       ChatConversa conversa,
       Usuario usuario,
-      ChatMensagem ultimaMensagem) {
-    return ChatConversaResponse.fromEntity(conversa, usuario, ultimaMensagem);
+      ChatMensagem ultimaMensagem,
+      Map<Long, String> fotosPerfilPorPrestador) {
+    boolean usuarioEhCliente = conversa.getCliente().getId().equals(usuario.getId());
+    String participanteFotoPerfilBase64 = usuarioEhCliente
+        ? fotosPerfilPorPrestador.get(conversa.getPrestador().getId())
+        : null;
+    return ChatConversaResponse.fromEntity(
+        conversa,
+        usuario,
+        ultimaMensagem,
+        participanteFotoPerfilBase64);
   }
 
   private ChatMensagem buscarUltimaMensagem(ChatConversa conversa) {
@@ -194,5 +210,23 @@ public class ChatService {
         .collect(Collectors.toMap(
             mensagem -> mensagem.getConversa().getId(),
             Function.identity()));
+  }
+
+  private Map<Long, String> buscarFotosPerfilPorPrestador(List<ChatConversa> conversas) {
+    if (conversas.isEmpty()) {
+      return Collections.emptyMap();
+    }
+
+    List<Long> prestadorIds = conversas.stream()
+        .map(conversa -> conversa.getPrestador().getId())
+        .distinct()
+        .toList();
+
+    return estabelecimentoRepository.findByUsuarioIdIn(prestadorIds)
+        .stream()
+        .filter(estabelecimento -> estabelecimento.getFotoPerfilBase64() != null)
+        .collect(Collectors.toMap(
+            Estabelecimento::getUsuarioId,
+            Estabelecimento::getFotoPerfilBase64));
   }
 }

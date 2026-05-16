@@ -14,10 +14,12 @@ import com.duckhat.api.dto.CreateChatConversaRequest;
 import com.duckhat.api.dto.CreateChatMensagemRequest;
 import com.duckhat.api.entity.ChatConversa;
 import com.duckhat.api.entity.ChatMensagem;
+import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.ChatConversaRepository;
 import com.duckhat.api.repository.ChatMensagemRepository;
+import com.duckhat.api.repository.EstabelecimentoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,11 +34,13 @@ class ChatServiceTest {
   private final ChatConversaRepository conversaRepository = mock(ChatConversaRepository.class);
   private final ChatMensagemRepository mensagemRepository = mock(ChatMensagemRepository.class);
   private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
+  private final EstabelecimentoRepository estabelecimentoRepository = mock(EstabelecimentoRepository.class);
   private final NotificacaoEventoService notificacaoEventoService = mock(NotificacaoEventoService.class);
   private final ChatService service = new ChatService(
       conversaRepository,
       mensagemRepository,
       usuarioRepository,
+      estabelecimentoRepository,
       notificacaoEventoService);
 
   @Test
@@ -50,14 +54,38 @@ class ChatServiceTest {
         .thenReturn(List.of(conversa));
     when(mensagemRepository.findUltimasMensagensByConversaIds(List.of(10L)))
         .thenReturn(List.of(ultimaMensagem));
+    when(estabelecimentoRepository.findByUsuarioIdIn(List.of(2L)))
+        .thenReturn(List.of(estabelecimento(2L, "logo-prestador")));
 
     List<ChatConversaResponse> responses = service.listarConversas(prestador);
 
     assertEquals(1, responses.size());
     assertEquals(1L, responses.get(0).participanteId());
     assertEquals("Cliente", responses.get(0).participanteNome());
+    assertEquals(null, responses.get(0).participanteFotoPerfilBase64());
     assertEquals("Ainda tem horario hoje?", responses.get(0).ultimaMensagem());
     verify(mensagemRepository, never()).findFirstByConversaIdOrderByCriadoEmDescIdDesc(10L);
+  }
+
+  @Test
+  void listarConversasComoClienteRetornaFotoDePerfilDoPrestador() {
+    Usuario cliente = usuario(1L, "Cliente", TipoUsuario.CLIENTE);
+    Usuario prestador = usuario(2L, "Barbearia", TipoUsuario.PRESTADOR);
+    ChatConversa conversa = conversa(10L, cliente, prestador);
+
+    when(conversaRepository.findByClienteIdOrderByUltimaMensagemEmDescIdDesc(1L))
+        .thenReturn(List.of(conversa));
+    when(mensagemRepository.findUltimasMensagensByConversaIds(List.of(10L)))
+        .thenReturn(List.of());
+    when(estabelecimentoRepository.findByUsuarioIdIn(List.of(2L)))
+        .thenReturn(List.of(estabelecimento(2L, "logo-prestador")));
+
+    List<ChatConversaResponse> responses = service.listarConversas(cliente);
+
+    assertEquals(1, responses.size());
+    assertEquals(2L, responses.get(0).participanteId());
+    assertEquals("Barbearia", responses.get(0).participanteNome());
+    assertEquals("logo-prestador", responses.get(0).participanteFotoPerfilBase64());
   }
 
   @Test
@@ -159,5 +187,12 @@ class ChatServiceTest {
     mensagem.setConteudo(conteudo);
     mensagem.setCriadoEm(LocalDateTime.of(2026, 5, 6, 10, 5));
     return mensagem;
+  }
+
+  private Estabelecimento estabelecimento(Long usuarioId, String fotoPerfilBase64) {
+    Estabelecimento estabelecimento = new Estabelecimento();
+    estabelecimento.setUsuarioId(usuarioId);
+    estabelecimento.setFotoPerfilBase64(fotoPerfilBase64);
+    return estabelecimento;
   }
 }

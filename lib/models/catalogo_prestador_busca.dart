@@ -8,6 +8,7 @@ class CatalogoPrestadorBusca {
   final String? horarioAtendimento;
   final String? imagemCapa;
   final String? imagemLogo;
+  final String? fotoPerfilBase64;
 
   const CatalogoPrestadorBusca({
     required this.prestadorId,
@@ -19,6 +20,7 @@ class CatalogoPrestadorBusca {
     required this.horarioAtendimento,
     required this.imagemCapa,
     required this.imagemLogo,
+    required this.fotoPerfilBase64,
   });
 
   factory CatalogoPrestadorBusca.fromJson(Map<String, dynamic> json) {
@@ -36,6 +38,7 @@ class CatalogoPrestadorBusca {
       horarioAtendimento: json['horarioAtendimento'] as String?,
       imagemCapa: json['imagemCapa'] as String?,
       imagemLogo: json['imagemLogo'] as String?,
+      fotoPerfilBase64: json['fotoPerfilBase64'] as String?,
     );
   }
 }

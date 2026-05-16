@@ -284,6 +284,7 @@ class _ServicePageState extends State<ServicePage> {
       horarioAtendimento: catalog.horarioAtendimento,
       imagemCapa: fallback?.imagemCapa,
       imagemLogo: fallback?.imagemLogo,
+      fotoPerfilBase64: catalog.fotoPerfilBase64,
     );
   }
 
@@ -464,6 +465,7 @@ class _ServicePageState extends State<ServicePage> {
                           ratingValue: _averageRating,
                           reviewCount: _publicReviews.length,
                           logoSource: profile.imagemLogo,
+                          logoBase64: profile.fotoPerfilBase64,
                           address: profile.endereco,
                           schedule: profile.horarioAtendimento,
                           description: profile.descricaoPublica,

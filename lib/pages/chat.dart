@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/chat_conversa.dart';
 import 'package:duckhat/pages/chat_detail.dart';
@@ -221,25 +223,9 @@ class _ChatPageState extends State<ChatPage> {
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
             child: Row(
               children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.accentLight.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      conversa.participanteNome.isEmpty
-                          ? '?'
-                          : conversa.participanteNome[0].toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.accent,
-                      ),
-                    ),
-                  ),
+                _ConversationAvatar(
+                  name: conversa.participanteNome,
+                  imageBase64: conversa.participanteFotoPerfilBase64,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -292,6 +278,56 @@ class _ChatPageState extends State<ChatPage> {
       return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
     }
     return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}';
+  }
+}
+
+class _ConversationAvatar extends StatelessWidget {
+  final String name;
+  final String? imageBase64;
+
+  const _ConversationAvatar({required this.name, required this.imageBase64});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    final value = imageBase64?.trim();
+    if (value != null && value.isNotEmpty) {
+      try {
+        child = Image.memory(
+          base64Decode(value),
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        );
+      } on FormatException {
+        child = _initial();
+      }
+    } else {
+      child = _initial();
+    }
+
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: AppColors.accentLight.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+
+  Widget _initial() {
+    return Center(
+      child: Text(
+        name.isEmpty ? '?' : name[0].toUpperCase(),
+        style: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: AppColors.accent,
+        ),
+      ),
+    );
   }
 }
 

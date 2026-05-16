@@ -15,6 +15,7 @@ public record EstabelecimentoCatalogoResponse(
     String descricao,
     String horarioAtendimento,
     String bannerImagemBase64,
+    String fotoPerfilBase64,
     Integer totalServicos,
     BigDecimal precoInicial,
     List<ServicoResponse> servicos
@@ -37,6 +38,7 @@ public record EstabelecimentoCatalogoResponse(
         estabelecimento.getDescricao(),
         estabelecimento.getHorarioAtendimento(),
         estabelecimento.getBannerImagemBase64(),
+        estabelecimento.getFotoPerfilBase64(),
         servicos.size(),
         precoInicial,
         servicos);

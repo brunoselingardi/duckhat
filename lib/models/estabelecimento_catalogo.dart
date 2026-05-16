@@ -10,6 +10,7 @@ class EstabelecimentoCatalogo {
   final String? descricao;
   final String? horarioAtendimento;
   final String? bannerImagemBase64;
+  final String? fotoPerfilBase64;
   final int totalServicos;
   final double? precoInicial;
   final List<ServicoCatalogo> servicos;
@@ -24,6 +25,7 @@ class EstabelecimentoCatalogo {
     required this.descricao,
     required this.horarioAtendimento,
     required this.bannerImagemBase64,
+    required this.fotoPerfilBase64,
     required this.totalServicos,
     required this.precoInicial,
     required this.servicos,
@@ -54,6 +56,7 @@ class EstabelecimentoCatalogo {
       descricao: json['descricao'] as String?,
       horarioAtendimento: json['horarioAtendimento'] as String?,
       bannerImagemBase64: json['bannerImagemBase64'] as String?,
+      fotoPerfilBase64: json['fotoPerfilBase64'] as String?,
       totalServicos: json['totalServicos'] == null
           ? services.length
           : parseInt(json['totalServicos']),

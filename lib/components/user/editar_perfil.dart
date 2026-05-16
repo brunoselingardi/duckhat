@@ -67,6 +67,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         descricao: session.descricao,
         horarioAtendimento: session.horarioAtendimento,
         bannerImagemBase64: session.bannerImagemBase64,
+        fotoPerfilBase64: session.fotoPerfilBase64,
         tipo: session.tipo,
       ),
     );
@@ -139,6 +140,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           descricao: current.descricao,
           horarioAtendimento: current.horarioAtendimento,
           bannerImagemBase64: current.bannerImagemBase64,
+          fotoPerfilBase64: current.fotoPerfilBase64,
           tipo: current.tipo,
         ),
       );

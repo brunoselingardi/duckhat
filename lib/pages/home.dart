@@ -95,6 +95,7 @@ class _HomeState extends State<Home> {
             'service': item.servicoNome ?? 'Serviço #${item.servicoId}',
             'place': item.prestadorNome ?? 'Prestador #${item.prestadorId}',
             'image': _imageForAppointment(item),
+            'profileImageBase64': item.prestadorFotoPerfilBase64,
             'agendamento': item,
           },
         )
