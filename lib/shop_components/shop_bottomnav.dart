@@ -16,15 +16,19 @@ class ShopBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.surface,
         border: Border(
-          top: BorderSide(color: AppColors.border.withValues(alpha: 0.9)),
+          top: BorderSide(color: themeColors.border.withValues(alpha: 0.9)),
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow.withValues(alpha: 0.35),
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.34 : 0.35,
+            ),
             offset: const Offset(0, -2),
             blurRadius: 10,
           ),
@@ -39,11 +43,11 @@ class ShopBottomNav extends StatelessWidget {
           currentIndex: selectedIndex,
           onTap: onTap,
           type: BottomNavigationBarType.fixed,
-          backgroundColor: AppColors.cardBackground,
+          backgroundColor: themeColors.surface,
           elevation: 0,
           showUnselectedLabels: true,
           selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.navUnselected,
+          unselectedItemColor: themeColors.navUnselected,
           selectedLabelStyle: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -102,13 +106,14 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     return RepaintBoundary(
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           ColorFiltered(
             colorFilter: ColorFilter.mode(
-              isSelected ? AppColors.accent : AppColors.navUnselected,
+              isSelected ? AppColors.accent : themeColors.navUnselected,
               BlendMode.srcIn,
             ),
             child: SvgPicture.asset(asset, width: 32, height: 32),
@@ -132,6 +137,7 @@ class _UnreadBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final label = count > 9 ? '9+' : '$count';
     return Container(
       constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
@@ -139,7 +145,7 @@ class _UnreadBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.error,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.cardBackground, width: 1.5),
+        border: Border.all(color: themeColors.surface, width: 1.5),
       ),
       alignment: Alignment.center,
       child: Text(

@@ -15,11 +15,13 @@ class ServiceTabMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: themeColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
@@ -54,8 +56,8 @@ class ServiceTabMenu extends StatelessWidget {
                               ? FontWeight.w700
                               : FontWeight.w500,
                           color: isSelected
-                              ? AppColors.textBold
-                              : AppColors.textRegular,
+                              ? themeColors.primaryText
+                              : themeColors.secondaryText,
                         ),
                       ),
                     ),
@@ -64,7 +66,7 @@ class ServiceTabMenu extends StatelessWidget {
               },
             ),
           ),
-          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          Divider(height: 1, color: themeColors.border),
         ],
       ),
     );

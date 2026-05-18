@@ -42,8 +42,10 @@ class _ShopMainNavigatorState extends State<ShopMainNavigator> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.primary.withValues(alpha: 0),
+      backgroundColor: themeColors.background,
       body: PageStorage(
         bucket: _bucket,
         child: Stack(

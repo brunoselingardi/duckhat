@@ -153,7 +153,7 @@ class _ShopSchedulePageState extends State<ShopSchedulePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(

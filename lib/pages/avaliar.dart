@@ -71,9 +71,9 @@ class _AvaliarPageState extends State<AvaliarPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppThemeColors.of(context).background,
         elevation: 0,
         leading: IconButton(
           onPressed: () => Navigator.pop(context),

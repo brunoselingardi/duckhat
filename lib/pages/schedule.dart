@@ -169,7 +169,7 @@ class _SchedulePageState extends State<SchedulePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       body: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -295,17 +295,22 @@ class _SchedulePageState extends State<SchedulePage> {
   }
 
   Widget _buildCalendarCard() {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
+        border: Border.all(color: themeColors.border),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.32 : 0.20,
+            ),
             blurRadius: 14,
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -316,10 +321,10 @@ class _SchedulePageState extends State<SchedulePage> {
               Expanded(
                 child: Text(
                   _monthLabel(_currentMonth),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.textBold,
+                    color: themeColors.primaryText,
                   ),
                 ),
               ),
@@ -513,18 +518,23 @@ class _SchedulePageState extends State<SchedulePage> {
     final items = _selectedDayAppointments;
 
     if (items.isEmpty) {
+      final themeColors = AppThemeColors.of(context);
+
       return SliverList.list(
         children: [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 44),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: themeColors.surface,
               borderRadius: BorderRadius.circular(22),
-              boxShadow: const [
+              border: Border.all(color: themeColors.border),
+              boxShadow: [
                 BoxShadow(
-                  color: AppColors.cardShadow,
+                  color: themeColors.shadow.withValues(
+                    alpha: themeColors.isDark ? 0.32 : 0.20,
+                  ),
                   blurRadius: 12,
-                  offset: Offset(0, 4),
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),

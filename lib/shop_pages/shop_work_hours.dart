@@ -16,7 +16,7 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: buildShopAppBar(
         context,
         title: 'Horários de Serviço',

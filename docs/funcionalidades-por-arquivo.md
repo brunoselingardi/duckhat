@@ -257,7 +257,13 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_profile.dart`
   - hub de configuracoes do estabelecimento
   - header usa nome/e-mail reais da sessao/API
-  - exibe apenas entradas principais ja conectadas ao fluxo real: dados do estabelecimento, servicos/precos e logout
+  - exibe entradas conectadas para dados do estabelecimento, preferencias visuais, seguranca/privacidade e logout
+  - item `Segurança e privacidade` abre `ShopPrivacyPage`
+- `lib/shop_pages/shop_privacy.dart`
+  - tela de seguranca e privacidade do estabelecimento
+  - possui configuracoes locais de exposicao publica e atalhos de seguranca ainda demonstrativos
+  - `Excluir minha conta` usa `DELETE /api/me`, remove sessao local e volta para `LoginPage`
+  - para concluir exclusao, exige digitar o e-mail da conta do estabelecimento como verificacao destrutiva
   - telas locais/demo de galeria, horarios, notificacoes, privacidade, ajuda e sobre nao ficam mais expostas no menu principal
 - `lib/shop_pages/shop_establishment_data.dart`
   - formulario real de dados do estabelecimento

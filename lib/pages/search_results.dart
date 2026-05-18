@@ -290,7 +290,7 @@ class _SearchResultsPageState extends State<SearchResultsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       body: SafeArea(
         bottom: false,
         child: CustomScrollView(
@@ -503,6 +503,8 @@ class _CompactSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return SizedBox(
       height: 42,
       child: TextField(
@@ -511,32 +513,32 @@ class _CompactSearchField extends StatelessWidget {
         onTap: onTap,
         onSubmitted: (_) => onSubmitted(),
         textInputAction: TextInputAction.search,
-        style: const TextStyle(
-          color: AppColors.textBold,
+        style: TextStyle(
+          color: themeColors.primaryText,
           fontSize: 13,
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: AppColors.textMutedLight,
+          hintStyle: TextStyle(
+            color: themeColors.mutedText,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
           prefixIcon: Icon(icon, color: AppColors.accent, size: 18),
           filled: true,
-          fillColor: const Color(0xFFF8FAFF),
+          fillColor: themeColors.inputFill,
           contentPadding: const EdgeInsets.symmetric(horizontal: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-              color: AppColors.border.withValues(alpha: 0.5),
+              color: themeColors.border.withValues(alpha: 0.8),
             ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
             borderSide: BorderSide(
-              color: AppColors.border.withValues(alpha: 0.5),
+              color: themeColors.border.withValues(alpha: 0.8),
             ),
           ),
           focusedBorder: OutlineInputBorder(
@@ -624,10 +626,12 @@ class _MapPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       height: 240,
       width: double.infinity,
-      color: AppColors.cardBackground,
+      color: themeColors.surface,
       child: Stack(
         children: [
           FlutterMap(

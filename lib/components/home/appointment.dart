@@ -1,29 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/components/home/appointmentcard.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppThemeColors;
 
 class EmptyAppointmentState extends StatelessWidget {
   const EmptyAppointmentState({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 100,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: themeColors.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: themeColors.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.schedule, color: AppColors.textMuted),
+            Icon(Icons.schedule, color: themeColors.mutedText),
             const SizedBox(width: 8),
             Text(
               "Nenhum agendamento hoje",
-              style: TextStyle(color: AppColors.textMuted),
+              style: TextStyle(color: themeColors.mutedText),
             ),
           ],
         ),
@@ -44,6 +47,8 @@ class AppointmentSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -54,7 +59,7 @@ class AppointmentSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
         ),

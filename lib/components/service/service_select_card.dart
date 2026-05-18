@@ -21,6 +21,8 @@ class ServiceSelectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -28,17 +30,19 @@ class ServiceSelectCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: themeColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.accent : AppColors.border,
+            color: isSelected ? AppColors.accent : themeColors.border,
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
                   ? AppColors.accent.withValues(alpha: 0.15)
-                  : AppColors.cardShadow.withValues(alpha: 0.5),
+                  : themeColors.shadow.withValues(
+                      alpha: themeColors.isDark ? 0.30 : 0.18,
+                    ),
               blurRadius: isSelected ? 12 : 8,
               offset: const Offset(0, 2),
             ),
@@ -53,10 +57,10 @@ class ServiceSelectCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textBold,
+                      color: themeColors.primaryText,
                     ),
                   ),
                 ),
@@ -85,10 +89,10 @@ class ServiceSelectCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               description,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 height: 1.5,
-                color: AppColors.textRegular,
+                color: themeColors.secondaryText,
               ),
             ),
             const SizedBox(height: 10),
@@ -97,7 +101,7 @@ class ServiceSelectCard extends StatelessWidget {
                 Icon(
                   Icons.access_time_rounded,
                   size: 16,
-                  color: isSelected ? AppColors.accent : AppColors.textMuted,
+                  color: isSelected ? AppColors.accent : themeColors.mutedText,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -105,7 +109,9 @@ class ServiceSelectCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
-                    color: isSelected ? AppColors.accent : AppColors.textMuted,
+                    color: isSelected
+                        ? AppColors.accent
+                        : themeColors.mutedText,
                   ),
                 ),
               ],

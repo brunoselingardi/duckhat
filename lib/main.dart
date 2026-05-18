@@ -6,7 +6,9 @@ import 'package:duckhat/theme.dart';
 import 'pages/launch_intro.dart';
 import 'pages/schedule_date.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppThemeController.init();
   runApp(const MyApp());
 }
 

@@ -134,9 +134,9 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     final item = widget.agendamento;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppThemeColors.of(context).background,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textBold),
         title: const Text(
@@ -466,16 +466,21 @@ class _DetailCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
+        border: Border.all(color: themeColors.border),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.32 : 0.20,
+            ),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -486,8 +491,8 @@ class _DetailCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.textBold,
+                  style: TextStyle(
+                    color: themeColors.primaryText,
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                   ),

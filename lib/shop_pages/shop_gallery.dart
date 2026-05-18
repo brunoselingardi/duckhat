@@ -21,7 +21,7 @@ class _ShopGalleryPageState extends State<ShopGalleryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: buildShopAppBar(
         context,
         title: 'Galeria de Fotos',

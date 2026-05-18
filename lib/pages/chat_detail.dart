@@ -1,7 +1,7 @@
 import 'package:duckhat/models/chat_mensagem.dart';
 import 'package:duckhat/services/chat_notification_service.dart';
 import 'package:duckhat/services/duckhat_api.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppColors, AppThemeColors;
 import 'package:flutter/material.dart';
 
 class ChatDetailPage extends StatefulWidget {
@@ -98,8 +98,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: themeColors.background,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -111,25 +113,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final themeColors = AppThemeColors.of(context);
+
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: themeColors.surface,
       elevation: 1,
       leading: IconButton(
-        icon: Icon(Icons.arrow_back, color: AppColors.textBold),
+        icon: Icon(Icons.arrow_back, color: themeColors.primaryText),
         onPressed: () => Navigator.pop(context),
         tooltip: 'Voltar',
       ),
       title: Text(
         widget.participanteNome,
         style: TextStyle(
-          color: AppColors.textBold,
+          color: themeColors.primaryText,
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
       ),
       actions: [
         IconButton(
-          icon: Icon(Icons.refresh, color: AppColors.textBold),
+          icon: Icon(Icons.refresh, color: themeColors.primaryText),
           tooltip: 'Atualizar mensagens',
           onPressed: _loading ? null : _loadMessages,
         ),
@@ -158,7 +162,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textRegular),
+                style: TextStyle(
+                  color: AppThemeColors.of(context).secondaryText,
+                ),
               ),
               const SizedBox(height: 14),
               FilledButton(
@@ -172,13 +178,14 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
 
     if (_messages.isEmpty) {
-      return const Center(
+      final themeColors = AppThemeColors.of(context);
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Text(
             'Envie a primeira mensagem desta conversa.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textRegular),
+            style: TextStyle(color: themeColors.secondaryText),
           ),
         ),
       );
@@ -198,6 +205,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   Widget _buildMessageBubble(ChatMensagem msg) {
     final isMe = msg.enviadaPorMim;
+    final themeColors = AppThemeColors.of(context);
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -208,7 +216,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
         decoration: BoxDecoration(
-          color: isMe ? AppColors.chatBubbleSelf : AppColors.chatBubbleOther,
+          color: isMe
+              ? AppColors.chatBubbleSelf
+              : themeColors.isDark
+              ? themeColors.elevatedSurface
+              : AppColors.chatBubbleOther,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -222,7 +234,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             Text(
               msg.conteudo,
               style: TextStyle(
-                color: isMe ? Colors.white : AppColors.textBold,
+                color: isMe ? Colors.white : themeColors.primaryText,
                 fontSize: 14,
               ),
             ),
@@ -231,7 +243,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               _formatTime(msg.criadoEm),
               style: TextStyle(
                 fontSize: 10,
-                color: isMe ? Colors.white70 : AppColors.textMuted,
+                color: isMe ? Colors.white70 : themeColors.mutedText,
               ),
             ),
           ],
@@ -241,13 +253,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   Widget _buildInputArea() {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeColors.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.34 : 0.22,
+            ),
             blurRadius: 4,
             offset: const Offset(0, -2),
           ),
@@ -261,7 +277,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.inputFill,
+                  color: themeColors.inputFill,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: TextField(
@@ -273,7 +289,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                   decoration: InputDecoration(
                     hintText: 'Digite uma mensagem...',
                     hintStyle: TextStyle(
-                      color: AppColors.textMuted,
+                      color: themeColors.mutedText,
                       fontSize: 14,
                     ),
                     border: InputBorder.none,

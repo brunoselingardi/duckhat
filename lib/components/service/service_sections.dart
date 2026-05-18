@@ -5,6 +5,7 @@ import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/components/service/service_profile_fallbacks.dart';
 import 'package:duckhat/components/service/service_reviews_section.dart';
 import 'package:duckhat/components/service/service_services_section.dart';
+import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceSections extends StatelessWidget {
@@ -49,11 +50,13 @@ class ServiceSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: themeColors.surface,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
       child: Column(
         children: [
@@ -62,7 +65,7 @@ class ServiceSections extends StatelessWidget {
             summary: experience.summary,
             highlights: experience.highlights,
           ),
-          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          Divider(height: 1, color: themeColors.border),
           ServiceServicesSection(
             key: sectionKeys[1],
             offers: offers,
@@ -71,7 +74,7 @@ class ServiceSections extends StatelessWidget {
             onRetry: onServicesRetry,
             onBookOffer: onBookOffer,
           ),
-          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          Divider(height: 1, color: themeColors.border),
           ServiceGallerySection(
             key: sectionKeys[2],
             images: galleryImages,
@@ -81,9 +84,9 @@ class ServiceSections extends StatelessWidget {
             onSelected: onGallerySelected,
             onOpenGallery: onOpenGallery,
           ),
-          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          Divider(height: 1, color: themeColors.border),
           ServiceReviewsSection(key: sectionKeys[3], reviews: reviews),
-          const Divider(height: 1, color: Color(0xFFE8EDF6)),
+          Divider(height: 1, color: themeColors.border),
           ServiceFaqSection(key: sectionKeys[4], faqs: faqs),
         ],
       ),

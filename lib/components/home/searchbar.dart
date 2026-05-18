@@ -9,6 +9,8 @@ class SearchDuck extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
@@ -33,7 +35,7 @@ class SearchDuck extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: themeColors.inputFill,
             borderRadius: BorderRadius.circular(28),
           ),
           child: TextField(
@@ -47,7 +49,7 @@ class SearchDuck extends StatelessWidget {
               ),
               hintText: "Encontre os melhores serviços...",
               hintStyle: TextStyle(
-                color: AppColors.textRegular,
+                color: themeColors.secondaryText,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -56,7 +58,7 @@ class SearchDuck extends StatelessWidget {
                 child: Icon(
                   Icons.search,
                   size: 20,
-                  color: AppColors.textRegular,
+                  color: themeColors.secondaryText,
                 ),
               ),
               suffixIconConstraints: const BoxConstraints(

@@ -8,7 +8,7 @@ class ShopAboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: buildShopAppBar(context, title: 'Sobre o App'),
       body: ListView(
         padding: const EdgeInsets.all(16),

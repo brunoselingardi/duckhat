@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppColors {
   static const primary = Color(0xFFFFFFFF);
@@ -54,6 +55,20 @@ class AppTheme {
       surface: AppColors.cardBackground,
     ),
     scaffoldBackgroundColor: AppColors.background,
+    cardColor: AppColors.cardBackground,
+    dividerColor: AppColors.divider,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.background,
+      foregroundColor: AppColors.secondary,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+    ),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: AppColors.cardBackground,
+      selectedItemColor: AppColors.accent,
+      unselectedItemColor: AppColors.navUnselected,
+      elevation: 0,
+    ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) return AppColors.accent;
@@ -83,9 +98,16 @@ class AppTheme {
       backgroundColor: Color(0xFF111827),
       foregroundColor: Color(0xFF7DB4F5),
       elevation: 0,
+      surfaceTintColor: Colors.transparent,
     ),
     cardColor: const Color(0xFF111827),
     dividerColor: const Color(0xFF263244),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF111827),
+      selectedItemColor: Color(0xFF7DB4F5),
+      unselectedItemColor: Color(0xFF94A3B8),
+      elevation: 0,
+    ),
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -105,11 +127,94 @@ class AppTheme {
 }
 
 class AppThemeController {
+  static const _storageKey = 'duckhat_theme_mode';
   static final ValueNotifier<ThemeMode> mode = ValueNotifier(ThemeMode.light);
+  static bool _initialized = false;
 
   static bool get isDark => mode.value == ThemeMode.dark;
 
-  static void setDark(bool value) {
-    mode.value = value ? ThemeMode.dark : ThemeMode.light;
+  static Future<void> init() async {
+    if (_initialized) return;
+    final prefs = await SharedPreferences.getInstance();
+    final savedMode = prefs.getString(_storageKey);
+    mode.value = savedMode == 'dark' ? ThemeMode.dark : ThemeMode.light;
+    _initialized = true;
+  }
+
+  static Future<void> setDark(bool value) async {
+    final nextMode = value ? ThemeMode.dark : ThemeMode.light;
+    if (mode.value == nextMode) return;
+    mode.value = nextMode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_storageKey, value ? 'dark' : 'light');
+  }
+
+  @visibleForTesting
+  static void resetForTests({ThemeMode value = ThemeMode.light}) {
+    mode.value = value;
+    _initialized = false;
+  }
+}
+
+class AppThemeColors {
+  final bool isDark;
+  final Color background;
+  final Color surface;
+  final Color elevatedSurface;
+  final Color primaryText;
+  final Color secondaryText;
+  final Color mutedText;
+  final Color border;
+  final Color shadow;
+  final Color navUnselected;
+  final Color inputFill;
+
+  const AppThemeColors._({
+    required this.isDark,
+    required this.background,
+    required this.surface,
+    required this.elevatedSurface,
+    required this.primaryText,
+    required this.secondaryText,
+    required this.mutedText,
+    required this.border,
+    required this.shadow,
+    required this.navUnselected,
+    required this.inputFill,
+  });
+
+  factory AppThemeColors.of(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+
+    if (!isDark) {
+      return const AppThemeColors._(
+        isDark: false,
+        background: AppColors.background,
+        surface: AppColors.cardBackground,
+        elevatedSurface: AppColors.cardBackground,
+        primaryText: AppColors.textBold,
+        secondaryText: AppColors.textRegular,
+        mutedText: AppColors.textMuted,
+        border: AppColors.border,
+        shadow: AppColors.cardShadow,
+        navUnselected: AppColors.navUnselected,
+        inputFill: AppColors.cardBackground,
+      );
+    }
+
+    return const AppThemeColors._(
+      isDark: true,
+      background: Color(0xFF0B1220),
+      surface: Color(0xFF111827),
+      elevatedSurface: Color(0xFF172033),
+      primaryText: Color(0xFFE5EDF8),
+      secondaryText: Color(0xFFB8C5D8),
+      mutedText: Color(0xFF94A3B8),
+      border: Color(0xFF2B3A52),
+      shadow: Color(0xFF020617),
+      navUnselected: Color(0xFF94A3B8),
+      inputFill: Color(0xFF172033),
+    );
   }
 }

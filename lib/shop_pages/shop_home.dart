@@ -94,7 +94,7 @@ class _ShopHomePageState extends State<ShopHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.accent,

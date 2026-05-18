@@ -417,9 +417,10 @@ class _ServicePageState extends State<ServicePage> {
   @override
   Widget build(BuildContext context) {
     final profile = _effectiveProfile;
+    final themeColors = AppThemeColors.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeColors.background,
       body: _loadingProfile && profile == null
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.accent),

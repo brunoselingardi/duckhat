@@ -4,7 +4,7 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/chat_conversa.dart';
 import 'package:duckhat/pages/chat_detail.dart';
 import 'package:duckhat/services/duckhat_api.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppColors, AppThemeColors;
 import 'package:flutter/material.dart';
 
 class ChatPage extends StatefulWidget {
@@ -99,9 +99,10 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final conversas = _filteredConversas;
+    final themeColors = AppThemeColors.of(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeColors.background,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -122,6 +123,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildHeader() {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
@@ -132,7 +135,7 @@ class _ChatPageState extends State<ChatPage> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textBold,
+                color: themeColors.primaryText,
               ),
             ),
           ),
@@ -148,6 +151,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildSearchBar() {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: TextField(
@@ -156,7 +161,8 @@ class _ChatPageState extends State<ChatPage> {
           hintText: widget.searchHint,
           prefixIcon: const Icon(Icons.search),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: themeColors.inputFill,
+          hintStyle: TextStyle(color: themeColors.mutedText),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
@@ -212,6 +218,8 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildConversationItem(ChatConversa conversa) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Material(
@@ -237,7 +245,7 @@ class _ChatPageState extends State<ChatPage> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textBold,
+                          color: themeColors.primaryText,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -245,7 +253,7 @@ class _ChatPageState extends State<ChatPage> {
                         conversa.ultimaMensagem ?? 'Conversa criada',
                         style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textRegular,
+                          color: themeColors.secondaryText,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -256,7 +264,7 @@ class _ChatPageState extends State<ChatPage> {
                 const SizedBox(width: 8),
                 Text(
                   _formatTime(conversa.ultimaMensagemEm),
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 12, color: themeColors.mutedText),
                 ),
               ],
             ),

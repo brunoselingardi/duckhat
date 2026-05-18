@@ -8,7 +8,7 @@ class ShopHelpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: buildShopAppBar(context, title: 'Ajuda'),
       body: ListView(
         padding: const EdgeInsets.all(16),
