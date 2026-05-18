@@ -306,27 +306,11 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
   }
 
   Future<void> _showDeleteDialog() async {
+    final sessionEmail = DuckHatApi.instance.currentSession?.email.trim() ?? '';
+
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir conta'),
-        content: const Text(
-          'O estabelecimento, serviços, agenda e dados relacionados serão removidos. Esta ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
-              'Excluir conta',
-              style: TextStyle(color: AppColors.error),
-            ),
-          ),
-        ],
-      ),
+      builder: (ctx) => _ShopDeleteAccountDialog(sessionEmail: sessionEmail),
     );
 
     if (confirmed != true || !mounted) return;
@@ -348,5 +332,101 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
         ),
       );
     }
+  }
+}
+
+class _ShopDeleteAccountDialog extends StatefulWidget {
+  final String sessionEmail;
+
+  const _ShopDeleteAccountDialog({required this.sessionEmail});
+
+  @override
+  State<_ShopDeleteAccountDialog> createState() =>
+      _ShopDeleteAccountDialogState();
+}
+
+class _ShopDeleteAccountDialogState extends State<_ShopDeleteAccountDialog> {
+  late final TextEditingController _controller;
+  String _typed = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  bool get _isValid =>
+      widget.sessionEmail.isNotEmpty &&
+      _typed.trim().toLowerCase() == widget.sessionEmail.toLowerCase();
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Excluir conta'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'O estabelecimento, serviços, agenda e dados relacionados serão removidos. Esta ação não pode ser desfeita.',
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'Para confirmar, digite o e-mail da conta:',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            SelectableText(
+              widget.sessionEmail.isEmpty
+                  ? 'E-mail indisponível'
+                  : widget.sessionEmail,
+              style: const TextStyle(
+                color: AppColors.accent,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                labelText: 'E-mail do estabelecimento',
+                errorText: _typed.isEmpty || _isValid
+                    ? null
+                    : 'Digite o e-mail exatamente como exibido.',
+              ),
+              onChanged: (value) => setState(() => _typed = value),
+              onSubmitted: (_) {
+                if (_isValid) Navigator.pop(context, true);
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: _isValid ? () => Navigator.pop(context, true) : null,
+          child: Text(
+            'Excluir conta',
+            style: TextStyle(color: _isValid ? AppColors.error : null),
+          ),
+        ),
+      ],
+    );
   }
 }

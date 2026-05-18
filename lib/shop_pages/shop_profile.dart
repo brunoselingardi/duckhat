@@ -8,6 +8,7 @@ import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
 import 'shop_establishment_data.dart';
+import 'shop_privacy.dart';
 
 class ShopProfilePage extends StatefulWidget {
   const ShopProfilePage({super.key});
@@ -319,6 +320,21 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                   onChanged: AppThemeController.setDark,
                 ),
               );
+            },
+          ),
+        ]),
+        const SizedBox(height: 16),
+        _buildSectionTitle('SEGURANÇA DA CONTA'),
+        _buildMenuCard([
+          _buildMenuItem(
+            context,
+            icon: Icons.verified_user_outlined,
+            title: 'Segurança e privacidade',
+            subtitle: 'Acesso, exposição pública e exclusão da conta',
+            onTap: () {
+              Navigator.of(
+                context,
+              ).push(AppRoute(builder: (_) => const ShopPrivacyPage()));
             },
           ),
         ]),
