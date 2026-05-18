@@ -18,4 +18,6 @@ public interface ServicoRepository extends JpaRepository<Servico, Long> {
 
   @Query("select s from Servico s join fetch s.prestador where s.ativo = true order by s.prestador.id asc, s.nome asc")
   List<Servico> findAtivosComPrestador();
+
+  void deleteByPrestadorId(Long prestadorId);
 }

@@ -45,4 +45,13 @@ public interface ChatMensagemRepository extends JpaRepository<ChatMensagem, Long
   int deleteMensagensExpiradas(
       @Param("limitePadrao") LocalDateTime limitePadrao,
       @Param("limiteComGraca") LocalDateTime limiteComGraca);
+
+  @Modifying
+  @Query("""
+      delete from ChatMensagem mensagem
+      where mensagem.remetente.id = :usuarioId
+        or mensagem.conversa.cliente.id = :usuarioId
+        or mensagem.conversa.prestador.id = :usuarioId
+      """)
+  int deleteByUsuarioParticipante(@Param("usuarioId") Long usuarioId);
 }

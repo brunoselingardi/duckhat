@@ -173,6 +173,30 @@ class DuckHatApi {
     return atualizado;
   }
 
+  Future<void> excluirMinhaConta() async {
+    if (_devMode) {
+      clearSession();
+      return;
+    }
+
+    await ensureAuthenticated();
+
+    final response = await _client.delete(
+      Uri.parse('${ApiConfig.baseUrl}/api/me'),
+      headers: _authorizedHeaders(),
+    );
+
+    final body = _decodeBody(response);
+
+    if (response.statusCode != 204) {
+      throw Exception(
+        _extractMessage(body) ?? 'Não foi possível excluir a conta.',
+      );
+    }
+
+    clearSession();
+  }
+
   Future<UsuarioCadastroResponse> criarUsuario({
     required String nome,
     required String email,

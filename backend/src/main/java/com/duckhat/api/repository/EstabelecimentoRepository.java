@@ -12,4 +12,5 @@ public interface EstabelecimentoRepository extends JpaRepository<Estabelecimento
     List<Estabelecimento> findByUsuarioIdIn(Collection<Long> usuarioIds);
     List<Estabelecimento> findAllByOrderByNomeAsc();
     boolean existsByCnpj(String cnpj);
+    void deleteByUsuarioId(Long usuarioId);
 }

@@ -5,9 +5,12 @@ import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,5 +34,11 @@ public class MeController {
       @Valid @RequestBody UpdatePerfilRequest request
   ) {
     return usuarioService.atualizarPerfil(usuario, request);
+  }
+
+  @DeleteMapping("/api/me")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void excluir(@AuthenticationPrincipal Usuario usuario) {
+    usuarioService.excluirMinhaConta(usuario);
   }
 }

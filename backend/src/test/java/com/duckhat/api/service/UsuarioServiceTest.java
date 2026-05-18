@@ -17,7 +17,16 @@ import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
+import com.duckhat.api.repository.AgendamentoRepository;
+import com.duckhat.api.repository.AvaliacaoRepository;
+import com.duckhat.api.repository.ChatConversaRepository;
+import com.duckhat.api.repository.ChatMensagemRepository;
+import com.duckhat.api.repository.DisponibilidadeRepository;
 import com.duckhat.api.repository.EstabelecimentoRepository;
+import com.duckhat.api.repository.NotificacaoEventoRepository;
+import com.duckhat.api.repository.NotificacaoPreferenciaRepository;
+import com.duckhat.api.repository.RecuperacaoSenhaTokenRepository;
+import com.duckhat.api.repository.ServicoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import java.time.LocalDate;
 import java.util.List;
@@ -32,12 +41,32 @@ class UsuarioServiceTest {
 
   private final UsuarioRepository usuarioRepository = mock(UsuarioRepository.class);
   private final EstabelecimentoRepository estabelecimentoRepository = mock(EstabelecimentoRepository.class);
+  private final AgendamentoRepository agendamentoRepository = mock(AgendamentoRepository.class);
+  private final AvaliacaoRepository avaliacaoRepository = mock(AvaliacaoRepository.class);
+  private final ChatConversaRepository chatConversaRepository = mock(ChatConversaRepository.class);
+  private final ChatMensagemRepository chatMensagemRepository = mock(ChatMensagemRepository.class);
+  private final DisponibilidadeRepository disponibilidadeRepository = mock(DisponibilidadeRepository.class);
+  private final NotificacaoEventoRepository notificacaoEventoRepository = mock(NotificacaoEventoRepository.class);
+  private final NotificacaoPreferenciaRepository notificacaoPreferenciaRepository =
+      mock(NotificacaoPreferenciaRepository.class);
+  private final RecuperacaoSenhaTokenRepository recuperacaoSenhaTokenRepository =
+      mock(RecuperacaoSenhaTokenRepository.class);
+  private final ServicoRepository servicoRepository = mock(ServicoRepository.class);
   private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
   private final DisponibilidadePadraoService disponibilidadePadraoService =
       mock(DisponibilidadePadraoService.class);
   private final UsuarioService service = new UsuarioService(
       usuarioRepository,
       estabelecimentoRepository,
+      agendamentoRepository,
+      avaliacaoRepository,
+      chatConversaRepository,
+      chatMensagemRepository,
+      disponibilidadeRepository,
+      notificacaoEventoRepository,
+      notificacaoPreferenciaRepository,
+      recuperacaoSenhaTokenRepository,
+      servicoRepository,
       passwordEncoder,
       disponibilidadePadraoService);
 

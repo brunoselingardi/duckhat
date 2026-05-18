@@ -1,201 +1,146 @@
-import 'package:flutter/material.dart';
+import 'package:duckhat/components/user/profile_settings_ui.dart';
+import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/pages/login.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
+import 'package:flutter/material.dart';
 
-class SegurancaPage extends StatelessWidget {
+class SegurancaPage extends StatefulWidget {
   const SegurancaPage({super.key});
 
   @override
+  State<SegurancaPage> createState() => _SegurancaPageState();
+}
+
+class _SegurancaPageState extends State<SegurancaPage> {
+  bool _deleting = false;
+
+  @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: colorScheme.primary),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Segurança e Privacidade',
-          style: TextStyle(
-            color: colorScheme.primary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSectionTitle(context, 'SEGURANÇA'),
-          const SizedBox(height: 8),
-          _buildItem(
-            context,
-            icon: Icons.lock_outline,
-            title: 'Alterar Senha',
-            subtitle: 'Última alteração há 30 dias',
-            onTap: () => _showEmBreve(context),
-          ),
-          _buildItem(
-            context,
-            icon: Icons.phone_android,
-            title: 'Verificação em Dois Fatores',
-            subtitle: 'Adiciona uma camada extra de segurança',
-            onTap: () => _showEmBreve(context),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionTitle(context, 'PRIVACIDADE'),
-          const SizedBox(height: 8),
-          _buildItem(
-            context,
-            icon: Icons.visibility_off_outlined,
-            title: 'Perfil Privado',
-            subtitle: 'Apenas clientes agendados podem ver seu perfil',
-            trailing: Switch(
-              value: false,
-              onChanged: (v) {},
-              activeThumbColor: AppColors.accent,
+    return ProfileSettingsScaffold(
+      title: 'Segurança',
+      heroTitle: 'Controle da conta',
+      heroSubtitle:
+          'Revise acesso, privacidade e ações sensíveis do seu perfil DuckHat.',
+      heroIcon: Icons.verified_user_outlined,
+      children: [
+        ProfileSettingsSection(
+          title: 'ACESSO',
+          children: [
+            ProfileSettingsTile(
+              icon: Icons.lock_outline,
+              title: 'Alterar senha',
+              subtitle: 'Atualize sua senha de acesso',
+              onTap: () => _showEmBreve(context),
             ),
+            const ProfileSettingsDivider(),
+            ProfileSettingsTile(
+              icon: Icons.phone_android_outlined,
+              title: 'Verificação em duas etapas',
+              subtitle: 'Adicione uma camada extra de proteção',
+              onTap: () => _showEmBreve(context),
+            ),
+          ],
+        ),
+        ProfileSettingsSection(
+          title: 'PRIVACIDADE',
+          children: [
+            ProfileSettingsTile(
+              icon: Icons.visibility_off_outlined,
+              title: 'Perfil privado',
+              subtitle: 'Controle quem pode ver seus dados no app',
+              trailing: Switch(
+                value: false,
+                onChanged: (_) => _showEmBreve(context),
+              ),
+            ),
+            const ProfileSettingsDivider(),
+            ProfileSettingsTile(
+              icon: Icons.location_off_outlined,
+              title: 'Localização',
+              subtitle: 'Gerencie o acesso à sua localização',
+              onTap: () => _showEmBreve(context),
+            ),
+            const ProfileSettingsDivider(),
+            ProfileSettingsTile(
+              icon: Icons.share_outlined,
+              title: 'Dados compartilhados',
+              subtitle: 'Revise os dados usados nos agendamentos',
+              onTap: () => _showEmBreve(context),
+            ),
+          ],
+        ),
+        ProfileSettingsSection(
+          title: 'CONTA',
+          children: [
+            ProfileSettingsTile(
+              icon: Icons.delete_outline,
+              title: _deleting ? 'Excluindo conta...' : 'Excluir conta',
+              subtitle: 'Remove sua conta e seus dados do DuckHat',
+              destructive: true,
+              trailing: _deleting
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : null,
+              onTap: _deleting ? null : _confirmDeleteAccount,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Excluir conta'),
+        content: const Text(
+          'Sua conta, sessão, agendamentos e dados relacionados serão removidos. Esta ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
           ),
-          _buildItem(
-            context,
-            icon: Icons.location_off_outlined,
-            title: 'Localização',
-            subtitle: 'Controlar acesso à localização',
-            onTap: () => _showEmBreve(context),
-          ),
-          _buildItem(
-            context,
-            icon: Icons.share_outlined,
-            title: 'Dados Compartilhados',
-            subtitle: 'Gerenciar quais dados são compartilhados',
-            onTap: () => _showEmBreve(context),
-          ),
-          const SizedBox(height: 24),
-          _buildSectionTitle(context, 'CONTA'),
-          const SizedBox(height: 8),
-          _buildItem(
-            context,
-            icon: Icons.delete_outline,
-            title: 'Excluir Conta',
-            subtitle: 'Remover conta e todos os dados',
-            titleColor: Colors.red,
-            onTap: () => _showExcluirDialog(context),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text(
+              'Excluir conta',
+              style: TextStyle(color: AppColors.error),
+            ),
           ),
         ],
       ),
     );
-  }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
-        color: colorScheme.primary.withValues(alpha: 0.62),
-        letterSpacing: 1,
-      ),
-    );
-  }
+    if (confirmed != true || !mounted) return;
 
-  Widget _buildItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Widget? trailing,
-    Color? titleColor,
-    VoidCallback? onTap,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final itemColor = titleColor ?? colorScheme.primary;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(
-          alpha: isDark ? 0.72 : 1,
+    setState(() => _deleting = true);
+    try {
+      await DuckHatApi.instance.excluirMinhaConta();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        AppRoute(builder: (_) => const LoginPage()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _deleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
         ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: itemColor.withValues(alpha: isDark ? 0.18 : 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: itemColor, size: 20),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: titleColor ?? colorScheme.onSurface,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 13,
-            color: colorScheme.onSurface.withValues(alpha: 0.62),
-          ),
-        ),
-        trailing:
-            trailing ??
-            Icon(
-              Icons.chevron_right,
-              color: colorScheme.primary.withValues(alpha: 0.5),
-            ),
-      ),
-    );
+      );
+    }
   }
 
   void _showEmBreve(BuildContext context) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Em breve')));
-  }
-
-  void _showExcluirDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Excluir Conta'),
-        content: const Text(
-          'Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Conta excluída')));
-            },
-            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
   }
 }

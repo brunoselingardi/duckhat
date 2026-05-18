@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:duckhat/core/app_route.dart';
+import 'package:duckhat/pages/login.dart';
+import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import '../shop_components/shop_ui.dart';
 
@@ -13,6 +16,7 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
   bool _perfilPrivado = false;
   bool _mostrarContato = true;
   bool _mostrarLocal = true;
+  bool _deleting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +24,7 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
       backgroundColor: AppColors.background,
       appBar: buildShopAppBar(
         context,
-        title: 'Privacidade e Segurança',
+        title: 'Segurança',
         actions: [
           TextButton(
             onPressed: () => _save(context),
@@ -35,8 +39,10 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          _buildHero(),
+          const SizedBox(height: 18),
           _buildSectionTitle('PRIVACIDADE'),
           _buildToggleItem(
             'Perfil Privado',
@@ -58,18 +64,105 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
           ),
           const SizedBox(height: 24),
           _buildSectionTitle('SEGURANÇA'),
-          _buildMenuItem('Alterar Senha', () => _showComingSoon(context)),
           _buildMenuItem(
-            'Autenticação em 2 Fatores',
+            Icons.lock_outline,
+            'Alterar senha',
+            'Atualize a senha de acesso da empresa',
+            () => _showComingSoon(context),
+          ),
+          _buildMenuItem(
+            Icons.phone_android_outlined,
+            'Autenticação em duas etapas',
+            'Proteção extra para operações do estabelecimento',
             () => _showComingSoon(context),
           ),
           const SizedBox(height: 24),
           _buildSectionTitle('DADOS'),
-          _buildMenuItem('Baixar meus dados', () => _showComingSoon(context)),
           _buildMenuItem(
-            'Excluir minha conta',
-            () => _showDeleteDialog(context),
+            Icons.download_outlined,
+            'Baixar meus dados',
+            'Exportação das informações do perfil',
+            () => _showComingSoon(context),
+          ),
+          _buildMenuItem(
+            Icons.delete_outline,
+            _deleting ? 'Excluindo conta...' : 'Excluir minha conta',
+            'Remove estabelecimento, serviços e dados relacionados',
+            _deleting ? null : _showDeleteDialog,
             isDestructive: true,
+            trailing: _deleting
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHero() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.secondary, AppColors.accent],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowAccent,
+            blurRadius: 20,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: const Icon(
+              Icons.storefront_outlined,
+              color: Colors.white,
+              size: 26,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Controle do estabelecimento',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
+                  ),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Gerencie exposição pública, acesso e ações sensíveis da conta.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -107,6 +200,20 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
       ),
       child: Row(
         children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.visibility_outlined,
+              color: AppColors.accent,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,10 +243,14 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
   }
 
   Widget _buildMenuItem(
+    IconData icon,
     String title,
-    VoidCallback onTap, {
+    String subtitle,
+    VoidCallback? onTap, {
     bool isDestructive = false,
+    Widget? trailing,
   }) {
+    final color = isDestructive ? AppColors.error : AppColors.accent;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -149,13 +260,34 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
       ),
       child: ListTile(
         onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: color, size: 21),
+        ),
         title: Text(
           title,
           style: TextStyle(
             color: isDestructive ? AppColors.error : AppColors.darkAlt,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        trailing: Icon(Icons.chevron_right, color: AppColors.textMuted),
+        subtitle: Text(
+          subtitle,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing:
+            trailing ??
+            const Icon(Icons.chevron_right, color: AppColors.textMuted),
       ),
     );
   }
@@ -173,26 +305,48 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
     ).showSnackBar(const SnackBar(content: Text('Em breve')));
   }
 
-  void _showDeleteDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showDeleteDialog() async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Excluir Conta'),
-        content: const Text('Tem certeza? Esta ação não pode ser desfeita.'),
+        title: const Text('Excluir conta'),
+        content: const Text(
+          'O estabelecimento, serviços, agenda e dados relacionados serão removidos. Esta ação não pode ser desfeita.',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text(
-              'Excluir',
+              'Excluir conta',
               style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
       ),
     );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _deleting = true);
+    try {
+      await DuckHatApi.instance.excluirMinhaConta();
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        AppRoute(builder: (_) => const LoginPage()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _deleting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.toString().replaceFirst('Exception: ', '')),
+        ),
+      );
+    }
   }
 }

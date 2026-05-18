@@ -16,4 +16,6 @@ public interface DisponibilidadeRepository extends JpaRepository<Disponibilidade
   List<Disponibilidade> findByPrestadorIdAndDiaSemanaAndAtivoTrue(Long prestadorId, Byte diaSemana);
 
   boolean existsByPrestadorIdAndDiaSemana(Long prestadorId, Byte diaSemana);
+
+  void deleteByPrestadorId(Long prestadorId);
 }
