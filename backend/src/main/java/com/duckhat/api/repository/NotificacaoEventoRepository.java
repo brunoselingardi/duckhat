@@ -6,6 +6,9 @@ import com.duckhat.api.entity.enums.StatusNotificacao;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface NotificacaoEventoRepository extends JpaRepository<NotificacaoEvento, Long> {
 
@@ -30,4 +33,19 @@ public interface NotificacaoEventoRepository extends JpaRepository<NotificacaoEv
   List<NotificacaoEvento> findByUsuarioIdAndLidoEmIsNull(Long usuarioId);
 
   long countByUsuarioIdAndLidoEmIsNull(Long usuarioId);
+
+  @Modifying
+  @Query(
+      value = """
+          DELETE FROM notificacao_eventos
+          WHERE usuario_id = :usuarioId
+             OR agendamento_id IN (
+               SELECT id FROM agendamentos WHERE cliente_id = :usuarioId OR prestador_id = :usuarioId
+             )
+             OR chat_conversa_id IN (
+               SELECT id FROM chat_conversas WHERE cliente_id = :usuarioId OR prestador_id = :usuarioId
+             )
+          """,
+      nativeQuery = true)
+  int deleteByUsuarioOuRelacionamentos(@Param("usuarioId") Long usuarioId);
 }

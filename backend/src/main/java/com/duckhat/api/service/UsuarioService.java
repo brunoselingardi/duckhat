@@ -8,8 +8,19 @@ import com.duckhat.api.dto.UsuarioResponse;
 import com.duckhat.api.entity.Estabelecimento;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.TipoUsuario;
+import com.duckhat.api.repository.AgendamentoRepository;
+import com.duckhat.api.repository.AvaliacaoRepository;
+import com.duckhat.api.repository.ChatConversaRepository;
+import com.duckhat.api.repository.ChatMensagemRepository;
+import com.duckhat.api.repository.DisponibilidadeRepository;
 import com.duckhat.api.repository.EstabelecimentoRepository;
+import com.duckhat.api.repository.NotificacaoEventoRepository;
+import com.duckhat.api.repository.NotificacaoPreferenciaRepository;
+import com.duckhat.api.repository.RecuperacaoSenhaTokenRepository;
+import com.duckhat.api.repository.ServicoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,17 +41,47 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final EstabelecimentoRepository estabelecimentoRepository;
+    private final AgendamentoRepository agendamentoRepository;
+    private final AvaliacaoRepository avaliacaoRepository;
+    private final ChatConversaRepository chatConversaRepository;
+    private final ChatMensagemRepository chatMensagemRepository;
+    private final DisponibilidadeRepository disponibilidadeRepository;
+    private final NotificacaoEventoRepository notificacaoEventoRepository;
+    private final NotificacaoPreferenciaRepository notificacaoPreferenciaRepository;
+    private final RecuperacaoSenhaTokenRepository recuperacaoSenhaTokenRepository;
+    private final ServicoRepository servicoRepository;
     private final PasswordEncoder passwordEncoder;
     private final DisponibilidadePadraoService disponibilidadePadraoService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
             EstabelecimentoRepository estabelecimentoRepository,
+            AgendamentoRepository agendamentoRepository,
+            AvaliacaoRepository avaliacaoRepository,
+            ChatConversaRepository chatConversaRepository,
+            ChatMensagemRepository chatMensagemRepository,
+            DisponibilidadeRepository disponibilidadeRepository,
+            NotificacaoEventoRepository notificacaoEventoRepository,
+            NotificacaoPreferenciaRepository notificacaoPreferenciaRepository,
+            RecuperacaoSenhaTokenRepository recuperacaoSenhaTokenRepository,
+            ServicoRepository servicoRepository,
             PasswordEncoder passwordEncoder,
             DisponibilidadePadraoService disponibilidadePadraoService
     ) {
         this.usuarioRepository = usuarioRepository;
         this.estabelecimentoRepository = estabelecimentoRepository;
+        this.agendamentoRepository = agendamentoRepository;
+        this.avaliacaoRepository = avaliacaoRepository;
+        this.chatConversaRepository = chatConversaRepository;
+        this.chatMensagemRepository = chatMensagemRepository;
+        this.disponibilidadeRepository = disponibilidadeRepository;
+        this.notificacaoEventoRepository = notificacaoEventoRepository;
+        this.notificacaoPreferenciaRepository = notificacaoPreferenciaRepository;
+        this.recuperacaoSenhaTokenRepository = recuperacaoSenhaTokenRepository;
+        this.servicoRepository = servicoRepository;
         this.passwordEncoder = passwordEncoder;
         this.disponibilidadePadraoService = disponibilidadePadraoService;
     }
@@ -209,6 +250,30 @@ public class UsuarioService {
         }
 
         return UsuarioResponse.fromEntity(salvo, estabelecimento);
+    }
+
+    @Transactional
+    public void excluirMinhaConta(Usuario autenticado) {
+        if (!usuarioRepository.existsById(autenticado.getId())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado");
+        }
+
+        Long usuarioId = autenticado.getId();
+        entityManager.flush();
+        entityManager.clear();
+        notificacaoEventoRepository.deleteByUsuarioOuRelacionamentos(usuarioId);
+        avaliacaoRepository.deleteByAgendamentoClienteIdOrPrestadorId(usuarioId);
+        chatMensagemRepository.deleteByUsuarioParticipante(usuarioId);
+        chatConversaRepository.deleteByClienteIdOrPrestadorId(usuarioId);
+        notificacaoPreferenciaRepository.deleteByUsuarioId(usuarioId);
+        recuperacaoSenhaTokenRepository.deleteByUsuarioId(usuarioId);
+        estabelecimentoRepository.deleteByUsuarioId(usuarioId);
+        disponibilidadeRepository.deleteByPrestadorId(usuarioId);
+        agendamentoRepository.deleteByClienteIdOrPrestadorId(usuarioId);
+        servicoRepository.deleteByPrestadorId(usuarioId);
+        usuarioRepository.deleteById(usuarioId);
+        entityManager.flush();
+        entityManager.clear();
     }
 
     private Estabelecimento salvarEstabelecimento(Usuario prestador, String endereco) {

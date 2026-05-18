@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface NotificacaoPreferenciaRepository extends JpaRepository<NotificacaoPreferencia, Long> {
 
   Optional<NotificacaoPreferencia> findByUsuarioId(Long usuarioId);
+
+  void deleteByUsuarioId(Long usuarioId);
 }

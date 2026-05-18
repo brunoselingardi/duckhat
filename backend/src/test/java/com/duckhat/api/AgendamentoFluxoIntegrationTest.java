@@ -13,6 +13,9 @@ import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.entity.enums.StatusAgendamento;
 import com.duckhat.api.entity.enums.TipoUsuario;
 import com.duckhat.api.repository.DisponibilidadeRepository;
+import com.duckhat.api.repository.AgendamentoRepository;
+import com.duckhat.api.repository.EstabelecimentoRepository;
+import com.duckhat.api.repository.ServicoRepository;
 import com.duckhat.api.repository.UsuarioRepository;
 import com.duckhat.api.service.AgendamentoService;
 import com.duckhat.api.service.ServicoService;
@@ -50,6 +53,15 @@ class AgendamentoFluxoIntegrationTest {
 
   @Autowired
   private DisponibilidadeRepository disponibilidadeRepository;
+
+  @Autowired
+  private AgendamentoRepository agendamentoRepository;
+
+  @Autowired
+  private ServicoRepository servicoRepository;
+
+  @Autowired
+  private EstabelecimentoRepository estabelecimentoRepository;
 
   @Test
   void novoPrestadorComServicoNovoConsegueReceberAgendamento() {
@@ -162,6 +174,60 @@ class AgendamentoFluxoIntegrationTest {
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
     assertEquals("O serviço informado está pausado e não aceita agendamentos", error.getReason());
     assertEquals(0, agendamentoService.listarParaPrestador(prestador).size());
+  }
+
+  @Test
+  void excluirContaRemoveUsuarioEDadosRelacionadosDoBanco() {
+    usuarioService.criar(new CreateUsuarioRequest(
+        "Studio Exclusao",
+        "studio.exclusao@duckhat.test",
+        "123456",
+        "62999994444",
+        "11.222.333/0001-66",
+        "Elisa Responsavel",
+        "barbearia",
+        TipoUsuario.PRESTADOR));
+    Usuario prestador = usuarioRepository.findByEmail("studio.exclusao@duckhat.test")
+        .orElseThrow();
+
+    ServicoResponse servico = servicoService.criar(
+        new CreateServicoRequest(
+            "Corte exclusao",
+            "Servico usado para validar exclusao de conta",
+            30,
+            new BigDecimal("45.00"),
+            true),
+        prestador);
+
+    usuarioService.criar(new CreateUsuarioRequest(
+        "Cliente Exclusao",
+        "cliente.exclusao@duckhat.test",
+        "123456",
+        "62999993333",
+        null,
+        null,
+        null,
+        TipoUsuario.CLIENTE));
+    Usuario cliente = usuarioRepository.findByEmail("cliente.exclusao@duckhat.test")
+        .orElseThrow();
+
+    LocalDateTime inicio = proximoDiaUtilAs10h();
+    agendamentoService.criar(
+        new CreateAgendamentoRequest(
+            servico.id(),
+            inicio,
+            inicio.plusMinutes(30),
+            "Fluxo de exclusao"),
+        cliente);
+
+    usuarioService.excluirMinhaConta(prestador);
+
+    assertFalse(usuarioRepository.findById(prestador.getId()).isPresent());
+    assertFalse(estabelecimentoRepository.findByUsuarioId(prestador.getId()).isPresent());
+    assertEquals(0, disponibilidadeRepository.findByPrestadorId(prestador.getId()).size());
+    assertEquals(0, servicoRepository.findByPrestadorId(prestador.getId()).size());
+    assertEquals(0, agendamentoRepository.findByPrestadorId(prestador.getId()).size());
+    assertFalse(usuarioRepository.findById(cliente.getId()).isEmpty());
   }
 
   private LocalDateTime proximoDiaUtilAs10h() {
