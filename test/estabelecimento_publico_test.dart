@@ -12,6 +12,7 @@ void main() {
       'horarioAtendimento': 'Segunda a sexta 9h - 20h',
       'imagemCapa': 'assets/barbie.jpg',
       'imagemLogo': 'assets/barbielogo.jpg',
+      'fotoPerfilBase64': 'logo-base64',
     });
 
     expect(perfil.id, 12);
@@ -21,5 +22,6 @@ void main() {
     expect(perfil.horarioAtendimento, 'Segunda a sexta 9h - 20h');
     expect(perfil.imagemCapa, 'assets/barbie.jpg');
     expect(perfil.imagemLogo, 'assets/barbielogo.jpg');
+    expect(perfil.fotoPerfilBase64, 'logo-base64');
   });
 }

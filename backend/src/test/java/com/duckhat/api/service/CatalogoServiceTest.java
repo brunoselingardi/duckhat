@@ -42,6 +42,7 @@ class CatalogoServiceTest {
     assertEquals(2, responses.get(0).totalServicos());
     assertEquals(new BigDecimal("35.00"), responses.get(0).precoInicial());
     assertEquals("Corte premium", responses.get(0).servicos().get(0).nome());
+    assertEquals("logo", responses.get(0).fotoPerfilBase64());
     assertEquals("Barbie Dream Barber", responses.get(1).nome());
     assertEquals(0, responses.get(1).totalServicos());
   }
@@ -132,6 +133,7 @@ class CatalogoServiceTest {
     estabelecimento.setDescricao("Atendimento profissional.");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 18h");
     estabelecimento.setBannerImagemBase64("banner");
+    estabelecimento.setFotoPerfilBase64("logo");
     return estabelecimento;
   }
 

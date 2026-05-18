@@ -12,7 +12,8 @@ public record CatalogoPrestadorBuscaResponse(
     String descricaoPublica,
     String horarioAtendimento,
     String imagemCapa,
-    String imagemLogo
+    String imagemLogo,
+    String fotoPerfilBase64
 ) {
   public static CatalogoPrestadorBuscaResponse fromEntity(
       Usuario usuario,
@@ -34,6 +35,7 @@ public record CatalogoPrestadorBuscaResponse(
         estabelecimento == null ? null : estabelecimento.getDescricao(),
         estabelecimento == null ? null : estabelecimento.getHorarioAtendimento(),
         null,
-        null);
+        null,
+        estabelecimento == null ? null : estabelecimento.getFotoPerfilBase64());
   }
 }

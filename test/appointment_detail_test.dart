@@ -11,6 +11,7 @@ Agendamento _agendamento({String status = 'CONFIRMADO'}) {
     clienteNome: 'Cliente Duck',
     prestadorId: 12,
     prestadorNome: 'DuckHat Studio',
+    prestadorFotoPerfilBase64: null,
     servicoId: 3,
     servicoNome: 'Corte completo',
     inicioEm: DateTime(2026, 5, 6, 14),

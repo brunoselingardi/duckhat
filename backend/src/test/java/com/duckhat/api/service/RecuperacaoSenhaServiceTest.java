@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,19 +33,24 @@ class RecuperacaoSenhaServiceTest {
   private final RecuperacaoSenhaTokenRepository tokenRepository =
       mock(RecuperacaoSenhaTokenRepository.class);
   private final PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+  private final RecuperacaoSenhaEmailSender emailSender = mock(RecuperacaoSenhaEmailSender.class);
 
   @Test
-  void solicitarNaoRetornaCodigoQuandoRecursoDeDemoEstaDesligado() {
+  void solicitarEnviaCodigoPorEmailQuandoUsuarioExiste() {
     Usuario usuario = usuario(7L, "cliente@duckhat.com");
     RecuperacaoSenhaService service = new RecuperacaoSenhaService(
         usuarioRepository,
         tokenRepository,
         passwordEncoder,
-        false);
+        false,
+        emailSender);
 
+    when(emailSender.configurado()).thenReturn(true);
     when(usuarioRepository.findByEmail("cliente@duckhat.com")).thenReturn(Optional.of(usuario));
-    when(tokenRepository.save(any(RecuperacaoSenhaToken.class)))
+    when(tokenRepository.saveAndFlush(any(RecuperacaoSenhaToken.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
+    when(passwordEncoder.encode(any())).thenAnswer(
+        invocation -> "hash:" + invocation.getArgument(0));
 
     SolicitarRecuperacaoSenhaResponse response = service.solicitar(
         new SolicitarRecuperacaoSenhaRequest("cliente@duckhat.com"));
@@ -53,20 +59,118 @@ class RecuperacaoSenhaServiceTest {
 
     ArgumentCaptor<RecuperacaoSenhaToken> tokenCaptor =
         ArgumentCaptor.forClass(RecuperacaoSenhaToken.class);
-    verify(tokenRepository).save(tokenCaptor.capture());
+    ArgumentCaptor<String> codigoCaptor = ArgumentCaptor.forClass(String.class);
+    verify(tokenRepository).saveAndFlush(tokenCaptor.capture());
     assertEquals(0, tokenCaptor.getValue().getTentativasFalhas());
     assertNull(tokenCaptor.getValue().getBloqueadoAte());
+    verify(emailSender).enviarCodigo(
+        eq(usuario),
+        codigoCaptor.capture(),
+        eq(tokenCaptor.getValue().getExpiraEm()));
+    assertTrue(codigoCaptor.getValue().matches("\\d{6}"));
+    assertEquals("hash:" + codigoCaptor.getValue(), tokenCaptor.getValue().getCodigo());
+  }
+
+  @Test
+  void solicitarRetornaCodigoEmModoDemoMesmoSemEmailConfigurado() {
+    Usuario usuario = usuario(7L, "cliente@duckhat.com");
+    RecuperacaoSenhaService service = new RecuperacaoSenhaService(
+        usuarioRepository,
+        tokenRepository,
+        passwordEncoder,
+        true,
+        emailSender);
+
+    when(emailSender.configurado()).thenReturn(false);
+    when(usuarioRepository.findByEmail("cliente@duckhat.com")).thenReturn(Optional.of(usuario));
+    when(tokenRepository.saveAndFlush(any(RecuperacaoSenhaToken.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(passwordEncoder.encode(any())).thenAnswer(
+        invocation -> "hash:" + invocation.getArgument(0));
+
+    SolicitarRecuperacaoSenhaResponse response = service.solicitar(
+        new SolicitarRecuperacaoSenhaRequest("cliente@duckhat.com"));
+
+    assertTrue(response.codigoRecuperacao().matches("\\d{6}"));
+    verify(emailSender, never()).enviarCodigo(any(), any(), any());
+  }
+
+  @Test
+  void redefinirAceitaCodigoPorHashETrocaSenha() {
+    Usuario usuario = usuario(7L, "cliente@duckhat.com");
+    usuario.setSenhaHash("senha-antiga");
+    RecuperacaoSenhaToken token = token(usuario, "hash:123456");
+    RecuperacaoSenhaService service = new RecuperacaoSenhaService(
+        usuarioRepository,
+        tokenRepository,
+        passwordEncoder,
+        false,
+        emailSender);
+
+    when(usuarioRepository.findByEmail("cliente@duckhat.com")).thenReturn(Optional.of(usuario));
+    when(tokenRepository.findFirstByUsuarioIdAndUsadoEmIsNullOrderByCriadoEmDesc(7L))
+        .thenReturn(Optional.of(token));
+    when(passwordEncoder.matches("123456", "hash:123456")).thenReturn(true);
+    when(passwordEncoder.encode("novaSenha")).thenReturn("senha-nova-hash");
+
+    service.redefinir(new RedefinirSenhaRequest("cliente@duckhat.com", "123456", "novaSenha"));
+
+    assertEquals("senha-nova-hash", usuario.getSenhaHash());
+    assertTrue(token.getUsadoEm().isBefore(LocalDateTime.now().plusSeconds(1)));
+    assertEquals(0, token.getTentativasFalhas());
+  }
+
+  @Test
+  void solicitarFalhaQuandoNaoHaSmtpNemModoDemo() {
+    RecuperacaoSenhaService service = new RecuperacaoSenhaService(
+        usuarioRepository,
+        tokenRepository,
+        passwordEncoder,
+        false,
+        emailSender);
+
+    when(emailSender.configurado()).thenReturn(false);
+
+    ResponseStatusException error = assertThrows(
+        ResponseStatusException.class,
+        () -> service.solicitar(new SolicitarRecuperacaoSenhaRequest("cliente@duckhat.com")));
+
+    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, error.getStatusCode());
+    verify(usuarioRepository, never()).findByEmail(any());
+    verify(tokenRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void solicitarNaoRevelaSeEmailExiste() {
+    RecuperacaoSenhaService service = new RecuperacaoSenhaService(
+        usuarioRepository,
+        tokenRepository,
+        passwordEncoder,
+        false,
+        emailSender);
+
+    when(emailSender.configurado()).thenReturn(true);
+    when(usuarioRepository.findByEmail("naoexiste@duckhat.com")).thenReturn(Optional.empty());
+
+    SolicitarRecuperacaoSenhaResponse response = service.solicitar(
+        new SolicitarRecuperacaoSenhaRequest("naoexiste@duckhat.com"));
+
+    assertNull(response.codigoRecuperacao());
+    assertEquals("Se o e-mail existir, enviaremos um código de recuperação.", response.mensagem());
+    verify(tokenRepository, never()).saveAndFlush(any());
+    verify(emailSender, never()).enviarCodigo(any(), any(), any());
   }
 
   @Test
   void redefinirBloqueiaTokenAposCincoCodigosInvalidos() {
     Usuario usuario = usuario(7L, "cliente@duckhat.com");
-    RecuperacaoSenhaToken token = token(usuario, "123456");
+    RecuperacaoSenhaToken token = token(usuario, "hash:123456");
     RecuperacaoSenhaService service = new RecuperacaoSenhaService(
         usuarioRepository,
         tokenRepository,
         passwordEncoder,
-        false);
+        false,
+        emailSender);
 
     when(usuarioRepository.findByEmail("cliente@duckhat.com")).thenReturn(Optional.of(usuario));
     when(tokenRepository.findFirstByUsuarioIdAndUsadoEmIsNullOrderByCriadoEmDesc(7L))

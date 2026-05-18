@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/establishment_category.dart';
 import 'package:duckhat/services/duckhat_api.dart';
@@ -854,22 +856,9 @@ class _ResultCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: result.hasInternalPage
-                      ? AppColors.accent.withValues(alpha: 0.14)
-                      : AppColors.secondary.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  result.hasInternalPage
-                      ? Icons.storefront
-                      : Icons.location_city_outlined,
-                  color: AppColors.textBold,
-                  size: 28,
-                ),
+              _ResultLogo(
+                imageBase64: result.fotoPerfilBase64,
+                hasInternalPage: result.hasInternalPage,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -979,6 +968,53 @@ class _ResultCard extends StatelessWidget {
       child: onOpenPage == null
           ? card
           : InkWell(onTap: onOpenPage, child: card),
+    );
+  }
+}
+
+class _ResultLogo extends StatelessWidget {
+  final String? imageBase64;
+  final bool hasInternalPage;
+
+  const _ResultLogo({required this.imageBase64, required this.hasInternalPage});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    final value = imageBase64?.trim();
+    if (value != null && value.isNotEmpty) {
+      try {
+        child = Image.memory(
+          base64Decode(value),
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        );
+      } on FormatException {
+        child = _fallbackIcon();
+      }
+    } else {
+      child = _fallbackIcon();
+    }
+
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        color: hasInternalPage
+            ? AppColors.accent.withValues(alpha: 0.14)
+            : AppColors.secondary.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+
+  Widget _fallbackIcon() {
+    return Icon(
+      hasInternalPage ? Icons.storefront : Icons.location_city_outlined,
+      color: AppColors.textBold,
+      size: 28,
     );
   }
 }
@@ -1170,6 +1206,7 @@ class _PlaceCardModel {
   final bool hasInternalPage;
   final int? prestadorId;
   final EstabelecimentoCatalogo? estabelecimento;
+  final String? fotoPerfilBase64;
   final String? priceLabel;
   final List<String> serviceLabels;
   final String phone;
@@ -1186,6 +1223,7 @@ class _PlaceCardModel {
     required this.hasInternalPage,
     this.prestadorId,
     this.estabelecimento,
+    this.fotoPerfilBase64,
     this.priceLabel,
     this.serviceLabels = const [],
     required this.phone,
@@ -1209,6 +1247,7 @@ class _PlaceCardModel {
       distanceLabel: _formatDistance(meters),
       hasInternalPage: hasInternalPage,
       prestadorId: hasInternalPage ? 2 : null,
+      fotoPerfilBase64: null,
       serviceLabels: const [],
       phone: item.phone ?? '5562999990100',
       whatsappUrl: SearchContact.whatsappUri(
@@ -1237,6 +1276,7 @@ class _PlaceCardModel {
       distanceLabel: _formatDistance(meters),
       hasInternalPage: item.hasInternalPage,
       prestadorId: item.prestadorId,
+      fotoPerfilBase64: null,
       serviceLabels: const [],
       phone: item.phone,
       whatsappUrl: item.whatsappUrl,
@@ -1270,6 +1310,7 @@ class _PlaceCardModel {
       hasInternalPage: true,
       prestadorId: item.prestadorId,
       estabelecimento: item,
+      fotoPerfilBase64: item.fotoPerfilBase64,
       priceLabel: item.precoInicialLabel,
       serviceLabels: item.servicos
           .map((service) => '${service.nome} · ${_formatPrice(service.preco)}')

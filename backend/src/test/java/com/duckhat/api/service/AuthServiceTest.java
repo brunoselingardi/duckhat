@@ -51,6 +51,7 @@ class AuthServiceTest {
     estabelecimento.setDescricao("Atendimento profissional.");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 8h - 18h");
     estabelecimento.setBannerImagemBase64("banner");
+    estabelecimento.setFotoPerfilBase64("logo");
 
     when(usuarioRepository.findByEmail("studio@duckhat.com")).thenReturn(Optional.of(usuario));
     when(passwordEncoder.matches("123456", "hash")).thenReturn(true);
@@ -65,5 +66,6 @@ class AuthServiceTest {
     assertEquals("Atendimento profissional.", response.descricao());
     assertEquals("Segunda a sexta 8h - 18h", response.horarioAtendimento());
     assertEquals("banner", response.bannerImagemBase64());
+    assertEquals("logo", response.fotoPerfilBase64());
   }
 }

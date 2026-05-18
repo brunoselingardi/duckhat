@@ -8,6 +8,8 @@ import com.duckhat.api.entity.RecuperacaoSenhaToken;
 import com.duckhat.api.entity.Usuario;
 import com.duckhat.api.repository.RecuperacaoSenhaTokenRepository;
 import com.duckhat.api.repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +24,9 @@ import java.time.LocalDateTime;
 @Service
 public class RecuperacaoSenhaService {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(RecuperacaoSenhaService.class);
+  private static final String MENSAGEM_SOLICITACAO =
+      "Se o e-mail existir, enviaremos um código de recuperação.";
   private static final SecureRandom RANDOM = new SecureRandom();
   private static final int MAX_TENTATIVAS = 5;
   private static final Duration DURACAO_BLOQUEIO = Duration.ofMinutes(15);
@@ -29,29 +34,37 @@ public class RecuperacaoSenhaService {
   private final UsuarioRepository usuarioRepository;
   private final RecuperacaoSenhaTokenRepository tokenRepository;
   private final PasswordEncoder passwordEncoder;
+  private final RecuperacaoSenhaEmailSender emailSender;
   private final boolean retornarCodigoRecuperacao;
 
   public RecuperacaoSenhaService(
       UsuarioRepository usuarioRepository,
       RecuperacaoSenhaTokenRepository tokenRepository,
       PasswordEncoder passwordEncoder,
-      @Value("${app.auth.return-reset-code:false}") boolean retornarCodigoRecuperacao
+      @Value("${app.auth.return-reset-code:false}") boolean retornarCodigoRecuperacao,
+      RecuperacaoSenhaEmailSender emailSender
   ) {
     this.usuarioRepository = usuarioRepository;
     this.tokenRepository = tokenRepository;
     this.passwordEncoder = passwordEncoder;
     this.retornarCodigoRecuperacao = retornarCodigoRecuperacao;
+    this.emailSender = emailSender;
   }
 
   @Transactional
   public SolicitarRecuperacaoSenhaResponse solicitar(SolicitarRecuperacaoSenhaRequest request) {
     String email = request.email().trim().toLowerCase();
+
+    if (!retornarCodigoRecuperacao && !emailSender.configurado()) {
+      throw new ResponseStatusException(
+          HttpStatus.SERVICE_UNAVAILABLE,
+          "Envio de e-mail de recuperação não configurado");
+    }
+
     Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
 
     if (usuario == null) {
-      return new SolicitarRecuperacaoSenhaResponse(
-          "Se o e-mail existir, um código de recuperação foi gerado para o ambiente atual.",
-          null);
+      return new SolicitarRecuperacaoSenhaResponse(MENSAGEM_SOLICITACAO, null);
     }
 
     tokenRepository.deleteByUsuarioIdAndUsadoEmIsNull(usuario.getId());
@@ -59,14 +72,25 @@ public class RecuperacaoSenhaService {
     String codigo = gerarCodigo();
     RecuperacaoSenhaToken token = new RecuperacaoSenhaToken();
     token.setUsuario(usuario);
-    token.setCodigo(codigo);
+    token.setCodigo(passwordEncoder.encode(codigo));
     token.setExpiraEm(LocalDateTime.now().plusMinutes(15));
     token.setTentativasFalhas(0);
     token.setBloqueadoAte(null);
-    tokenRepository.save(token);
+    tokenRepository.saveAndFlush(token);
+
+    if (emailSender.configurado()) {
+      try {
+        emailSender.enviarCodigo(usuario, codigo, token.getExpiraEm());
+      } catch (RecuperacaoSenhaEmailException ex) {
+        LOGGER.warn("Falha ao enviar e-mail de recuperação de senha.", ex);
+        throw new ResponseStatusException(
+            HttpStatus.SERVICE_UNAVAILABLE,
+            "Não foi possível enviar o código de recuperação. Tente novamente mais tarde");
+      }
+    }
 
     return new SolicitarRecuperacaoSenhaResponse(
-        "Código de recuperação gerado com sucesso.",
+        MENSAGEM_SOLICITACAO,
         retornarCodigoRecuperacao ? codigo : null);
   }
 
@@ -98,7 +122,7 @@ public class RecuperacaoSenhaService {
           "Código de recuperação expirado");
     }
 
-    if (!token.getCodigo().equals(request.codigo().trim())) {
+    if (!passwordEncoder.matches(request.codigo().trim(), token.getCodigo())) {
       registrarTentativaFalha(token, agora);
     }
 

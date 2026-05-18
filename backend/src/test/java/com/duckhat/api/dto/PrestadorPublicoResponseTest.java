@@ -20,6 +20,7 @@ class PrestadorPublicoResponseTest {
     estabelecimento.setUsuario(usuario);
     estabelecimento.setDescricao("Cortes e cuidados para todos os estilos.");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
+    estabelecimento.setFotoPerfilBase64("logo-base64");
 
     PrestadorPublicoResponse response = PrestadorPublicoResponse.fromEntity(usuario, estabelecimento);
 
@@ -31,5 +32,6 @@ class PrestadorPublicoResponseTest {
     assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
     assertNull(response.imagemCapa());
     assertNull(response.imagemLogo());
+    assertEquals("logo-base64", response.fotoPerfilBase64());
   }
 }

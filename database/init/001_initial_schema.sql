@@ -28,6 +28,7 @@ CREATE TABLE estabelecimentos (
     descricao TEXT NULL,
     horario_atendimento VARCHAR(160) NULL,
     banner_imagem_base64 MEDIUMTEXT NULL,
+    foto_perfil_base64 MEDIUMTEXT NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT pk_estabelecimentos PRIMARY KEY (usuario_id),
@@ -38,7 +39,7 @@ CREATE TABLE estabelecimentos (
 CREATE TABLE recuperacao_senha_tokens (
     id BIGINT NOT NULL AUTO_INCREMENT,
     usuario_id BIGINT NOT NULL,
-    codigo VARCHAR(12) NOT NULL,
+    codigo VARCHAR(255) NOT NULL,
     expira_em DATETIME NOT NULL,
     usado_em DATETIME NULL,
     tentativas_falhas INT NOT NULL DEFAULT 0,

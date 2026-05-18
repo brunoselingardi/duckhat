@@ -4,6 +4,7 @@ class Agendamento {
   final String? clienteNome;
   final int? prestadorId;
   final String? prestadorNome;
+  final String? prestadorFotoPerfilBase64;
   final int servicoId;
   final String? servicoNome;
   final DateTime inicioEm;
@@ -18,6 +19,7 @@ class Agendamento {
     required this.clienteNome,
     required this.prestadorId,
     required this.prestadorNome,
+    required this.prestadorFotoPerfilBase64,
     required this.servicoId,
     required this.servicoNome,
     required this.inicioEm,
@@ -39,6 +41,7 @@ class Agendamento {
           ? null
           : parseInt(json['prestadorId']),
       prestadorNome: json['prestadorNome'] as String?,
+      prestadorFotoPerfilBase64: json['prestadorFotoPerfilBase64'] as String?,
       servicoId: parseInt(json['servicoId']),
       servicoNome: json['servicoNome'] as String?,
       inicioEm: DateTime.parse(json['inicioEm'] as String),

@@ -74,6 +74,7 @@ class AppointmentSection extends StatelessWidget {
                       service: appointment["service"],
                       place: appointment["place"],
                       image: appointment["image"],
+                      imageBase64: appointment["profileImageBase64"],
                       onTap: onAppointmentTap == null
                           ? null
                           : () => onAppointmentTap!(appointment),

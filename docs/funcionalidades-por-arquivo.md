@@ -128,7 +128,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - fluxo real de recuperacao em duas etapas
   - botao voltar retorna
   - CTA principal gera codigo de recuperacao via API
-  - codigo so aparece na tela quando o backend for iniciado explicitamente com retorno de codigo de demo
+  - em execucao normal, o codigo e enviado para o e-mail cadastrado via SMTP configurado no backend
+  - codigo so aparece/preenche a tela quando o backend for iniciado explicitamente com retorno de codigo de demo
   - segunda etapa recebe codigo e nova senha e redefine na API
   - retorna o e-mail para a tela de login ao concluir
 - `lib/pages/signup.dart`
@@ -350,8 +351,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `backend/src/main/java/com/duckhat/api/service/JwtService.java`
   - gera e valida JWT
 - `backend/src/main/java/com/duckhat/api/service/RecuperacaoSenhaService.java`
-  - gera codigo, persiste token de recuperacao e redefine senha
+  - gera codigo, persiste token de recuperacao, aciona envio por e-mail e redefine senha
   - aplica limite de tentativas invalidas e bloqueio temporario por token
+- `backend/src/main/java/com/duckhat/api/service/SmtpRecuperacaoSenhaEmailSender.java`
+  - envia o codigo de recuperacao por SMTP usando as variaveis `APP_EMAIL_*`
+  - suporta STARTTLS, SSL direto, autenticacao SMTP e timeouts configuraveis
 - `backend/src/main/java/com/duckhat/api/service/ChatService.java`
   - cria/busca conversa entre cliente e prestador
   - lista conversas e mensagens autorizadas por participante, com ultima mensagem carregada em lote
@@ -388,6 +392,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - evolui `notificacao_eventos` para feed por usuario e cria `notificacao_preferencias`
 - `database/migrations/V11__establishment_category.sql`
   - adiciona `estabelecimentos.categoria` e preenche categorias para registros existentes
+- `database/migrations/V12__password_reset_token_hash.sql`
+  - aumenta a coluna do codigo de recuperacao para armazenar hash BCrypt em vez de codigo puro
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`

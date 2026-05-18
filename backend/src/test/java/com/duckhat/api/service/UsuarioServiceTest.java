@@ -223,6 +223,7 @@ class UsuarioServiceTest {
             null,
             null,
             null,
+            null,
             null));
 
     assertEquals("Maria Duck", response.nome());
@@ -254,7 +255,8 @@ class UsuarioServiceTest {
             "barbearia",
             "Atendimento com horario marcado e ambiente profissional.",
             "Segunda a sexta 9h - 20h",
-            "banner-base64"));
+            "banner-base64",
+            "logo-base64"));
 
     assertEquals("DuckHat Studio", response.nome());
     assertEquals("11222333000144", response.cnpj());
@@ -265,6 +267,7 @@ class UsuarioServiceTest {
     assertEquals("Atendimento com horario marcado e ambiente profissional.", response.descricao());
     assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
     assertEquals("banner-base64", response.bannerImagemBase64());
+    assertEquals("logo-base64", response.fotoPerfilBase64());
 
     ArgumentCaptor<Estabelecimento> captor = ArgumentCaptor.forClass(Estabelecimento.class);
     verify(estabelecimentoRepository).save(captor.capture());
@@ -279,6 +282,7 @@ class UsuarioServiceTest {
     assertEquals("Atendimento com horario marcado e ambiente profissional.", estabelecimento.getDescricao());
     assertEquals("Segunda a sexta 9h - 20h", estabelecimento.getHorarioAtendimento());
     assertEquals("banner-base64", estabelecimento.getBannerImagemBase64());
+    assertEquals("logo-base64", estabelecimento.getFotoPerfilBase64());
   }
 
   @Test
@@ -295,6 +299,7 @@ class UsuarioServiceTest {
     estabelecimento.setDescricao("Descricao salva no estabelecimento");
     estabelecimento.setHorarioAtendimento("Segunda a sexta 9h - 20h");
     estabelecimento.setBannerImagemBase64("banner-salvo");
+    estabelecimento.setFotoPerfilBase64("logo-salvo");
 
     when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));
     when(estabelecimentoRepository.findByUsuarioId(2L)).thenReturn(Optional.of(estabelecimento));
@@ -312,6 +317,7 @@ class UsuarioServiceTest {
     assertEquals("Descricao salva no estabelecimento", response.descricao());
     assertEquals("Segunda a sexta 9h - 20h", response.horarioAtendimento());
     assertEquals("banner-salvo", response.bannerImagemBase64());
+    assertEquals("logo-salvo", response.fotoPerfilBase64());
   }
 
   @Test
@@ -327,6 +333,7 @@ class UsuarioServiceTest {
             new UpdatePerfilRequest(
                 "Maria Duck",
                 "outro@duckhat.com",
+                null,
                 null,
                 null,
                 null,
@@ -361,6 +368,7 @@ class UsuarioServiceTest {
                 null,
                 null,
                 null,
+                null,
                 null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
@@ -385,6 +393,7 @@ class UsuarioServiceTest {
                 null,
                 LocalDate.now().minusYears(121),
                 "Rua das Palmas, 42",
+                null,
                 null,
                 null,
                 null,
@@ -415,6 +424,7 @@ class UsuarioServiceTest {
                 null,
                 null,
                 null,
+                null,
                 null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
@@ -442,6 +452,7 @@ class UsuarioServiceTest {
                 null,
                 null,
                 null,
+                null,
                 null)));
 
     assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
@@ -466,6 +477,7 @@ class UsuarioServiceTest {
                 null,
                 LocalDate.of(1998, 5, 12),
                 "Rua das Palmas",
+                null,
                 null,
                 null,
                 null,

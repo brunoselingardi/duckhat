@@ -9,6 +9,7 @@ class ServiceInfoCard extends StatelessWidget {
   final double ratingValue;
   final int reviewCount;
   final String? logoSource;
+  final String? logoBase64;
   final String? address;
   final String? schedule;
   final String? description;
@@ -20,6 +21,7 @@ class ServiceInfoCard extends StatelessWidget {
     required this.ratingValue,
     required this.reviewCount,
     this.logoSource,
+    this.logoBase64,
     this.address,
     this.schedule,
     this.description,
@@ -102,6 +104,7 @@ class ServiceInfoCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: ServiceImage(
                     source: logoSource,
+                    base64Source: logoBase64,
                     fit: BoxFit.cover,
                     cacheWidth: 200,
                   ),

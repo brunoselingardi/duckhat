@@ -16,7 +16,7 @@ public class RecuperacaoSenhaToken {
   @JoinColumn(name = "usuario_id", nullable = false)
   private Usuario usuario;
 
-  @Column(nullable = false, length = 12)
+  @Column(nullable = false, length = 255)
   private String codigo;
 
   @Column(name = "expira_em", nullable = false)

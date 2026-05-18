@@ -44,6 +44,10 @@ public class Estabelecimento {
     @Column(name = "banner_imagem_base64", columnDefinition = "MEDIUMTEXT")
     private String bannerImagemBase64;
 
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "foto_perfil_base64", columnDefinition = "MEDIUMTEXT")
+    private String fotoPerfilBase64;
+
     @Column(name = "criado_em", insertable = false, updatable = false)
     private LocalDateTime criadoEm;
 
@@ -88,6 +92,10 @@ public class Estabelecimento {
 
     public String getBannerImagemBase64() {
         return bannerImagemBase64;
+    }
+
+    public String getFotoPerfilBase64() {
+        return fotoPerfilBase64;
     }
 
     public LocalDateTime getCriadoEm() {
@@ -140,5 +148,9 @@ public class Estabelecimento {
 
     public void setBannerImagemBase64(String bannerImagemBase64) {
         this.bannerImagemBase64 = bannerImagemBase64;
+    }
+
+    public void setFotoPerfilBase64(String fotoPerfilBase64) {
+        this.fotoPerfilBase64 = fotoPerfilBase64;
     }
 }

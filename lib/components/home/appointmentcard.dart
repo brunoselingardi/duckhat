@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:duckhat/theme.dart';
 
@@ -6,6 +8,7 @@ class AppointmentCard extends StatelessWidget {
   final String service;
   final String place;
   final String? image;
+  final String? imageBase64;
   final VoidCallback? onTap;
 
   const AppointmentCard({
@@ -14,6 +17,7 @@ class AppointmentCard extends StatelessWidget {
     required this.service,
     required this.place,
     this.image,
+    this.imageBase64,
     this.onTap,
   });
 
@@ -47,6 +51,8 @@ class AppointmentCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
+              const SizedBox(width: 12),
+              _AppointmentImage(image: image, imageBase64: imageBase64),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -127,5 +133,47 @@ class AppointmentCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _AppointmentImage extends StatelessWidget {
+  final String? image;
+  final String? imageBase64;
+
+  const _AppointmentImage({required this.image, required this.imageBase64});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    final value = imageBase64?.trim();
+    if (value != null && value.isNotEmpty) {
+      try {
+        child = Image.memory(
+          base64Decode(value),
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+        );
+      } on FormatException {
+        child = _fallbackImage();
+      }
+    } else {
+      child = _fallbackImage();
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(width: 52, height: 52, child: child),
+    );
+  }
+
+  Widget _fallbackImage() {
+    final value = image?.trim();
+    if (value == null || value.isEmpty) {
+      return Container(
+        color: AppColors.accent.withValues(alpha: 0.10),
+        child: const Icon(Icons.storefront, color: AppColors.accent),
+      );
+    }
+    return Image.asset(value, fit: BoxFit.cover);
   }
 }

@@ -42,6 +42,9 @@ public record UpdatePerfilRequest(
     String horarioAtendimento,
 
     @Size(max = 1200000)
-    String bannerImagemBase64
+    String bannerImagemBase64,
+
+    @Size(max = 1200000)
+    String fotoPerfilBase64
 ) {
 }

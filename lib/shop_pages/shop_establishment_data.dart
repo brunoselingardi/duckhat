@@ -67,6 +67,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
         descricao: session.descricao,
         horarioAtendimento: session.horarioAtendimento,
         bannerImagemBase64: session.bannerImagemBase64,
+        fotoPerfilBase64: session.fotoPerfilBase64,
         tipo: session.tipo,
       ),
     );
@@ -228,6 +229,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
                         coverImage: _coverImage,
                         coverImageBase64: _perfil?.bannerImagemBase64,
                         logoImage: _logoImage,
+                        logoImageBase64: _perfil?.fotoPerfilBase64,
                         name: _nameController.text.trim().isEmpty
                             ? 'Nome do estabelecimento'
                             : _nameController.text.trim(),
@@ -423,6 +425,9 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
       final bannerBase64 = _coverImage == null
           ? current.bannerImagemBase64
           : await encodeImageFileAsBase64(_coverImage);
+      final logoBase64 = _logoImage == null
+          ? current.fotoPerfilBase64
+          : await encodeImageFileAsBase64(_logoImage);
 
       await DuckHatApi.instance.atualizarMeuPerfil(
         UsuarioPerfil(
@@ -439,6 +444,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           descricao: _descriptionController.text,
           horarioAtendimento: _hoursController.text,
           bannerImagemBase64: bannerBase64,
+          fotoPerfilBase64: logoBase64,
           tipo: current.tipo,
         ),
       );
@@ -543,6 +549,7 @@ class _PublicProfilePreview extends StatelessWidget {
   final File? coverImage;
   final String? coverImageBase64;
   final File? logoImage;
+  final String? logoImageBase64;
   final String name;
   final String address;
   final String hours;
@@ -554,6 +561,7 @@ class _PublicProfilePreview extends StatelessWidget {
     required this.coverImage,
     required this.coverImageBase64,
     required this.logoImage,
+    required this.logoImageBase64,
     required this.name,
     required this.address,
     required this.hours,
@@ -612,7 +620,11 @@ class _PublicProfilePreview extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      _LogoPicker(image: logoImage, onTap: onPickLogo),
+                      _LogoPicker(
+                        image: logoImage,
+                        imageBase64: logoImageBase64,
+                        onTap: onPickLogo,
+                      ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Padding(
@@ -707,9 +719,14 @@ class _CoverImage extends StatelessWidget {
 
 class _LogoPicker extends StatelessWidget {
   final File? image;
+  final String? imageBase64;
   final VoidCallback? onTap;
 
-  const _LogoPicker({required this.image, required this.onTap});
+  const _LogoPicker({
+    required this.image,
+    required this.imageBase64,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -740,9 +757,7 @@ class _LogoPicker extends StatelessWidget {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
-                child: image == null
-                    ? Image.asset('assets/barbielogo.jpg', fit: BoxFit.cover)
-                    : Image.file(image!, fit: BoxFit.cover),
+                child: _LogoImage(image: image, imageBase64: imageBase64),
               ),
             ),
             Positioned(
@@ -767,6 +782,31 @@ class _LogoPicker extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _LogoImage extends StatelessWidget {
+  final File? image;
+  final String? imageBase64;
+
+  const _LogoImage({required this.image, required this.imageBase64});
+
+  @override
+  Widget build(BuildContext context) {
+    if (image != null) {
+      return Image.file(image!, fit: BoxFit.cover);
+    }
+
+    final savedImage = imageBase64?.trim();
+    if (savedImage != null && savedImage.isNotEmpty) {
+      return Image.memory(
+        base64Decode(savedImage),
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+      );
+    }
+
+    return Image.asset('assets/barbielogo.jpg', fit: BoxFit.cover);
   }
 }
 

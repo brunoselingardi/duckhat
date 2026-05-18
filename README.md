@@ -106,6 +106,36 @@ Variáveis aceitas:
 - `SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL`
 - `JWT_SECRET`
 - `JWT_EXPIRATION`
+- `APP_AUTH_RETURN_RESET_CODE`
+- `APP_EMAIL_ENABLED`
+- `APP_EMAIL_HOST`
+- `APP_EMAIL_PORT`
+- `APP_EMAIL_USERNAME`
+- `APP_EMAIL_PASSWORD`
+- `APP_EMAIL_FROM`
+- `APP_EMAIL_FROM_NAME`
+- `APP_EMAIL_AUTH`
+- `APP_EMAIL_SSL`
+- `APP_EMAIL_START_TLS`
+- `APP_EMAIL_CONNECT_TIMEOUT_MS`
+- `APP_EMAIL_READ_TIMEOUT_MS`
+
+### Recuperação de senha por e-mail
+
+O fluxo `Esqueci minha senha` usa `POST /api/auth/recuperar-senha/solicitar`.
+Em execução normal, configure SMTP pelas variáveis `APP_EMAIL_*` para o código chegar ao e-mail cadastrado.
+Se SMTP não estiver configurado e `APP_AUTH_RETURN_RESET_CODE=false`, a API retorna `503` em vez de gerar um token que o usuário nunca receberia.
+
+Para teste local sem SMTP, use:
+
+```bash
+APP_AUTH_RETURN_RESET_CODE=true
+```
+
+Esse modo retorna o código no payload da API e não deve ser usado em execução real.
+
+Para o teste físico real, mantenha `APP_AUTH_RETURN_RESET_CODE=false` e suba o backend com `backend/run-local.sh`.
+Esse script carrega `backend/.env` antes de iniciar a API; rodar `cd backend && ./mvnw spring-boot:run` direto não carrega SMTP.
 
 Rodar testes:
 
@@ -117,8 +147,7 @@ cd backend
 Subir API:
 
 ```bash
-cd backend
-./mvnw spring-boot:run
+backend/run-local.sh
 ```
 
 Health check:

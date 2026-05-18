@@ -47,6 +47,7 @@ const Map<int, ServicePublicPageFallback> servicePublicPageFallbacks = {
       horarioAtendimento: 'Segunda a sexta 9h - 20h | Sabado 9h - 18h',
       imagemCapa: 'assets/barbie.jpg',
       imagemLogo: 'assets/barbielogo.jpg',
+      fotoPerfilBase64: null,
     ),
     galleryImages: [
       'assets/barbie.jpg',

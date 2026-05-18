@@ -12,6 +12,7 @@ class UsuarioPerfil {
   final String? descricao;
   final String? horarioAtendimento;
   final String? bannerImagemBase64;
+  final String? fotoPerfilBase64;
   final String tipo;
 
   const UsuarioPerfil({
@@ -28,6 +29,7 @@ class UsuarioPerfil {
     required this.descricao,
     required this.horarioAtendimento,
     required this.bannerImagemBase64,
+    required this.fotoPerfilBase64,
     required this.tipo,
   });
 
@@ -46,6 +48,7 @@ class UsuarioPerfil {
       descricao: json['descricao'] as String?,
       horarioAtendimento: json['horarioAtendimento'] as String?,
       bannerImagemBase64: json['bannerImagemBase64'] as String?,
+      fotoPerfilBase64: json['fotoPerfilBase64'] as String?,
       tipo: json['tipo'] as String? ?? '',
     );
   }
@@ -65,6 +68,7 @@ class UsuarioPerfil {
       'descricao': _nullableTrim(descricao),
       'horarioAtendimento': _nullableTrim(horarioAtendimento),
       'bannerImagemBase64': _nullableTrim(bannerImagemBase64),
+      'fotoPerfilBase64': _nullableTrim(fotoPerfilBase64),
     };
   }
 
