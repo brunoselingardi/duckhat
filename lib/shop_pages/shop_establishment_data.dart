@@ -429,7 +429,7 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
           ? current.fotoPerfilBase64
           : await encodeImageFileAsBase64(_logoImage);
 
-      await DuckHatApi.instance.atualizarMeuPerfil(
+      final atualizado = await DuckHatApi.instance.atualizarMeuPerfil(
         UsuarioPerfil(
           id: current.id,
           nome: _nameController.text,
@@ -450,6 +450,11 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
       );
 
       if (!context.mounted) return;
+      setState(() {
+        _applyProfile(atualizado);
+        _coverImage = null;
+        _logoImage = null;
+      });
       final message = DuckHatApi.instance.isDevMode
           ? 'Dados salvos nesta sessão de desenvolvimento'
           : 'Dados salvos no banco';

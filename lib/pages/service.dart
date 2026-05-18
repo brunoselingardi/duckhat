@@ -465,7 +465,9 @@ class _ServicePageState extends State<ServicePage> {
                           ratingValue: _averageRating,
                           reviewCount: _publicReviews.length,
                           logoSource: profile.imagemLogo,
-                          logoBase64: profile.fotoPerfilBase64,
+                          logoBase64:
+                              _catalog?.fotoPerfilBase64 ??
+                              profile.fotoPerfilBase64,
                           address: profile.endereco,
                           schedule: profile.horarioAtendimento,
                           description: profile.descricaoPublica,
