@@ -29,15 +29,19 @@ class ServiceInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 18),
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.34 : 0.10,
+            ),
             blurRadius: 28,
             offset: const Offset(0, 14),
           ),
@@ -55,10 +59,10 @@ class ServiceInfoCard extends StatelessWidget {
                   children: [
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textBold,
+                        color: themeColors.primaryText,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -96,9 +100,9 @@ class ServiceInfoCard extends StatelessWidget {
                 height: 84,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFDFDFF),
+                  color: themeColors.inputFill,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.border),
+                  border: Border.all(color: themeColors.border),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
@@ -127,16 +131,16 @@ class ServiceInfoCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFF),
+              color: themeColors.elevatedSurface,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFE6EDFF)),
+              border: Border.all(color: themeColors.border),
             ),
             child: Text(
               '"${description ?? 'Descrição pública indisponível no momento.'}"',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
                 height: 1.6,
-                color: AppColors.textRegular,
+                color: themeColors.secondaryText,
               ),
             ),
           ),
@@ -178,6 +182,8 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -194,10 +200,10 @@ class _InfoRow extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13.5,
               height: 1.45,
-              color: AppColors.textRegular,
+              color: themeColors.secondaryText,
             ),
           ),
         ),

@@ -1407,13 +1407,19 @@ class _SignupScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: themeColors.isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFFBF5F7),
+        backgroundColor: themeColors.isDark
+            ? themeColors.background
+            : const Color(0xFFFBF5F7),
         body: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {

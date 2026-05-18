@@ -23,6 +23,8 @@ class AppointmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -31,13 +33,16 @@ class AppointmentCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: themeColors.surface,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
+            border: Border.all(color: themeColors.border),
+            boxShadow: [
               BoxShadow(
-                color: AppColors.cardShadow,
+                color: themeColors.shadow.withValues(
+                  alpha: themeColors.isDark ? 0.30 : 0.18,
+                ),
                 blurRadius: 6,
-                offset: Offset(0, 3),
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -65,10 +70,10 @@ class AppointmentCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             place,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textBold,
+                              color: themeColors.primaryText,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -97,9 +102,9 @@ class AppointmentCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       service,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textMuted,
+                        color: themeColors.mutedText,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -107,18 +112,18 @@ class AppointmentCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.location_on,
                           size: 12,
-                          color: AppColors.textMuted,
+                          color: themeColors.mutedText,
                         ),
                         const SizedBox(width: 2),
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             "Detalhes e local do atendimento",
                             style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textMuted,
+                              color: themeColors.mutedText,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),

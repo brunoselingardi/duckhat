@@ -65,8 +65,10 @@ class _SearchPageState extends State<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: themeColors.background,
       body: SafeArea(
         child: ListView(
           key: const PageStorageKey('search-page'),
@@ -78,7 +80,7 @@ class _SearchPageState extends State<SearchPage> {
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close_rounded),
                 iconSize: 26,
-                color: Colors.black,
+                color: themeColors.primaryText,
                 tooltip: 'Fechar',
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(
@@ -110,10 +112,10 @@ class _SearchPageState extends State<SearchPage> {
               onSubmitted: (_) => _submitSearch(),
             ),
             const SizedBox(height: 34),
-            const Text(
+            Text(
               'SUGESTÕES',
               style: TextStyle(
-                color: Color(0xFF667085),
+                color: themeColors.mutedText,
                 fontSize: 13,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 0,
@@ -150,6 +152,8 @@ class _ModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Row(
       children: _SearchMode.values.map((mode) {
         final isSelected = selected == mode;
@@ -163,12 +167,10 @@ class _ModeSelector extends StatelessWidget {
               height: 50,
               padding: const EdgeInsets.symmetric(horizontal: 18),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : Colors.white,
+                color: isSelected ? AppColors.accent : themeColors.surface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isSelected
-                      ? AppColors.accent
-                      : const Color(0xFFE5E7EB),
+                  color: isSelected ? AppColors.accent : themeColors.border,
                   width: 1.3,
                 ),
               ),
@@ -176,7 +178,7 @@ class _ModeSelector extends StatelessWidget {
                 child: Text(
                   mode.label,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : const Color(0xFF667085),
+                    color: isSelected ? Colors.white : themeColors.mutedText,
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0,
@@ -210,8 +212,9 @@ class _SearchTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = active ? AppColors.accent : const Color(0xFFE2E5EA);
-    final iconColor = active ? AppColors.accent : const Color(0xFF98A2B3);
+    final themeColors = AppThemeColors.of(context);
+    final borderColor = active ? AppColors.accent : themeColors.border;
+    final iconColor = active ? AppColors.accent : themeColors.mutedText;
 
     return SizedBox(
       height: 54,
@@ -220,15 +223,15 @@ class _SearchTextField extends StatelessWidget {
         enabled: enabled,
         onSubmitted: onSubmitted,
         textInputAction: TextInputAction.search,
-        style: const TextStyle(
-          color: AppColors.textBold,
+        style: TextStyle(
+          color: themeColors.primaryText,
           fontSize: 15,
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(
-            color: Color(0xFFD7D9DE),
+          hintStyle: TextStyle(
+            color: themeColors.mutedText,
             fontSize: 15,
             fontWeight: FontWeight.w700,
           ),
@@ -238,7 +241,7 @@ class _SearchTextField extends StatelessWidget {
           ),
           prefixIconConstraints: const BoxConstraints(minWidth: 48),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: themeColors.inputFill,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,
             vertical: 15,
@@ -273,6 +276,8 @@ class _SuggestionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -292,8 +297,8 @@ class _SuggestionRow extends StatelessWidget {
             Expanded(
               child: Text(
                 suggestion.title,
-                style: const TextStyle(
-                  color: Color(0xFF1F2937),
+                style: TextStyle(
+                  color: themeColors.primaryText,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                   height: 1.2,

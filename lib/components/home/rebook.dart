@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:duckhat/components/home/rebookcard.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppThemeColors;
 
 class EmptyRebookState extends StatelessWidget {
   final String message;
@@ -12,23 +12,26 @@ class EmptyRebookState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 120,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: themeColors.surface,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: themeColors.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.history, color: AppColors.textMuted),
+            Icon(Icons.history, color: themeColors.mutedText),
             const SizedBox(height: 6),
             Text(
               message,
-              style: TextStyle(color: AppColors.textMuted),
+              style: TextStyle(color: themeColors.mutedText),
               textAlign: TextAlign.center,
             ),
           ],
@@ -52,6 +55,8 @@ class RebookSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -62,7 +67,7 @@ class RebookSection extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
         ),

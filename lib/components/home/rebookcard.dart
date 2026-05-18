@@ -26,18 +26,23 @@ class RebookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return GestureDetector(
       onTap: () => _navigateToEstabelecimento(context),
       child: Container(
         height: 130,
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: themeColors.surface,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
+          border: Border.all(color: themeColors.border),
+          boxShadow: [
             BoxShadow(
-              color: AppColors.cardShadow,
+              color: themeColors.shadow.withValues(
+                alpha: themeColors.isDark ? 0.30 : 0.18,
+              ),
               blurRadius: 8,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -58,10 +63,10 @@ class RebookCard extends StatelessWidget {
                           const SizedBox(width: 2),
                           Text(
                             rating!.toStringAsFixed(1),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.dark,
+                              color: themeColors.primaryText,
                             ),
                           ),
                         ],
@@ -69,29 +74,29 @@ class RebookCard extends StatelessWidget {
                     if (rating != null) const SizedBox(height: 4),
                     Text(
                       name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: AppColors.dark,
+                        color: themeColors.primaryText,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    const Row(
+                    Row(
                       children: [
                         Icon(
                           Icons.location_on,
                           size: 10,
-                          color: AppColors.textMuted,
+                          color: themeColors.mutedText,
                         ),
-                        SizedBox(width: 2),
+                        const SizedBox(width: 2),
                         Expanded(
                           child: Text(
                             "Rua Example, 123",
                             style: TextStyle(
                               fontSize: 10,
-                              color: AppColors.textMuted,
+                              color: themeColors.mutedText,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -138,7 +143,7 @@ class RebookCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: AppColors.cardBackground.withValues(alpha: 0.9),
+                        color: themeColors.surface.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Icon(

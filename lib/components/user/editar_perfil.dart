@@ -1,6 +1,6 @@
 import 'package:duckhat/models/usuario_perfil.dart';
 import 'package:duckhat/services/duckhat_api.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppColors, AppThemeColors;
 import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -167,9 +167,9 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     final title = _isPrestador ? 'Editar Estabelecimento' : 'Editar Perfil';
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppThemeColors.of(context).surface,
         elevation: 1,
         centerTitle: true,
         leading: IconButton(

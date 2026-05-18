@@ -19,7 +19,7 @@ class _ShopNotificationsPageState extends State<ShopNotificationsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: buildShopAppBar(
         context,
         title: 'Notificações',

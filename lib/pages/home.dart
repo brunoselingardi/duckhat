@@ -144,13 +144,17 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final username = _api.currentSession?.nome;
+    final themeColors = AppThemeColors.of(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: themeColors.isDark
+            ? Brightness.light
+            : Brightness.dark,
       ),
       child: Scaffold(
+        backgroundColor: themeColors.background,
         body: SafeArea(
           child: RefreshIndicator(
             onRefresh: _loadHomeData,
@@ -197,6 +201,8 @@ class _SearchShortcut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: InkWell(
@@ -209,34 +215,36 @@ class _SearchShortcut extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: themeColors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
+            border: Border.all(color: themeColors.border),
+            boxShadow: [
               BoxShadow(
-                color: AppColors.cardShadow,
+                color: themeColors.shadow.withValues(
+                  alpha: themeColors.isDark ? 0.30 : 0.22,
+                ),
                 blurRadius: 10,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.search, color: AppColors.accent),
-              SizedBox(width: 12),
+              const Icon(Icons.search, color: AppColors.accent),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Buscar salões, barbearias e serviços',
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: AppColors.textRegular,
+                    color: themeColors.secondaryText,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
                 ),
               ),
-              SizedBox(width: 8),
-              Icon(Icons.tune, color: AppColors.accent),
+              const SizedBox(width: 8),
+              const Icon(Icons.tune, color: AppColors.accent),
             ],
           ),
         ),
@@ -348,12 +356,14 @@ class _HomeErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: themeColors.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
         ),
@@ -364,8 +374,8 @@ class _HomeErrorState extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textBold,
+              style: TextStyle(
+                color: themeColors.primaryText,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),

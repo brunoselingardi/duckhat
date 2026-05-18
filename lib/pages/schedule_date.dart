@@ -2,7 +2,7 @@ import 'package:duckhat/components/service/service_models.dart';
 import 'package:duckhat/models/disponibilidade_catalogo.dart';
 import 'package:duckhat/models/ocupacao_prestador.dart';
 import 'package:duckhat/services/duckhat_api.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppColors, AppThemeColors;
 import 'package:flutter/material.dart';
 
 class ScheduleDatePage extends StatefulWidget {
@@ -209,9 +209,9 @@ class _ScheduleDatePageState extends State<ScheduleDatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppThemeColors.of(context).background,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textBold),

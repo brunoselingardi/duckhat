@@ -7,7 +7,7 @@ class ShopPlaceholderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppThemeColors.of(context).background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

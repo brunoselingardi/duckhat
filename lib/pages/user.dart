@@ -7,7 +7,7 @@ import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/login.dart';
 import 'package:duckhat/pages/signup.dart';
 import 'package:duckhat/services/duckhat_api.dart';
-import 'package:duckhat/theme.dart' show AppColors;
+import 'package:duckhat/theme.dart' show AppColors, AppThemeColors;
 import 'package:flutter/material.dart';
 
 class PerfilPage extends StatefulWidget {
@@ -45,7 +45,7 @@ class _PerfilPageState extends State<PerfilPage> {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: AppThemeColors.of(context).background,
           body: Builder(
             builder: (ctx) => CustomScrollView(
               key: const PageStorageKey('profile-scroll'),

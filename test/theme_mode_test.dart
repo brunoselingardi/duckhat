@@ -1,5 +1,7 @@
 import 'package:duckhat/components/user/configuracoes.dart';
+import 'package:duckhat/pages/search.dart';
 import 'package:duckhat/services/duckhat_api.dart';
+import 'package:duckhat/shop_pages/shop_placeholder.dart';
 import 'package:duckhat/shop_pages/shop_profile.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
@@ -65,5 +67,29 @@ void main() {
 
     expect(find.text('Modo escuro ativo'), findsOneWidget);
     expect(AppThemeController.isDark, isTrue);
+  });
+
+  testWidgets('telas principais usam fundo do tema escuro', (tester) async {
+    AppThemeController.resetForTests(value: ThemeMode.dark);
+
+    await tester.pumpWidget(_themedApp(const SearchPage()));
+    await tester.pumpAndSettle();
+
+    var scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+    expect(
+      scaffold.backgroundColor,
+      AppThemeColors.of(tester.element(find.byType(SearchPage))).background,
+    );
+
+    await tester.pumpWidget(_themedApp(const ShopPlaceholderPage()));
+    await tester.pumpAndSettle();
+
+    scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+    expect(
+      scaffold.backgroundColor,
+      AppThemeColors.of(
+        tester.element(find.byType(ShopPlaceholderPage)),
+      ).background,
+    );
   });
 }
