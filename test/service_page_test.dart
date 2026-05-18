@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:duckhat/models/estabelecimento_catalogo.dart';
 import 'package:duckhat/models/estabelecimento_publico.dart';
 import 'package:duckhat/models/avaliacao.dart';
@@ -100,6 +103,61 @@ void main() {
     expect(find.text('Mostrar mais detalhes'), findsNothing);
   });
 
+  testWidgets('ServicePage prioritizes catalog profile photo like banner', (
+    tester,
+  ) async {
+    const catalogLogo = _transparentPixelBase64;
+    const staleProfileLogo = _whitePixelBase64;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ServicePage(
+          prestadorId: 13,
+          estabelecimento: EstabelecimentoCatalogo(
+            prestadorId: 13,
+            nome: 'Jorje Encanamentos',
+            telefone: '62999990013',
+            endereco: 'Rua dos Canos, 45 - Setor Oeste',
+            categoria: 'encanador',
+            categoriaLabel: 'Encanador',
+            descricao: 'Atendimento hidraulico residencial.',
+            horarioAtendimento: 'Segunda a sabado 7h - 19h',
+            bannerImagemBase64: null,
+            fotoPerfilBase64: catalogLogo,
+            totalServicos: 0,
+            precoInicial: null,
+            servicos: const [],
+          ),
+          profileLoader: (_) async => const EstabelecimentoPublico(
+            id: 13,
+            nome: 'Jorje Encanamentos',
+            telefone: '62999990013',
+            endereco: 'Rua dos Canos, 45 - Setor Oeste',
+            descricaoPublica: 'Atendimento hidraulico residencial.',
+            horarioAtendimento: 'Segunda a sabado 7h - 19h',
+            imagemCapa: null,
+            imagemLogo: null,
+            fotoPerfilBase64: staleProfileLogo,
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    final catalogBytes = base64Decode(catalogLogo);
+    final memoryImages = tester
+        .widgetList<Image>(find.byType(Image))
+        .map((image) => _unwrapMemoryImage(image.image))
+        .whereType<MemoryImage>();
+
+    expect(
+      memoryImages.any((image) => _sameBytes(image.bytes, catalogBytes)),
+      isTrue,
+    );
+  });
+
   testWidgets('ServicePage uses real reviews for public rating and comments', (
     tester,
   ) async {
@@ -166,4 +224,26 @@ void main() {
     expect(find.text('Joao Duck'), findsOneWidget);
     expect(find.text('Nenhuma avaliação publicada ainda.'), findsNothing);
   });
+}
+
+const _transparentPixelBase64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+const _whitePixelBase64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lK3Q1wAAAABJRU5ErkJggg==';
+
+bool _sameBytes(Uint8List left, List<int> right) {
+  if (left.length != right.length) return false;
+  for (var index = 0; index < left.length; index += 1) {
+    if (left[index] != right[index]) return false;
+  }
+  return true;
+}
+
+MemoryImage? _unwrapMemoryImage(ImageProvider provider) {
+  if (provider is MemoryImage) return provider;
+  if (provider is ResizeImage) {
+    final wrapped = provider.imageProvider;
+    if (wrapped is MemoryImage) return wrapped;
+  }
+  return null;
 }
