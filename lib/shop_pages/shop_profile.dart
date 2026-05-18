@@ -55,15 +55,18 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeColors.background,
       body: Builder(
         builder: (ctx) => CustomScrollView(
           slivers: [
             SliverToBoxAdapter(
               child: ValueListenableBuilder<LoginSession?>(
                 valueListenable: _api.sessionNotifier,
-                builder: (context, session, _) => _buildHeader(session),
+                builder: (context, session, _) =>
+                    _buildHeader(context, session),
               ),
             ),
             SliverToBoxAdapter(
@@ -94,7 +97,8 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
     );
   }
 
-  Widget _buildHeader(LoginSession? session) {
+  Widget _buildHeader(BuildContext context, LoginSession? session) {
+    final themeColors = AppThemeColors.of(context);
     final nome = session?.nome ?? 'Estabelecimento';
     final email = session?.email ?? '';
 
@@ -190,7 +194,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
-                  color: Colors.white,
+                  color: themeColors.surface,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.12),
@@ -279,6 +283,7 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
         _buildSectionTitle('VITRINE DO ESTABELECIMENTO'),
         _buildMenuCard([
           _buildMenuItem(
+            context,
             icon: Icons.storefront_outlined,
             title: 'Editar perfil público',
             subtitle: 'Capa, logo, nome, endereço e descrição',
@@ -296,8 +301,31 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
           ),
         ]),
         const SizedBox(height: 16),
+        _buildSectionTitle('PREFERÊNCIAS DO APP'),
+        _buildMenuCard([
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: AppThemeController.mode,
+            builder: (context, mode, _) {
+              final isDark = mode == ThemeMode.dark;
+              return _buildMenuItem(
+                context,
+                icon: isDark
+                    ? Icons.dark_mode_outlined
+                    : Icons.light_mode_outlined,
+                title: 'Tema do aplicativo',
+                subtitle: isDark ? 'Modo escuro ativo' : 'Modo claro ativo',
+                trailing: Switch(
+                  value: isDark,
+                  onChanged: AppThemeController.setDark,
+                ),
+              );
+            },
+          ),
+        ]),
+        const SizedBox(height: 16),
         _buildMenuCard([
           _buildMenuItem(
+            context,
             icon: Icons.logout,
             title: 'Sair da conta',
             subtitle: 'Encerrar a sessão neste dispositivo',
@@ -311,16 +339,18 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
   }
 
   Widget _buildSectionTitle(String title) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 0, 16, 9),
       child: Row(
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: AppColors.sectionLabel,
+              color: themeColors.mutedText,
               letterSpacing: 0.8,
             ),
           ),
@@ -330,23 +360,29 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
   }
 
   Widget _buildMenuCard(List<Widget> children) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
+        border: Border.all(color: themeColors.border),
+        boxShadow: buildShopCardDecorationFor(context, radius: 12).boxShadow,
       ),
       child: Column(children: children),
     );
   }
 
-  Widget _buildMenuItem({
+  Widget _buildMenuItem(
+    BuildContext context, {
     required IconData icon,
     required String title,
     String? subtitle,
     Color? titleColor,
+    Widget? trailing,
     VoidCallback? onTap,
   }) {
+    final themeColors = AppThemeColors.of(context);
     final color = titleColor ?? AppColors.accent;
     return InkWell(
       onTap: onTap,
@@ -373,27 +409,28 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: titleColor ?? AppColors.textBold,
+                      color: titleColor ?? themeColors.primaryText,
                     ),
                   ),
                   if (subtitle != null)
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         height: 1.35,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textRegular,
+                        color: themeColors.secondaryText,
                       ),
                     ),
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.textMuted.withValues(alpha: 0.8),
-              size: 22,
-            ),
+            trailing ??
+                Icon(
+                  Icons.chevron_right,
+                  color: themeColors.mutedText.withValues(alpha: 0.8),
+                  size: 22,
+                ),
           ],
         ),
       ),
@@ -436,6 +473,7 @@ class _ShopQuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final name = session?.nome.trim() ?? '';
     final initial = name.isEmpty ? 'D' : name.characters.first.toUpperCase();
     final horario = session?.horarioAtendimento?.trim();
@@ -455,12 +493,15 @@ class _ShopQuickStats extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.white, AppColors.accent.withValues(alpha: 0.1)],
+          colors: [
+            themeColors.surface,
+            AppColors.accent.withValues(alpha: themeColors.isDark ? 0.18 : 0.1),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: themeColors.border.withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [
@@ -490,8 +531,8 @@ class _ShopQuickStats extends StatelessWidget {
                   name.isEmpty ? 'Vitrine pronta para ajustes' : name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textBold,
+                  style: TextStyle(
+                    color: themeColors.primaryText,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
@@ -501,8 +542,8 @@ class _ShopQuickStats extends StatelessWidget {
                   subtitle,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textRegular,
+                  style: TextStyle(
+                    color: themeColors.secondaryText,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     height: 1.35,
@@ -525,6 +566,7 @@ class _ShopReviewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final total = reviews.length;
     final average = total == 0
         ? 0.0
@@ -534,7 +576,7 @@ class _ShopReviewsSection extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: buildShopCardDecoration(radius: 16),
+      decoration: buildShopCardDecorationFor(context, radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -554,10 +596,10 @@ class _ShopReviewsSection extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Avaliações do estabelecimento',
                       style: TextStyle(
-                        color: AppColors.textBold,
+                        color: themeColors.primaryText,
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
                       ),
@@ -567,8 +609,8 @@ class _ShopReviewsSection extends StatelessWidget {
                       total == 0
                           ? 'Nenhuma avaliação publicada ainda'
                           : '${average.toStringAsFixed(1)} de 5,0 · $total avaliação${total == 1 ? '' : 'ões'}',
-                      style: const TextStyle(
-                        color: AppColors.textRegular,
+                      style: TextStyle(
+                        color: themeColors.secondaryText,
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                       ),
@@ -585,10 +627,10 @@ class _ShopReviewsSection extends StatelessWidget {
               child: LinearProgressIndicator(color: AppColors.accent),
             )
           else if (recent.isEmpty)
-            const Text(
+            Text(
               'As avaliações aparecerão aqui depois que clientes concluírem serviços e enviarem uma nota.',
               style: TextStyle(
-                color: AppColors.textRegular,
+                color: themeColors.secondaryText,
                 fontSize: 12,
                 height: 1.45,
                 fontWeight: FontWeight.w600,
@@ -633,6 +675,7 @@ class _ShopReviewTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final cliente = review.clienteNome?.trim();
     final comentario = review.comentario?.trim();
 
@@ -640,9 +683,9 @@ class _ShopReviewTile extends StatelessWidget {
       margin: const EdgeInsets.only(top: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.inputBackground,
+        color: themeColors.inputFill,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+        border: Border.all(color: themeColors.border.withValues(alpha: 0.7)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -654,8 +697,8 @@ class _ShopReviewTile extends StatelessWidget {
                   cliente == null || cliente.isEmpty ? 'Cliente' : cliente,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textBold,
+                  style: TextStyle(
+                    color: themeColors.primaryText,
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                   ),
@@ -679,8 +722,8 @@ class _ShopReviewTile extends StatelessWidget {
               comentario,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textRegular,
+              style: TextStyle(
+                color: themeColors.secondaryText,
                 fontSize: 12,
                 height: 1.35,
                 fontWeight: FontWeight.w600,

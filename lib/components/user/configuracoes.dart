@@ -42,19 +42,22 @@ class ConfiguracoesPage extends StatelessWidget {
         ProfileSettingsSection(
           title: 'APARÊNCIA',
           children: [
-            ProfileSettingsTile(
-              icon: Icons.dark_mode_outlined,
-              title: 'Tema',
-              subtitle: AppThemeController.isDark ? 'Escuro' : 'Claro',
-              trailing: ValueListenableBuilder<ThemeMode>(
-                valueListenable: AppThemeController.mode,
-                builder: (context, mode, _) {
-                  return Switch(
-                    value: mode == ThemeMode.dark,
+            ValueListenableBuilder<ThemeMode>(
+              valueListenable: AppThemeController.mode,
+              builder: (context, mode, _) {
+                final isDark = mode == ThemeMode.dark;
+                return ProfileSettingsTile(
+                  icon: isDark
+                      ? Icons.dark_mode_outlined
+                      : Icons.light_mode_outlined,
+                  title: 'Tema',
+                  subtitle: isDark ? 'Escuro' : 'Claro',
+                  trailing: Switch(
+                    value: isDark,
                     onChanged: AppThemeController.setDark,
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ],
         ),

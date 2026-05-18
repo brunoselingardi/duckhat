@@ -16,13 +16,17 @@ class DuckHatBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
+      decoration: BoxDecoration(
+        color: themeColors.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadowLight,
-            offset: Offset(0, -2),
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.34 : 0.22,
+            ),
+            offset: const Offset(0, -2),
             blurRadius: 4,
           ),
         ],
@@ -36,8 +40,9 @@ class DuckHatBottomNav extends StatelessWidget {
           currentIndex: selectedIndex,
           onTap: onTap,
           type: BottomNavigationBarType.fixed,
+          backgroundColor: themeColors.surface,
           selectedItemColor: AppColors.accent,
-          unselectedItemColor: AppColors.navUnselected,
+          unselectedItemColor: themeColors.navUnselected,
           items: [
             BottomNavigationBarItem(
               icon: _NavIcon(
@@ -88,13 +93,14 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     return RepaintBoundary(
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           ColorFiltered(
             colorFilter: ColorFilter.mode(
-              isSelected ? AppColors.accent : AppColors.navUnselected,
+              isSelected ? AppColors.accent : themeColors.navUnselected,
               BlendMode.srcIn,
             ),
             child: SvgPicture.asset(asset, width: 32, height: 32),
@@ -118,6 +124,7 @@ class _UnreadBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final label = count > 9 ? '9+' : '$count';
     return Container(
       constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
@@ -125,7 +132,7 @@ class _UnreadBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.error,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.primary, width: 1.5),
+        border: Border.all(color: themeColors.surface, width: 1.5),
       ),
       alignment: Alignment.center,
       child: Text(

@@ -21,10 +21,12 @@ class ProfileSettingsScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: themeColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: themeColors.background,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -33,8 +35,8 @@ class ProfileSettingsScaffold extends StatelessWidget {
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: AppColors.secondary,
+          style: TextStyle(
+            color: themeColors.primaryText,
             fontSize: 18,
             fontWeight: FontWeight.w800,
           ),
@@ -69,6 +71,8 @@ class ProfileSettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 22),
       child: Column(
@@ -78,21 +82,23 @@ class ProfileSettingsSection extends StatelessWidget {
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textMuted,
+                color: themeColors.mutedText,
                 letterSpacing: 0.6,
               ),
             ),
           ),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: themeColors.surface,
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cardShadow.withValues(alpha: 0.18),
+                  color: themeColors.shadow.withValues(
+                    alpha: themeColors.isDark ? 0.34 : 0.18,
+                  ),
                   blurRadius: 18,
                   offset: const Offset(0, 10),
                 ),
@@ -126,6 +132,7 @@ class ProfileSettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final color = destructive ? AppColors.error : AppColors.accent;
     return Material(
       color: Colors.transparent,
@@ -155,7 +162,7 @@ class ProfileSettingsTile extends StatelessWidget {
                       style: TextStyle(
                         color: destructive
                             ? AppColors.error
-                            : AppColors.darkAlt,
+                            : themeColors.primaryText,
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -163,8 +170,8 @@ class ProfileSettingsTile extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       subtitle,
-                      style: const TextStyle(
-                        color: AppColors.textMuted,
+                      style: TextStyle(
+                        color: themeColors.mutedText,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         height: 1.3,
@@ -179,7 +186,7 @@ class ProfileSettingsTile extends StatelessWidget {
                     Icons.chevron_right,
                     color: destructive
                         ? AppColors.error.withValues(alpha: 0.7)
-                        : AppColors.textMuted,
+                        : themeColors.mutedText,
                   ),
             ],
           ),
@@ -194,9 +201,11 @@ class ProfileSettingsDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.only(left: 68),
-      child: Divider(height: 1, color: AppColors.divider),
+    final themeColors = AppThemeColors.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 68),
+      child: Divider(height: 1, color: themeColors.border),
     );
   }
 }

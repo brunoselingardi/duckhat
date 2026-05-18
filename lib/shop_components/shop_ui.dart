@@ -8,8 +8,10 @@ AppBar buildShopAppBar(
   required String title,
   List<Widget>? actions,
 }) {
+  final themeColors = AppThemeColors.of(context);
+
   return AppBar(
-    backgroundColor: AppColors.cardBackground,
+    backgroundColor: themeColors.surface,
     surfaceTintColor: _transparent,
     elevation: 0,
     scrolledUnderElevation: 0,
@@ -20,16 +22,16 @@ AppBar buildShopAppBar(
     ),
     title: Text(
       title,
-      style: const TextStyle(
-        color: AppColors.textBold,
+      style: TextStyle(
+        color: themeColors.primaryText,
         fontSize: 18,
         fontWeight: FontWeight.w700,
       ),
     ),
     actions: actions,
-    bottom: const PreferredSize(
-      preferredSize: Size.fromHeight(1),
-      child: Divider(height: 1, thickness: 1, color: AppColors.border),
+    bottom: PreferredSize(
+      preferredSize: const Size.fromHeight(1),
+      child: Divider(height: 1, thickness: 1, color: themeColors.border),
     ),
   );
 }
@@ -53,19 +55,46 @@ BoxDecoration buildShopCardDecoration({
   );
 }
 
+BoxDecoration buildShopCardDecorationFor(
+  BuildContext context, {
+  Color? color,
+  double radius = 16,
+  Color? borderColor,
+}) {
+  final themeColors = AppThemeColors.of(context);
+
+  return BoxDecoration(
+    color: color ?? themeColors.surface,
+    borderRadius: BorderRadius.circular(radius),
+    border: Border.all(color: borderColor ?? themeColors.border),
+    boxShadow: [
+      BoxShadow(
+        color: themeColors.shadow.withValues(
+          alpha: themeColors.isDark ? 0.34 : 0.32,
+        ),
+        blurRadius: 10,
+        offset: const Offset(0, 3),
+      ),
+    ],
+  );
+}
+
 InputDecoration buildShopInputDecoration({
+  required BuildContext context,
   required String hintText,
   Widget? prefixIcon,
 }) {
+  final themeColors = AppThemeColors.of(context);
+
   return InputDecoration(
     hintText: hintText,
-    hintStyle: const TextStyle(color: AppColors.grayField),
+    hintStyle: TextStyle(color: themeColors.mutedText),
     prefixIcon: prefixIcon,
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
       borderSide: BorderSide.none,
     ),
     filled: true,
-    fillColor: AppColors.cardBackground,
+    fillColor: themeColors.inputFill,
   );
 }
