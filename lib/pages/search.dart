@@ -167,10 +167,10 @@ class _ModeSelector extends StatelessWidget {
               height: 50,
               padding: const EdgeInsets.symmetric(horizontal: 18),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : themeColors.surface,
+                color: isSelected ? themeColors.accent : themeColors.surface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
-                  color: isSelected ? AppColors.accent : themeColors.border,
+                  color: isSelected ? themeColors.accent : themeColors.border,
                   width: 1.3,
                 ),
               ),
@@ -178,7 +178,9 @@ class _ModeSelector extends StatelessWidget {
                 child: Text(
                   mode.label,
                   style: TextStyle(
-                    color: isSelected ? Colors.white : themeColors.mutedText,
+                    color: isSelected
+                        ? themeColors.onAccent
+                        : themeColors.mutedText,
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0,
@@ -213,8 +215,8 @@ class _SearchTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeColors = AppThemeColors.of(context);
-    final borderColor = active ? AppColors.accent : themeColors.border;
-    final iconColor = active ? AppColors.accent : themeColors.mutedText;
+    final borderColor = active ? themeColors.accent : themeColors.border;
+    final iconColor = active ? themeColors.accent : themeColors.mutedText;
 
     return SizedBox(
       height: 54,
@@ -288,10 +290,10 @@ class _SuggestionRow extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.16),
+                color: themeColors.accentSoft,
                 shape: BoxShape.circle,
               ),
-              child: Icon(suggestion.icon, color: AppColors.accent, size: 22),
+              child: Icon(suggestion.icon, color: themeColors.accent, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(

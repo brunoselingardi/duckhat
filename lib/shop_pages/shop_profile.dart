@@ -108,17 +108,19 @@ class _ShopProfilePageState extends State<ShopProfilePage> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.secondary, AppColors.accent],
+            colors: [themeColors.heroStart, themeColors.heroEnd],
           ),
           borderRadius: BorderRadius.circular(30),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: AppColors.shadowAccent,
+              color: themeColors.shadow.withValues(
+                alpha: themeColors.isDark ? 0.44 : 0.24,
+              ),
               blurRadius: 22,
-              offset: Offset(0, 12),
+              offset: const Offset(0, 12),
             ),
           ],
         ),

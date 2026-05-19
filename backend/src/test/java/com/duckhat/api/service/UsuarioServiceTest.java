@@ -235,6 +235,33 @@ class UsuarioServiceTest {
   }
 
   @Test
+  void atualizarPerfilClienteSalvaFotoNaContaDoUsuario() {
+    Usuario usuario = usuario(7L, TipoUsuario.CLIENTE);
+    when(usuarioRepository.findById(7L)).thenReturn(Optional.of(usuario));
+    when(usuarioRepository.save(usuario)).thenReturn(usuario);
+
+    UsuarioResponse response = service.atualizarPerfil(
+        usuario,
+        new UpdatePerfilRequest(
+            "Maria Duck",
+            "maria@duckhat.com",
+            "(62) 99999-8888",
+            null,
+            null,
+            LocalDate.of(1998, 5, 12),
+            "Rua das Palmas, 42",
+            null,
+            null,
+            null,
+            null,
+            "cliente-foto-base64"));
+
+    assertEquals("cliente-foto-base64", response.fotoPerfilBase64());
+    assertEquals("cliente-foto-base64", usuario.getFotoPerfilBase64());
+    verify(estabelecimentoRepository, never()).save(any(Estabelecimento.class));
+  }
+
+  @Test
   void atualizarPerfilAtualizaCamposDePrestador() {
     Usuario usuario = usuario(2L, TipoUsuario.PRESTADOR);
     when(usuarioRepository.findById(2L)).thenReturn(Optional.of(usuario));

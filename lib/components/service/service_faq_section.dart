@@ -9,18 +9,20 @@ class ServiceFaqSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Perguntas frequentes',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
           const SizedBox(height: 12),
@@ -43,20 +45,22 @@ class _EmptyFaqs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFF),
+        color: themeColors.elevatedSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE8EDF6)),
+        border: Border.all(color: themeColors.border),
       ),
-      child: const Text(
+      child: Text(
         'Nenhuma pergunta frequente cadastrada.',
         style: TextStyle(
           fontSize: 14,
           height: 1.5,
-          color: AppColors.textRegular,
+          color: themeColors.secondaryText,
         ),
       ),
     );
@@ -70,36 +74,39 @@ class _FaqItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(top: 10),
       decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE8EDF6)),
+        color: themeColors.elevatedSurface,
+        border: Border.all(color: themeColors.border),
         borderRadius: BorderRadius.circular(18),
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        iconColor: AppColors.accent,
-        collapsedIconColor: AppColors.textRegular,
+        iconColor: themeColors.accent,
+        collapsedIconColor: themeColors.secondaryText,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         collapsedShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
         title: Text(
           faq.question,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14.5,
             fontWeight: FontWeight.w600,
-            color: AppColors.textBold,
+            color: themeColors.primaryText,
           ),
         ),
         children: [
           Text(
             faq.answer,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.6,
-              color: AppColors.textRegular,
+              color: themeColors.secondaryText,
             ),
           ),
         ],

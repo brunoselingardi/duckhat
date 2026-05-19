@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
 
 class ServiceImage extends StatelessWidget {
@@ -36,13 +37,13 @@ class ServiceImage extends StatelessWidget {
           gaplessPlayback: true,
         );
       } on FormatException {
-        return _brokenImage();
+        return _brokenImage(context);
       }
     }
 
     final value = source?.trim();
     if (value == null || value.isEmpty) {
-      return _emptyImage();
+      return _emptyImage(context);
     }
 
     if (isRemote(value)) {
@@ -51,7 +52,7 @@ class ServiceImage extends StatelessWidget {
         fit: fit,
         cacheWidth: cacheWidth,
         filterQuality: filterQuality,
-        errorBuilder: (_, _, _) => _brokenImage(),
+        errorBuilder: (_, _, _) => _brokenImage(context),
       );
     }
 
@@ -60,7 +61,7 @@ class ServiceImage extends StatelessWidget {
       fit: fit,
       cacheWidth: cacheWidth,
       filterQuality: filterQuality,
-      errorBuilder: (_, _, _) => _brokenImage(),
+      errorBuilder: (_, _, _) => _brokenImage(context),
     );
   }
 
@@ -74,22 +75,30 @@ class ServiceImage extends StatelessWidget {
     return value;
   }
 
-  static Widget _emptyImage() {
-    return const DecoratedBox(
-      decoration: BoxDecoration(color: Color(0xFFF2F4F7)),
+  static Widget _emptyImage(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(color: themeColors.imagePlaceholder),
       child: Center(
-        child: Icon(Icons.image_outlined, color: Color(0xFF98A2B3), size: 32),
+        child: Icon(
+          Icons.image_outlined,
+          color: themeColors.mutedText,
+          size: 32,
+        ),
       ),
     );
   }
 
-  static Widget _brokenImage() {
-    return const DecoratedBox(
-      decoration: BoxDecoration(color: Color(0xFFF2F4F7)),
+  static Widget _brokenImage(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(color: themeColors.imagePlaceholder),
       child: Center(
         child: Icon(
           Icons.broken_image_outlined,
-          color: Color(0xFF98A2B3),
+          color: themeColors.mutedText,
           size: 32,
         ),
       ),

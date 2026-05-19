@@ -46,7 +46,7 @@ class ShopBottomNav extends StatelessWidget {
           backgroundColor: themeColors.surface,
           elevation: 0,
           showUnselectedLabels: true,
-          selectedItemColor: AppColors.accent,
+          selectedItemColor: themeColors.accent,
           unselectedItemColor: themeColors.navUnselected,
           selectedLabelStyle: const TextStyle(
             fontSize: 12,
@@ -113,7 +113,7 @@ class _NavIcon extends StatelessWidget {
         children: [
           ColorFiltered(
             colorFilter: ColorFilter.mode(
-              isSelected ? AppColors.accent : themeColors.navUnselected,
+              isSelected ? themeColors.accent : themeColors.navUnselected,
               BlendMode.srcIn,
             ),
             child: SvgPicture.asset(asset, width: 32, height: 32),

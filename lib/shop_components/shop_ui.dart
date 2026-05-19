@@ -64,13 +64,13 @@ BoxDecoration buildShopCardDecorationFor(
   final themeColors = AppThemeColors.of(context);
 
   return BoxDecoration(
-    color: color ?? themeColors.surface,
+    color: color ?? themeColors.elevatedSurface,
     borderRadius: BorderRadius.circular(radius),
     border: Border.all(color: borderColor ?? themeColors.border),
     boxShadow: [
       BoxShadow(
         color: themeColors.shadow.withValues(
-          alpha: themeColors.isDark ? 0.34 : 0.32,
+          alpha: themeColors.isDark ? 0.34 : 0.18,
         ),
         blurRadius: 10,
         offset: const Offset(0, 3),

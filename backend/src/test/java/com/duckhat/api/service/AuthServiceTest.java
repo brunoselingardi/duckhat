@@ -68,4 +68,25 @@ class AuthServiceTest {
     assertEquals("banner", response.bannerImagemBase64());
     assertEquals("logo", response.fotoPerfilBase64());
   }
+
+  @Test
+  void loginClienteRetornaFotoVinculadaAoUsuario() {
+    Usuario usuario = new Usuario();
+    usuario.setId(7L);
+    usuario.setNome("Maria Duck");
+    usuario.setEmail("maria@duckhat.com");
+    usuario.setSenhaHash("hash");
+    usuario.setFotoPerfilBase64("cliente-foto");
+    usuario.setTipo(TipoUsuario.CLIENTE);
+
+    when(usuarioRepository.findByEmail("maria@duckhat.com")).thenReturn(Optional.of(usuario));
+    when(passwordEncoder.matches("123456", "hash")).thenReturn(true);
+    when(jwtService.gerarToken(usuario)).thenReturn("jwt-token");
+
+    LoginResponse response = service.login(new LoginRequest("maria@duckhat.com", "123456"));
+
+    assertEquals("Maria Duck", response.nome());
+    assertEquals("cliente-foto", response.fotoPerfilBase64());
+    assertEquals(null, response.bannerImagemBase64());
+  }
 }

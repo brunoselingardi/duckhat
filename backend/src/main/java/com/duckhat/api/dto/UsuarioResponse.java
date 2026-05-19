@@ -40,7 +40,7 @@ public record UsuarioResponse(
                 null,
                 null,
                 null,
-                null,
+                usuario.getFotoPerfilBase64(),
                 usuario.getTipo(),
                 usuario.getCriadoEm()
         );
@@ -65,7 +65,9 @@ public record UsuarioResponse(
                 estabelecimento.getDescricao(),
                 estabelecimento.getHorarioAtendimento(),
                 estabelecimento.getBannerImagemBase64(),
-                estabelecimento.getFotoPerfilBase64(),
+                estabelecimento.getFotoPerfilBase64() == null
+                        ? usuario.getFotoPerfilBase64()
+                        : estabelecimento.getFotoPerfilBase64(),
                 usuario.getTipo(),
                 usuario.getCriadoEm()
         );

@@ -230,7 +230,7 @@ class _SearchShortcut extends StatelessWidget {
           ),
           child: Row(
             children: [
-              const Icon(Icons.search, color: AppColors.accent),
+              Icon(Icons.search, color: themeColors.accent),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -244,7 +244,7 @@ class _SearchShortcut extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.tune, color: AppColors.accent),
+              Icon(Icons.tune, color: themeColors.accent),
             ],
           ),
         ),
@@ -258,6 +258,8 @@ class _PromoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: InkWell(
@@ -270,17 +272,19 @@ class _PromoBanner extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.secondary, AppColors.accent],
+            gradient: LinearGradient(
+              colors: [themeColors.heroStart, themeColors.heroEnd],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: AppColors.shadowAccent,
+                color: themeColors.shadow.withValues(
+                  alpha: themeColors.isDark ? 0.42 : 0.22,
+                ),
                 blurRadius: 8,
-                offset: Offset(0, 4),
+                offset: const Offset(0, 4),
               ),
             ],
           ),
@@ -384,8 +388,8 @@ class _HomeErrorState extends StatelessWidget {
             FilledButton(
               onPressed: () => onRetry(),
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
+                backgroundColor: themeColors.accent,
+                foregroundColor: themeColors.onAccent,
               ),
               child: const Text('Tentar novamente'),
             ),

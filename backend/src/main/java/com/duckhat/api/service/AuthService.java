@@ -77,7 +77,11 @@ public class AuthService {
         estabelecimento == null ? null : estabelecimento.getDescricao(),
         estabelecimento == null ? null : estabelecimento.getHorarioAtendimento(),
         estabelecimento == null ? null : estabelecimento.getBannerImagemBase64(),
-        estabelecimento == null ? null : estabelecimento.getFotoPerfilBase64(),
+        estabelecimento == null
+            ? usuario.getFotoPerfilBase64()
+            : estabelecimento.getFotoPerfilBase64() == null
+                ? usuario.getFotoPerfilBase64()
+                : estabelecimento.getFotoPerfilBase64(),
         usuario.getTipo(),
         token,
         "Login realizado com sucesso");

@@ -92,7 +92,7 @@ class ProfileSettingsSection extends StatelessWidget {
           ),
           DecoratedBox(
             decoration: BoxDecoration(
-              color: themeColors.surface,
+              color: themeColors.elevatedSurface,
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
@@ -223,21 +223,25 @@ class _ProfileSettingsHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.secondary, AppColors.accent],
+          colors: [themeColors.heroStart, themeColors.heroEnd],
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadowAccent,
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.44 : 0.22,
+            ),
             blurRadius: 20,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
         ],
       ),

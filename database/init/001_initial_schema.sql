@@ -10,6 +10,7 @@ CREATE TABLE usuarios (
     responsavel_nome VARCHAR(120) NULL,
     data_nascimento DATE NULL,
     endereco VARCHAR(255) NULL,
+    foto_perfil_base64 MEDIUMTEXT NULL,
     tipo ENUM('CLIENTE', 'PRESTADOR') NOT NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_usuarios PRIMARY KEY (id),

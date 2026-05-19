@@ -1,9 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:duckhat/models/usuario_perfil.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart' show AppColors, AppThemeColors;
+import 'package:duckhat/utils/image_base64.dart';
 import 'package:duckhat/utils/profile_validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditarPerfilPage extends StatefulWidget {
   const EditarPerfilPage({super.key});
@@ -26,6 +31,7 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
   bool _loading = true;
   bool _saving = false;
   String? _error;
+  File? _profileImage;
 
   bool get _isPrestador => _perfil?.tipo == 'PRESTADOR';
 
@@ -108,6 +114,29 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     _enderecoController.text = perfil.endereco ?? '';
   }
 
+  Future<void> _pickProfileImage() async {
+    if (_saving) return;
+
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 82,
+        maxWidth: 1200,
+      );
+      if (!mounted || image == null) return;
+      setState(() {
+        _profileImage = File(image.path);
+        _error = null;
+      });
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _error =
+            error.message ?? 'Não foi possível abrir a galeria do aparelho.';
+      });
+    }
+  }
+
   Future<void> _save() async {
     FocusScope.of(context).unfocus();
     final current = _perfil;
@@ -121,6 +150,11 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     });
 
     try {
+      final fotoPerfilBase64 = _profileImage == null
+          ? current.fotoPerfilBase64
+          : await encodeImageFileAsBase64(_profileImage);
+      if (!mounted) return;
+
       await DuckHatApi.instance.atualizarMeuPerfil(
         UsuarioPerfil(
           id: current.id,
@@ -140,12 +174,13 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           descricao: current.descricao,
           horarioAtendimento: current.horarioAtendimento,
           bannerImagemBase64: current.bannerImagemBase64,
-          fotoPerfilBase64: current.fotoPerfilBase64,
+          fotoPerfilBase64: fotoPerfilBase64,
           tipo: current.tipo,
         ),
       );
 
       if (!mounted) return;
+      setState(() => _profileImage = null);
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Perfil salvo no banco')));
@@ -291,48 +326,63 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
   Widget _buildAvatar() {
     final name = _nomeController.text.trim();
     final letter = name.isEmpty ? 'D' : name[0].toUpperCase();
+    final savedImage = _perfil?.fotoPerfilBase64?.trim();
 
     return Center(
-      child: Stack(
-        children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
-              color: AppColors.accent,
-            ),
-            child: Center(
-              child: Text(
-                letter,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
+      child: Semantics(
+        button: true,
+        label: 'Alterar foto do perfil',
+        child: InkWell(
+          onTap: _saving ? null : _pickProfileImage,
+          borderRadius: BorderRadius.circular(999),
+          child: Stack(
+            children: [
+              Container(
+                width: 108,
+                height: 108,
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 3),
+                  color: AppColors.accent,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: _profileImage != null
+                      ? Image.file(_profileImage!, fit: BoxFit.cover)
+                      : _SavedProfileImage(
+                          base64Value: savedImage,
+                          fallbackLetter: letter,
+                        ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            right: 2,
-            bottom: 2,
-            child: Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.accent, width: 1.5),
+              Positioned(
+                right: 2,
+                bottom: 2,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.accent, width: 1.5),
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt_outlined,
+                    size: 17,
+                    color: AppColors.accent,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.camera_alt_outlined,
-                size: 16,
-                color: AppColors.accent,
-              ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -378,6 +428,53 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
           ),
           filled: true,
           fillColor: AppColors.cardBackground,
+        ),
+      ),
+    );
+  }
+}
+
+class _SavedProfileImage extends StatelessWidget {
+  final String? base64Value;
+  final String fallbackLetter;
+
+  const _SavedProfileImage({
+    required this.base64Value,
+    required this.fallbackLetter,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final value = base64Value;
+    if (value != null && value.isNotEmpty) {
+      try {
+        return Image.memory(base64Decode(value), fit: BoxFit.cover);
+      } on FormatException {
+        return _ProfileInitials(fallbackLetter: fallbackLetter);
+      }
+    }
+
+    return _ProfileInitials(fallbackLetter: fallbackLetter);
+  }
+}
+
+class _ProfileInitials extends StatelessWidget {
+  final String fallbackLetter;
+
+  const _ProfileInitials({required this.fallbackLetter});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppColors.accent,
+      child: Center(
+        child: Text(
+          fallbackLetter,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 40,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );

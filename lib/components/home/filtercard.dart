@@ -17,6 +17,8 @@ class FilterCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -26,14 +28,20 @@ class FilterCard extends StatelessWidget {
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
+          color: isSelected ? themeColors.accentSoft : themeColors.surface,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: const [
-            BoxShadow(blurRadius: 6, color: AppColors.cardShadow),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+              color: themeColors.shadow.withValues(
+                alpha: themeColors.isDark ? 0.30 : 0.16,
+              ),
+            ),
           ],
           border: isSelected
-              ? Border.all(color: AppColors.filterSelected, width: 2)
-              : null,
+              ? Border.all(color: themeColors.accent, width: 2)
+              : Border.all(color: themeColors.border),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -41,16 +49,18 @@ class FilterCard extends StatelessWidget {
             AnimatedScale(
               scale: isSelected ? 1.15 : 1.0,
               duration: const Duration(milliseconds: 200),
-              child: Icon(icon, size: 28, color: AppColors.accent),
+              child: Icon(icon, size: 28, color: themeColors.accent),
             ),
             const SizedBox(height: 6),
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppColors.accent,
+                color: isSelected
+                    ? themeColors.accent
+                    : themeColors.secondaryText,
               ),
             ),
           ],

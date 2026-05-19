@@ -8,6 +8,7 @@ class HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final trimmedName = username?.trim();
     final greeting = trimmedName == null || trimmedName.isEmpty
         ? 'Quack!'
@@ -30,10 +31,10 @@ class HomeHeader extends StatelessWidget {
           Expanded(
             child: Text(
               greeting,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: AppColors.dark,
+                color: themeColors.primaryText,
               ),
             ),
           ),

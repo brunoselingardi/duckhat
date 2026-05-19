@@ -41,7 +41,7 @@ class DuckHatBottomNav extends StatelessWidget {
           onTap: onTap,
           type: BottomNavigationBarType.fixed,
           backgroundColor: themeColors.surface,
-          selectedItemColor: AppColors.accent,
+          selectedItemColor: themeColors.accent,
           unselectedItemColor: themeColors.navUnselected,
           items: [
             BottomNavigationBarItem(
@@ -100,7 +100,7 @@ class _NavIcon extends StatelessWidget {
         children: [
           ColorFiltered(
             colorFilter: ColorFilter.mode(
-              isSelected ? AppColors.accent : themeColors.navUnselected,
+              isSelected ? themeColors.accent : themeColors.navUnselected,
               BlendMode.srcIn,
             ),
             child: SvgPicture.asset(asset, width: 32, height: 32),

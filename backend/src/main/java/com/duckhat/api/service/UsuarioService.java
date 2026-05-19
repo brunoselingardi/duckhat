@@ -243,6 +243,7 @@ public class UsuarioService {
         usuario.setResponsavelNome(responsavelNome);
         usuario.setDataNascimento(request.dataNascimento());
         usuario.setEndereco(endereco);
+        usuario.setFotoPerfilBase64(fotoPerfilBase64);
 
         Usuario salvo = usuarioRepository.save(usuario);
         Estabelecimento estabelecimento = null;

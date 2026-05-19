@@ -158,6 +158,9 @@ class _ClientSignupPageState extends State<ClientSignupPage> {
     });
 
     try {
+      final profileImageBase64 = await encodeImageFileAsBase64(
+        _imageController.image,
+      );
       await DuckHatApi.instance.criarUsuario(
         nome: _nomeController.text,
         email: _emailController.text,
@@ -169,6 +172,28 @@ class _ClientSignupPageState extends State<ClientSignupPage> {
         email: _emailController.text.trim(),
         password: _senhaController.text,
       );
+      final session = DuckHatApi.instance.currentSession;
+      if (session != null && profileImageBase64 != null) {
+        await DuckHatApi.instance.atualizarMeuPerfil(
+          UsuarioPerfil(
+            id: session.id,
+            nome: session.nome,
+            email: session.email,
+            telefone: session.telefone,
+            cnpj: session.cnpj,
+            responsavelNome: session.responsavelNome,
+            dataNascimento: session.dataNascimento,
+            endereco: session.endereco,
+            categoria: session.categoria,
+            categoriaLabel: session.categoriaLabel,
+            descricao: session.descricao,
+            horarioAtendimento: session.horarioAtendimento,
+            bannerImagemBase64: session.bannerImagemBase64,
+            fotoPerfilBase64: profileImageBase64,
+            tipo: session.tipo,
+          ),
+        );
+      }
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(

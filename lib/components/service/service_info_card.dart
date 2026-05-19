@@ -75,8 +75,8 @@ class ServiceInfoCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           ratingValue.toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: AppColors.accent,
+                          style: TextStyle(
+                            color: themeColors.accent,
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                           ),
@@ -84,8 +84,8 @@ class ServiceInfoCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           '($reviewCount avaliações)',
-                          style: const TextStyle(
-                            color: AppColors.accent,
+                          style: TextStyle(
+                            color: themeColors.accent,
                             fontSize: 15,
                             fontWeight: FontWeight.w500,
                           ),
@@ -153,8 +153,8 @@ class ServiceInfoCard extends StatelessWidget {
                   icon: const Icon(Icons.chat_bubble_outline_rounded, size: 20),
                   label: const Text('Mensagem'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.accent,
-                    side: const BorderSide(color: AppColors.accent, width: 1.5),
+                    foregroundColor: themeColors.accent,
+                    side: BorderSide(color: themeColors.accent, width: 1.5),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
@@ -191,10 +191,10 @@ class _InfoRow extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: 0.12),
+            color: themeColors.accentSoft,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 16, color: AppColors.accent),
+          child: Icon(icon, size: 16, color: themeColors.accent),
         ),
         const SizedBox(width: 12),
         Expanded(

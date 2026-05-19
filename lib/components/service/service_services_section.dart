@@ -20,18 +20,20 @@ class ServiceServicesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Serviços e preços',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
           const SizedBox(height: 18),
@@ -43,11 +45,11 @@ class ServiceServicesSection extends StatelessWidget {
           else if (error != null)
             _ServiceError(message: error!, onRetry: onRetry)
           else if (offers.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
               child: Text(
                 'Nenhum serviço disponível no momento.',
-                style: TextStyle(color: AppColors.textRegular),
+                style: TextStyle(color: themeColors.secondaryText),
               ),
             )
           else
@@ -61,7 +63,7 @@ class ServiceServicesSection extends StatelessWidget {
                         : () => onBookOffer!(offers[index]),
                   ),
                   if (index != offers.length - 1)
-                    const Divider(height: 28, color: Color(0xFFE8EDF6)),
+                    Divider(height: 28, color: themeColors.border),
                 ],
               ],
             ),
@@ -84,7 +86,10 @@ class _ServiceError extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(message, style: const TextStyle(color: Colors.redAccent)),
+          Text(
+            message,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
           if (onRetry != null) ...[
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -107,6 +112,8 @@ class _ServiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 18),
       child: Column(
@@ -114,37 +121,37 @@ class _ServiceRow extends StatelessWidget {
         children: [
           Text(
             offer.title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             offer.price,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             offer.description,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.5,
-              color: AppColors.textRegular,
+              color: themeColors.secondaryText,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             offer.duration,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
-              color: AppColors.accent,
+              color: themeColors.accent,
             ),
           ),
           if (onBookTap != null) ...[
@@ -155,8 +162,8 @@ class _ServiceRow extends StatelessWidget {
                 onPressed: onBookTap,
                 icon: const Icon(Icons.calendar_today_rounded, size: 16),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
+                  backgroundColor: themeColors.accent,
+                  foregroundColor: themeColors.onAccent,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 10,

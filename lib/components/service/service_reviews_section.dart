@@ -9,18 +9,20 @@ class ServiceReviewsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Avaliacoes',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
             ),
           ),
           const SizedBox(height: 16),
@@ -48,20 +50,22 @@ class _EmptyReviews extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFF),
+        color: themeColors.elevatedSurface,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE8EDF6)),
+        border: Border.all(color: themeColors.border),
       ),
-      child: const Text(
+      child: Text(
         'Nenhuma avaliação publicada ainda.',
         style: TextStyle(
           fontSize: 14,
           height: 1.5,
-          color: AppColors.textRegular,
+          color: themeColors.secondaryText,
         ),
       ),
     );
@@ -75,14 +79,16 @@ class _ReviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return RepaintBoundary(
       child: Container(
         width: 250,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFFDFCF9),
+          color: themeColors.elevatedSurface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE8EDF6)),
+          border: Border.all(color: themeColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,17 +103,17 @@ class _ReviewCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   review.rating.toStringAsFixed(1).replaceAll('.0', ''),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textBold,
+                    color: themeColors.primaryText,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   review.date,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textRegular,
+                    color: themeColors.secondaryText,
                   ),
                 ),
               ],
@@ -117,19 +123,19 @@ class _ReviewCard extends StatelessWidget {
               review.comment,
               maxLines: 5,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 height: 1.6,
-                color: AppColors.textBold,
+                color: themeColors.primaryText,
               ),
             ),
             const Spacer(),
             Text(
               review.name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textRegular,
+                color: themeColors.secondaryText,
               ),
             ),
           ],

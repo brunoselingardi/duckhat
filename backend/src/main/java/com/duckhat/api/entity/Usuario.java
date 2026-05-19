@@ -38,6 +38,9 @@ public class Usuario {
     @Column(length = 255)
     private String endereco;
 
+    @Column(name = "foto_perfil_base64", columnDefinition = "MEDIUMTEXT")
+    private String fotoPerfilBase64;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
@@ -88,6 +91,10 @@ public class Usuario {
         return endereco;
     }
 
+    public String getFotoPerfilBase64() {
+        return fotoPerfilBase64;
+    }
+
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
@@ -126,6 +133,10 @@ public class Usuario {
 
     public void setEndereco(String endereco) {
         this.endereco = endereco;
+    }
+
+    public void setFotoPerfilBase64(String fotoPerfilBase64) {
+        this.fotoPerfilBase64 = fotoPerfilBase64;
     }
 
     public void setTipo(TipoUsuario tipo) {
