@@ -355,12 +355,10 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
     String? Function(String?)? validator,
     int maxLines = 1,
   }) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
+      decoration: buildShopCardDecorationFor(context, radius: 12),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
@@ -371,14 +369,14 @@ class _ShopEstablishmentDataPageState extends State<ShopEstablishmentDataPage> {
         onChanged: (_) => setState(() {}),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: AppColors.textMuted),
-          prefixIcon: Icon(icon, color: AppColors.accent),
+          labelStyle: TextStyle(color: themeColors.mutedText),
+          prefixIcon: Icon(icon, color: themeColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: AppColors.cardBackground,
+          fillColor: themeColors.elevatedSurface,
         ),
       ),
     );
@@ -484,8 +482,10 @@ class _ServicesEditorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
-      decoration: buildShopCardDecoration(radius: 18),
+      decoration: buildShopCardDecorationFor(context, radius: 18),
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(18),
@@ -510,23 +510,23 @@ class _ServicesEditorCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 14),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Serviços e Preços',
                         style: TextStyle(
-                          color: AppColors.textBold,
+                          color: themeColors.primaryText,
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'Edite duração, valor e disponibilidade dos serviços.',
                         style: TextStyle(
-                          color: AppColors.textRegular,
+                          color: themeColors.secondaryText,
                           fontSize: 12,
                           height: 1.35,
                           fontWeight: FontWeight.w600,
@@ -538,7 +538,7 @@ class _ServicesEditorCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Icon(
                   Icons.chevron_right,
-                  color: AppColors.textMuted.withValues(alpha: 0.8),
+                  color: themeColors.mutedText.withValues(alpha: 0.8),
                   size: 24,
                 ),
               ],
@@ -577,8 +577,10 @@ class _PublicProfilePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
-      decoration: buildShopCardDecoration(radius: 24),
+      decoration: buildShopCardDecorationFor(context, radius: 24),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,8 +640,8 @@ class _PublicProfilePreview extends StatelessWidget {
                             name,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textBold,
+                            style: TextStyle(
+                              color: themeColors.primaryText,
                               fontSize: 20,
                               height: 1.1,
                               fontWeight: FontWeight.w800,
@@ -668,14 +670,14 @@ class _PublicProfilePreview extends StatelessWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFF),
+                          color: themeColors.inputFill,
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFE6EDFF)),
+                          border: Border.all(color: themeColors.border),
                         ),
                         child: Text(
                           description,
-                          style: const TextStyle(
-                            color: AppColors.textRegular,
+                          style: TextStyle(
+                            color: themeColors.secondaryText,
                             fontSize: 13,
                             height: 1.5,
                             fontWeight: FontWeight.w600,
@@ -828,8 +830,10 @@ class _ImageEditChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Material(
-      color: Colors.white.withValues(alpha: 0.94),
+      color: themeColors.elevatedSurface.withValues(alpha: 0.94),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
@@ -839,12 +843,12 @@ class _ImageEditChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: AppColors.accent, size: 17),
+              Icon(icon, color: themeColors.accent, size: 17),
               const SizedBox(width: 7),
               Text(
                 label,
-                style: const TextStyle(
-                  color: AppColors.textBold,
+                style: TextStyle(
+                  color: themeColors.primaryText,
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                 ),
@@ -865,6 +869,8 @@ class _PreviewInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -875,16 +881,16 @@ class _PreviewInfoRow extends StatelessWidget {
             color: AppColors.accent.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: Icon(icon, size: 16, color: AppColors.accent),
+          child: Icon(icon, size: 16, color: themeColors.accent),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13.5,
               height: 1.45,
-              color: AppColors.textRegular,
+              color: themeColors.secondaryText,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -907,17 +913,19 @@ class _FormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: buildShopCardDecoration(radius: 18),
+      decoration: buildShopCardDecorationFor(context, radius: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
-              color: AppColors.textBold,
+            style: TextStyle(
+              color: themeColors.primaryText,
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
@@ -925,8 +933,8 @@ class _FormSection extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             subtitle,
-            style: const TextStyle(
-              color: AppColors.textRegular,
+            style: TextStyle(
+              color: themeColors.secondaryText,
               fontSize: 12,
               height: 1.35,
               fontWeight: FontWeight.w600,

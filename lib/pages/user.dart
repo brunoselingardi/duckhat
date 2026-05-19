@@ -174,59 +174,65 @@ class _PerfilPageState extends State<PerfilPage> {
     bool showArrow = true,
     VoidCallback? onTap,
   }) {
-    final iconColor = titleColor ?? AppColors.accent;
-    return InkWell(
-      onTap: onTap ?? () {},
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 12, 12, 12),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: titleColor ?? AppColors.textBold,
-                    ),
+    return Builder(
+      builder: (context) {
+        final themeColors = AppThemeColors.of(context);
+        final iconColor = titleColor ?? themeColors.accent;
+
+        return InkWell(
+          onTap: onTap ?? () {},
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 12, 12, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textRegular,
-                        height: 1.35,
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: titleColor ?? themeColors.primaryText,
+                        ),
                       ),
-                    ),
-                  ],
-                ],
-              ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 3),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: themeColors.secondaryText,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (showArrow)
+                  Icon(
+                    Icons.chevron_right,
+                    color: themeColors.mutedText.withValues(alpha: 0.8),
+                    size: 22,
+                  ),
+              ],
             ),
-            if (showArrow)
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.textMuted.withValues(alpha: 0.8),
-                size: 22,
-              ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -478,8 +484,12 @@ class _GuestProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFAED0FB),
+      backgroundColor: themeColors.isDark
+          ? themeColors.background
+          : const Color(0xFFAED0FB),
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -491,13 +501,15 @@ class _GuestProfilePage extends StatelessWidget {
                   children: [
                     Container(
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: themeColors.elevatedSurface,
                         borderRadius: BorderRadius.circular(32),
-                        boxShadow: const [
+                        boxShadow: [
                           BoxShadow(
-                            color: AppColors.cardShadow,
+                            color: themeColors.shadow.withValues(
+                              alpha: themeColors.isDark ? 0.34 : 0.22,
+                            ),
                             blurRadius: 24,
-                            offset: Offset(0, 10),
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -519,18 +531,20 @@ class _GuestProfilePage extends StatelessWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 34),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+              decoration: BoxDecoration(
+                color: themeColors.elevatedSurface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(30),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Customize seu perfil',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.black,
+                      color: themeColors.primaryText,
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                     ),
@@ -540,7 +554,7 @@ class _GuestProfilePage extends StatelessWidget {
                     'Crie sua conta para salvar agendamentos, acompanhar horários e acessar seu perfil no DuckHat.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: AppColors.textBold.withValues(alpha: 0.9),
+                      color: themeColors.secondaryText,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       height: 1.25,
@@ -553,8 +567,8 @@ class _GuestProfilePage extends StatelessWidget {
                     child: FilledButton(
                       onPressed: () => _openSignup(context),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.primary,
+                        backgroundColor: themeColors.accent,
+                        foregroundColor: themeColors.onAccent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
                         ),
@@ -575,8 +589,8 @@ class _GuestProfilePage extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () => _openLogin(context),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textBold,
-                        side: const BorderSide(color: AppColors.secondary),
+                        foregroundColor: themeColors.primaryText,
+                        side: BorderSide(color: themeColors.accent),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
                         ),
@@ -605,11 +619,9 @@ class _ProfileDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      thickness: 1,
-      color: AppColors.textMuted.withValues(alpha: 0.22),
-    );
+    final themeColors = AppThemeColors.of(context);
+
+    return Divider(height: 1, thickness: 1, color: themeColors.border);
   }
 }
 
@@ -621,6 +633,8 @@ class _MenuCardGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -628,23 +642,25 @@ class _MenuCardGroup extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(2, 0, 0, 10),
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
-              color: AppColors.sectionLabel,
+              color: themeColors.mutedText,
               letterSpacing: 0.9,
             ),
           ),
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: themeColors.elevatedSurface,
             borderRadius: BorderRadius.circular(24),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: AppColors.cardShadow,
+                color: themeColors.shadow.withValues(
+                  alpha: themeColors.isDark ? 0.34 : 0.18,
+                ),
                 blurRadius: 16,
-                offset: Offset(0, 8),
+                offset: const Offset(0, 8),
               ),
             ],
           ),
@@ -662,18 +678,19 @@ class _ProfileQuickStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final firstName = nome.trim().split(' ').first;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.white, AppColors.accent.withValues(alpha: 0.1)],
+          colors: [themeColors.surface, themeColors.accentSoft],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+        border: Border.all(color: themeColors.border.withValues(alpha: 0.8)),
       ),
       child: Row(
         children: [
@@ -695,23 +712,23 @@ class _ProfileQuickStats extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Conta pronta para uso',
                   style: TextStyle(
-                    color: AppColors.textBold,
+                    color: themeColors.primaryText,
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                SizedBox(height: 3),
+                const SizedBox(height: 3),
                 Text(
                   'Use este espaço para ajustar perfil, privacidade e notificações.',
                   style: TextStyle(
-                    color: AppColors.textRegular,
+                    color: themeColors.secondaryText,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     height: 1.35,

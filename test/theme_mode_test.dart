@@ -1,6 +1,8 @@
 import 'package:duckhat/components/user/configuracoes.dart';
+import 'package:duckhat/pages/user.dart';
 import 'package:duckhat/pages/search.dart';
 import 'package:duckhat/services/duckhat_api.dart';
+import 'package:duckhat/shop_pages/shop_about.dart';
 import 'package:duckhat/shop_pages/shop_placeholder.dart';
 import 'package:duckhat/shop_pages/shop_profile.dart';
 import 'package:duckhat/theme.dart';
@@ -91,5 +93,50 @@ void main() {
         tester.element(find.byType(ShopPlaceholderPage)),
       ).background,
     );
+  });
+
+  testWidgets('perfil do cliente aplica texto do tema escuro nos cards', (
+    tester,
+  ) async {
+    AppThemeController.resetForTests(value: ThemeMode.dark);
+    DuckHatApi.instance.startDevSession(tipo: 'CLIENTE');
+
+    await tester.pumpWidget(_themedApp(const PerfilPage()));
+    await tester.pumpAndSettle();
+
+    final themeColors = AppThemeColors.of(
+      tester.element(find.byType(PerfilPage)),
+    );
+    final editProfileText = tester.widget<Text>(find.text('Editar Perfil'));
+    final quickStatsText = tester.widget<Text>(
+      find.text('Conta pronta para uso'),
+    );
+
+    expect(editProfileText.style?.color, themeColors.primaryText);
+    expect(quickStatsText.style?.color, themeColors.primaryText);
+  });
+
+  testWidgets('paginas do estabelecimento aplicam texto do tema escuro', (
+    tester,
+  ) async {
+    AppThemeController.resetForTests(value: ThemeMode.dark);
+
+    await tester.pumpWidget(_themedApp(const ShopPlaceholderPage()));
+    await tester.pumpAndSettle();
+
+    var themeColors = AppThemeColors.of(
+      tester.element(find.byType(ShopPlaceholderPage)),
+    );
+    var title = tester.widget<Text>(find.text('Shop Version'));
+    expect(title.style?.color, themeColors.primaryText);
+
+    await tester.pumpWidget(_themedApp(const ShopAboutPage()));
+    await tester.pumpAndSettle();
+
+    themeColors = AppThemeColors.of(tester.element(find.byType(ShopAboutPage)));
+    title = tester.widget<Text>(find.text('DuckHat'));
+    final terms = tester.widget<Text>(find.text('Termos de Uso'));
+    expect(title.style?.color, themeColors.primaryText);
+    expect(terms.style?.color, themeColors.primaryText);
   });
 }

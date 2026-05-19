@@ -52,30 +52,28 @@ class ShopHelpPage extends StatelessWidget {
   }
 
   Widget _buildFaqItem(BuildContext context, String question, String answer) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
+      decoration: buildShopCardDecorationFor(context, radius: 12),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        iconColor: AppColors.accent,
-        collapsedIconColor: AppColors.textMuted,
+        iconColor: themeColors.accent,
+        collapsedIconColor: themeColors.mutedText,
         title: Text(
           question,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: AppColors.darkAlt,
+            color: themeColors.primaryText,
           ),
         ),
         children: [
           Text(
             answer,
-            style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+            style: TextStyle(fontSize: 13, color: themeColors.secondaryText),
           ),
         ],
       ),
@@ -88,13 +86,11 @@ class ShopHelpPage extends StatelessWidget {
     String value,
     IconData icon,
   ) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
+      decoration: buildShopCardDecorationFor(context, radius: 12),
       child: ListTile(
         onTap: () => ScaffoldMessenger.of(
           context,
@@ -106,17 +102,17 @@ class ShopHelpPage extends StatelessWidget {
             color: AppColors.accent.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.accent, size: 20),
+          child: Icon(icon, color: themeColors.accent, size: 20),
         ),
         title: Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w500,
-            color: AppColors.darkAlt,
+            color: themeColors.primaryText,
           ),
         ),
-        subtitle: Text(value, style: TextStyle(color: AppColors.textMuted)),
-        trailing: Icon(Icons.chevron_right, color: AppColors.textMuted),
+        subtitle: Text(value, style: TextStyle(color: themeColors.mutedText)),
+        trailing: Icon(Icons.chevron_right, color: themeColors.mutedText),
       ),
     );
   }

@@ -38,6 +38,31 @@ void main() {
     expect(find.text('Next'), findsOneWidget);
   });
 
+  testWidgets('client signup does not overflow when keyboard is open', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(720, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetViewInsets);
+
+    await tester.pumpWidget(const MaterialApp(home: SignupPage()));
+    await tester.tap(find.text('Sou cliente'));
+    await tester.pumpAndSettle();
+    tester.view.viewInsets = const FakeViewPadding(bottom: 500);
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Minimo 6 caracteres'),
+      '123456',
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Crie seu perfil'), findsOneWidget);
+  });
+
   testWidgets('business signup is split into multiple steps', (tester) async {
     tester.view.physicalSize = const Size(1080, 1920);
     tester.view.devicePixelRatio = 1;

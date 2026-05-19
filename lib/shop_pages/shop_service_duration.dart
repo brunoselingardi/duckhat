@@ -301,9 +301,11 @@ class _ServicePanelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: buildShopCardDecoration(radius: 20),
+      decoration: buildShopCardDecorationFor(context, radius: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -326,10 +328,10 @@ class _ServicePanelCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Painel da vitrine',
                       style: TextStyle(
-                        color: AppColors.textBold,
+                        color: themeColors.primaryText,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),
@@ -339,8 +341,8 @@ class _ServicePanelCard extends StatelessWidget {
                       total == 0
                           ? 'Adicione o primeiro serviço com descrição e preço.'
                           : '$total serviços cadastrados para este estabelecimento.',
-                      style: const TextStyle(
-                        color: AppColors.textRegular,
+                      style: TextStyle(
+                        color: themeColors.secondaryText,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         height: 1.35,
@@ -414,6 +416,8 @@ class _ServiceMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -435,8 +439,8 @@ class _ServiceMetric extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
-                color: AppColors.textBold,
+              style: TextStyle(
+                color: themeColors.primaryText,
                 fontSize: 11,
                 height: 1.15,
                 fontWeight: FontWeight.w800,
@@ -457,6 +461,7 @@ class _ServiceStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = active ? AppColors.success : AppColors.warning;
+    final themeColors = AppThemeColors.of(context);
     final label = active ? 'Ativo na vitrine' : 'Pausado';
     final icon = active ? Icons.visibility_outlined : Icons.visibility_off;
 
@@ -476,8 +481,8 @@ class _ServiceStatusBadge extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textBold,
+              style: TextStyle(
+                color: themeColors.primaryText,
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
               ),
@@ -504,6 +509,8 @@ class _ServiceCardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -527,8 +534,8 @@ class _ServiceCardHeader extends StatelessWidget {
             children: [
               Text(
                 isNew ? 'Novo serviço' : 'Serviço publicado',
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                style: TextStyle(
+                  color: themeColors.mutedText,
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                 ),
@@ -536,10 +543,10 @@ class _ServiceCardHeader extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textBold,
+                  color: themeColors.primaryText,
                 ),
               ),
               const SizedBox(height: 6),
@@ -561,17 +568,19 @@ class _ServiceFieldGroupLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Row(
       children: [
-        Icon(icon, color: AppColors.accent, size: 17),
+        Icon(icon, color: themeColors.accent, size: 17),
         const SizedBox(width: 7),
         Expanded(
           child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textBold,
+            style: TextStyle(
+              color: themeColors.primaryText,
               fontSize: 12,
               fontWeight: FontWeight.w800,
             ),
@@ -598,20 +607,21 @@ class _ServiceEditorCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final compact = !service.active && !service.isNew;
+    final themeColors = AppThemeColors.of(context);
 
     return Container(
       key: ValueKey('service-card-$index'),
       margin: const EdgeInsets.only(bottom: 14),
       padding: EdgeInsets.all(compact ? 14 : 18),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.elevatedSurface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: service.active
-              ? AppColors.border
+              ? themeColors.border
               : AppColors.warning.withValues(alpha: 0.35),
         ),
-        boxShadow: buildShopCardDecoration(radius: 18).boxShadow,
+        boxShadow: buildShopCardDecorationFor(context, radius: 18).boxShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -723,10 +733,10 @@ class _ServiceEditorCard extends StatelessWidget {
                   color: AppColors.warning.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Text(
+                child: Text(
                   'Serviço pausado: ele não aparece para clientes no catálogo.',
                   style: TextStyle(
-                    color: AppColors.textRegular,
+                    color: themeColors.secondaryText,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -747,6 +757,7 @@ class _PausedServiceSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final price = service.priceController.text.trim();
 
     return Container(
@@ -775,10 +786,10 @@ class _PausedServiceSummary extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Serviço pausado: reative para editar detalhes.',
             style: TextStyle(
-              color: AppColors.textRegular,
+              color: themeColors.secondaryText,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -797,10 +808,12 @@ class _PausedServiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
+        color: themeColors.elevatedSurface.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -810,8 +823,8 @@ class _PausedServiceChip extends StatelessWidget {
           const SizedBox(width: 5),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textBold,
+            style: TextStyle(
+              color: themeColors.primaryText,
               fontSize: 11,
               fontWeight: FontWeight.w800,
             ),
@@ -829,12 +842,14 @@ class _ServiceSectionShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: themeColors.inputFill,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.55)),
+        border: Border.all(color: themeColors.border.withValues(alpha: 0.55)),
       ),
       child: child,
     );
@@ -866,6 +881,8 @@ class _ServiceTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
@@ -874,31 +891,31 @@ class _ServiceTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       onChanged: onChanged,
       validator: validator,
-      style: const TextStyle(
-        color: AppColors.textBold,
+      style: TextStyle(
+        color: themeColors.primaryText,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: AppColors.textMuted),
-        prefixIcon: Icon(icon, color: AppColors.accent),
+        labelStyle: TextStyle(color: themeColors.mutedText),
+        prefixIcon: Icon(icon, color: themeColors.accent),
         filled: true,
-        fillColor: AppColors.cardBackground,
+        fillColor: themeColors.elevatedSurface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 14,
           vertical: 15,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: themeColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: themeColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.accent, width: 1.6),
+          borderSide: BorderSide(color: themeColors.accent, width: 1.6),
         ),
       ),
     );
@@ -913,20 +930,22 @@ class _DurationControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.elevatedSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: themeColors.border),
       ),
       child: Row(
         children: [
           IconButton(
             onPressed: duration <= 10 ? null : () => onChanged(duration - 5),
             icon: const Icon(Icons.remove_circle_outline),
-            color: AppColors.accent,
+            color: themeColors.accent,
             tooltip: 'Reduzir duração',
           ),
           Expanded(
@@ -935,14 +954,15 @@ class _DurationControl extends StatelessWidget {
               children: [
                 Text(
                   '$duration min',
-                  style: const TextStyle(
+                  style: TextStyle(
+                    color: themeColors.primaryText,
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
                   ),
                 ),
-                const Text(
+                Text(
                   'Duração',
-                  style: TextStyle(fontSize: 10, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 10, color: themeColors.mutedText),
                 ),
               ],
             ),
@@ -950,7 +970,7 @@ class _DurationControl extends StatelessWidget {
           IconButton(
             onPressed: duration >= 240 ? null : () => onChanged(duration + 5),
             icon: const Icon(Icons.add_circle_outline),
-            color: AppColors.accent,
+            color: themeColors.accent,
             tooltip: 'Aumentar duração',
           ),
         ],
@@ -966,9 +986,11 @@ class _EmptyServicesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(22),
-      decoration: buildShopCardDecoration(radius: 20),
+      decoration: buildShopCardDecorationFor(context, radius: 20),
       child: Column(
         children: [
           Container(
@@ -985,20 +1007,20 @@ class _EmptyServicesCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
+          Text(
             'Nenhum serviço cadastrado',
             style: TextStyle(
-              color: AppColors.textBold,
+              color: themeColors.primaryText,
               fontSize: 16,
               fontWeight: FontWeight.w800,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Cadastre pelo menos um serviço para iniciar a vitrine.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: AppColors.textRegular,
+              color: themeColors.secondaryText,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1023,13 +1045,15 @@ class _ServiceSaveBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return SafeArea(
       top: false,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-        decoration: const BoxDecoration(
-          color: AppColors.cardBackground,
-          border: Border(top: BorderSide(color: AppColors.border)),
+        decoration: BoxDecoration(
+          color: themeColors.elevatedSurface,
+          border: Border(top: BorderSide(color: themeColors.border)),
         ),
         child: FilledButton.icon(
           onPressed: saving ? null : onSave,

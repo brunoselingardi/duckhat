@@ -219,6 +219,7 @@ class _ClientSignupPageState extends State<ClientSignupPage> {
   @override
   Widget build(BuildContext context) {
     return _SignupScaffold(
+      scrollable: true,
       child: Form(
         key: _formKey,
         child: Column(
@@ -1427,8 +1428,9 @@ class _AccessStep extends StatelessWidget {
 
 class _SignupScaffold extends StatelessWidget {
   final Widget child;
+  final bool scrollable;
 
-  const _SignupScaffold({required this.child});
+  const _SignupScaffold({required this.child, this.scrollable = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1449,16 +1451,27 @@ class _SignupScaffold extends StatelessWidget {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 720;
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: isWide ? 500 : double.infinity,
-                    ),
-                    child: child,
+              final content = Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: isWide ? 500 : double.infinity,
                   ),
+                  child: child,
                 ),
+              );
+
+              if (scrollable) {
+                return SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
+                  child: content,
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 28),
+                child: content,
               );
             },
           ),

@@ -7,8 +7,10 @@ class ShopAboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppThemeColors.of(context).background,
+      backgroundColor: themeColors.background,
       appBar: buildShopAppBar(context, title: 'Sobre o App'),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -30,18 +32,18 @@ class ShopAboutPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'DuckHat',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.darkAlt,
+                    color: themeColors.primaryText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Versão 1.0.0',
-                  style: TextStyle(color: AppColors.textMuted),
+                  style: TextStyle(color: themeColors.mutedText),
                 ),
               ],
             ),
@@ -58,7 +60,7 @@ class ShopAboutPage extends StatelessWidget {
           Center(
             child: Text(
               '© 2024 DuckHat. Todos os direitos reservados.',
-              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              style: TextStyle(fontSize: 12, color: themeColors.mutedText),
             ),
           ),
         ],
@@ -67,44 +69,51 @@ class ShopAboutPage extends StatelessWidget {
   }
 
   Widget _buildInfoSection(String label, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
-            ),
+    return Builder(
+      builder: (context) {
+        final themeColors = AppThemeColors.of(context);
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: buildShopCardDecorationFor(context, radius: 12),
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: themeColors.mutedText,
+                ),
+              ),
+              const Spacer(),
+              Text(value, style: TextStyle(color: themeColors.primaryText)),
+            ],
           ),
-          const Spacer(),
-          Text(value, style: const TextStyle(color: AppColors.darkAlt)),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildMenuItem(String title, VoidCallback onTap) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
-      child: ListTile(
-        onTap: onTap,
-        title: Text(title, style: const TextStyle(color: AppColors.darkAlt)),
-        trailing: Icon(Icons.chevron_right, color: AppColors.textMuted),
-      ),
+    return Builder(
+      builder: (context) {
+        final themeColors = AppThemeColors.of(context);
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: buildShopCardDecorationFor(context, radius: 12),
+          child: ListTile(
+            onTap: onTap,
+            title: Text(
+              title,
+              style: TextStyle(color: themeColors.primaryText),
+            ),
+            trailing: Icon(Icons.chevron_right, color: themeColors.mutedText),
+          ),
+        );
+      },
     );
   }
 }

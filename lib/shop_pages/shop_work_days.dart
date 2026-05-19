@@ -22,8 +22,10 @@ class _ShopWorkDaysPageState extends State<ShopWorkDaysPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppThemeColors.of(context).background,
+      backgroundColor: themeColors.background,
       appBar: buildShopAppBar(
         context,
         title: 'Dias de Funcionamento',
@@ -43,9 +45,9 @@ class _ShopWorkDaysPageState extends State<ShopWorkDaysPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
+          Text(
             'Selecione os dias que o estabelecimento funcionará',
-            style: TextStyle(color: AppColors.textMuted),
+            style: TextStyle(color: themeColors.mutedText),
           ),
           const SizedBox(height: 16),
           ..._days.entries.map(
@@ -57,33 +59,25 @@ class _ShopWorkDaysPageState extends State<ShopWorkDaysPage> {
   }
 
   Widget _buildDayTile(String day, bool isOpen) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: buildShopCardDecorationFor(context, radius: 12),
       child: SwitchListTile(
         value: isOpen,
         onChanged: (value) => setState(() => _days[day] = value),
         title: Text(
           day,
           style: TextStyle(
-            color: isOpen ? AppColors.darkAlt : AppColors.textMuted,
+            color: isOpen ? themeColors.primaryText : themeColors.mutedText,
             fontWeight: FontWeight.w500,
           ),
         ),
-        activeThumbColor: AppColors.accent,
+        activeThumbColor: themeColors.accent,
         secondary: Icon(
           isOpen ? Icons.check_circle : Icons.cancel,
-          color: isOpen ? AppColors.success : AppColors.textMuted,
+          color: isOpen ? AppColors.success : themeColors.mutedText,
         ),
       ),
     );

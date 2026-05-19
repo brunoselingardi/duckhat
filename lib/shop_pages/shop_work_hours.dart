@@ -15,8 +15,10 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppThemeColors.of(context).background,
+      backgroundColor: themeColors.background,
       appBar: buildShopAppBar(
         context,
         title: 'Horários de Serviço',
@@ -36,9 +38,9 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text(
+          Text(
             'Defina o horário de funcionamento do estabelecimento',
-            style: TextStyle(color: AppColors.textMuted),
+            style: TextStyle(color: themeColors.mutedText),
           ),
           const SizedBox(height: 24),
           _buildTimeSelector(
@@ -64,28 +66,20 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
     TimeOfDay time,
     Function(TimeOfDay) onChanged,
   ) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      decoration: buildShopCardDecorationFor(context, radius: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: AppColors.darkAlt,
+              color: themeColors.primaryText,
             ),
           ),
           OutlinedButton(
@@ -100,10 +94,10 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
             },
             child: Text(
               '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppColors.accent,
+                color: themeColors.accent,
               ),
             ),
           ),
@@ -113,6 +107,7 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
   }
 
   Widget _buildInfoCard() {
+    final themeColors = AppThemeColors.of(context);
     final hours = _endTime.hour - _startTime.hour;
     return Container(
       padding: const EdgeInsets.all(16),
@@ -122,12 +117,12 @@ class _ShopWorkHoursPageState extends State<ShopWorkHoursPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: AppColors.accent),
+          Icon(Icons.info_outline, color: themeColors.accent),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Horário de funcionamento: $hours horas por dia (${_startTime.hour}:00 às ${_endTime.hour}:00)',
-              style: TextStyle(color: AppColors.textMuted),
+              style: TextStyle(color: themeColors.secondaryText),
             ),
           ),
         ],

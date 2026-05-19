@@ -6,26 +6,28 @@ class ShopPlaceholderPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Scaffold(
-      backgroundColor: AppThemeColors.of(context).background,
+      backgroundColor: themeColors.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.storefront, size: 80, color: AppColors.accent),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Shop Version',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: AppColors.darkAlt,
+                color: themeColors.primaryText,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Em desenvolvimento...',
-              style: TextStyle(fontSize: 16, color: AppColors.grayField),
+              style: TextStyle(fontSize: 16, color: themeColors.mutedText),
             ),
           ],
         ),
