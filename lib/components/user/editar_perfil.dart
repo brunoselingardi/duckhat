@@ -396,13 +396,17 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.30 : 0.18,
+            ),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -417,17 +421,17 @@ class _EditarPerfilPageState extends State<EditarPerfilPage> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          labelStyle: const TextStyle(color: AppColors.textMuted),
+          labelStyle: TextStyle(color: themeColors.mutedText),
           hintStyle: TextStyle(
-            color: AppColors.textMuted.withValues(alpha: 0.5),
+            color: themeColors.mutedText.withValues(alpha: 0.7),
           ),
-          prefixIcon: Icon(icon, color: AppColors.accent),
+          prefixIcon: Icon(icon, color: themeColors.accent),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
           filled: true,
-          fillColor: AppColors.cardBackground,
+          fillColor: themeColors.surface,
         ),
       ),
     );

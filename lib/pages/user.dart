@@ -3,6 +3,7 @@ import 'package:duckhat/components/user/configuracoes.dart';
 import 'package:duckhat/components/user/editar_perfil.dart';
 import 'package:duckhat/components/user/notificacoes.dart';
 import 'package:duckhat/components/user/seguranca.dart';
+import 'package:duckhat/components/shared/profile_avatar.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/pages/login.dart';
 import 'package:duckhat/pages/signup.dart';
@@ -55,6 +56,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     nome: session.nome,
                     email: session.email,
                     tipo: session.tipo,
+                    fotoPerfilBase64: session.fotoPerfilBase64,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -269,11 +271,13 @@ class _LoggedProfileHeader extends StatelessWidget {
   final String nome;
   final String email;
   final String tipo;
+  final String? fotoPerfilBase64;
 
   const _LoggedProfileHeader({
     required this.nome,
     required this.email,
     required this.tipo,
+    required this.fotoPerfilBase64,
   });
 
   @override
@@ -386,8 +390,10 @@ class _LoggedProfileHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipOval(
-                  child: Image.asset('assets/logologo.png', fit: BoxFit.cover),
+                child: ProfileAvatar(
+                  name: nome,
+                  imageBase64: fotoPerfilBase64,
+                  size: 108,
                 ),
               ),
             ),

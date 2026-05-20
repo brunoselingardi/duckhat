@@ -31,21 +31,22 @@ Fluxos principais já integrados com API:
 
 - Login real por tipo de conta: cliente ou prestador.
 - Cadastro de cliente e estabelecimento.
-- Edição de perfil do cliente.
-- Edição da vitrine pública do estabelecimento.
+- Edição de perfil do cliente, incluindo foto de perfil em Base64 exibida no perfil e no chat.
+- Edição da vitrine pública do estabelecimento, incluindo banner e foto/logo de perfil.
 - Cadastro e edição de serviços/preços do estabelecimento.
 - Busca por categoria, termo, endereço, CEP ou localização atual.
 - Página pública do estabelecimento com dados reais do catálogo.
-- Chat entre cliente e prestador.
+- Chat entre cliente e prestador, com foto do outro participante na lista e na conversa.
 - Agendamento com serviço, data, horário e disponibilidade.
 - Agenda do cliente e agenda do estabelecimento.
 - Notificações e preferências de notificação.
 - Recuperação de senha via API.
+- Tema claro/escuro aplicado nos fluxos principais e hotspots de cards/formulários.
 
 Conteúdos ainda tratados como fase futura ou fallback controlado:
 
 - Galeria, avaliações e FAQ reais do estabelecimento.
-- Estratégia definitiva de upload/armazenamento de imagens.
+- Storage externo definitivo para imagens; hoje o fluxo funcional usa Base64 persistido no banco.
 - Favoritos persistidos no backend.
 
 ## Requisitos

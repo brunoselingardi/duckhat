@@ -101,16 +101,28 @@ class ShopAboutPage extends StatelessWidget {
       builder: (context) {
         final themeColors = AppThemeColors.of(context);
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
-          decoration: buildShopCardDecorationFor(context, radius: 12),
-          child: ListTile(
-            onTap: onTap,
-            title: Text(
-              title,
-              style: TextStyle(color: themeColors.primaryText),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Material(
+            color: themeColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: themeColors.border),
             ),
-            trailing: Icon(Icons.chevron_right, color: themeColors.mutedText),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onTap,
+              child: ListTile(
+                title: Text(
+                  title,
+                  style: TextStyle(color: themeColors.primaryText),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: themeColors.mutedText,
+                ),
+              ),
+            ),
           ),
         );
       },

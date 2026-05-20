@@ -699,16 +699,18 @@ class _ShopAppointmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusColor = _statusColor(agendamento.status);
+    final themeColors = AppThemeColors.of(context);
 
     return Material(
-      color: AppColors.cardBackground,
+      color: themeColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Container(
           padding: const EdgeInsets.all(14),
-          decoration: buildShopCardDecoration(
+          decoration: buildShopCardDecorationFor(
+            context,
             radius: 18,
             borderColor: statusColor.withValues(alpha: 0.16),
           ),
@@ -722,7 +724,7 @@ class _ShopAppointmentCard extends StatelessWidget {
                     width: 62,
                     height: 62,
                     decoration: BoxDecoration(
-                      color: AppColors.inputBackground,
+                      color: themeColors.inputFill,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     alignment: Alignment.center,

@@ -38,9 +38,12 @@ database/
 │   ├── V10__default_provider_availability.sql
 │   ├── V11__establishment_category.sql
 │   ├── V12__password_reset_token_hash.sql
-│   └── V13__establishment_profile_image.sql
+│   ├── V13__establishment_profile_image.sql
+│   └── V14__user_profile_image.sql
 ├── seed/
-│   └── 001_seed_dev.sql
+│   ├── 001_seed_dev.sql
+│   ├── 002_seed_barbie_services.sql
+│   └── 003_seed_plumbing_provider.sql
 ├── compose.yaml
 ├── .env.example
 └── README_DATABASE_WORKFLOW.md
@@ -93,8 +96,17 @@ Aumenta `recuperacao_senha_tokens.codigo` para armazenar hash do código de recu
 ### `migrations/V13__establishment_profile_image.sql`
 Adiciona foto/logo de perfil em Base64 para a vitrine pública do estabelecimento.
 
+### `migrations/V14__user_profile_image.sql`
+Adiciona foto de perfil em Base64 para clientes em `usuarios`.
+
 ### `seed/001_seed_dev.sql`
 Carga opcional de dados de desenvolvimento.
+
+### `seed/002_seed_barbie_services.sql`
+Carga incremental para serviços da Barbie Dream Barber.
+
+### `seed/003_seed_plumbing_provider.sql`
+Carga incremental para o prestador Jorje Encanamentos.
 
 Todos os usuários do seed usam a senha:
 
@@ -130,6 +142,12 @@ docker compose -f database/compose.yaml --env-file database/.env up -d
 ```bash
 docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
   mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/001_seed_dev.sql
+
+docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/002_seed_barbie_services.sql
+
+docker compose -f database/compose.yaml --env-file database/.env exec -T mysql \
+  mysql -u duckhat_user -pduckhat_pass duckhat < database/seed/003_seed_plumbing_provider.sql
 ```
 
 ## Fluxo recomendado para banco local já existente
@@ -162,7 +180,8 @@ Confira se existem estas tabelas:
 
 Confira também estes pontos:
 - `usuarios.email` único
-- `usuarios.data_nascimento` e `usuarios.endereco` existem para o perfil real
+- `usuarios.data_nascimento`, `usuarios.endereco` e `usuarios.foto_perfil_base64` existem para o perfil real
+- `estabelecimentos.banner_imagem_base64` e `estabelecimentos.foto_perfil_base64` existem para a vitrine pública
 - `servicos.prestador_id` apontando para `usuarios.id`
 - `agendamentos` com colunas `cliente_id`, `prestador_id`, `servico_id`, `inicio_at`, `fim_at`, `status`
 - `avaliacoes.agendamento_id` único

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import 'package:duckhat/theme.dart';
 
@@ -18,7 +19,7 @@ class DemoHomePage extends StatelessWidget {
         body: SafeArea(
           child: ListView(
             key: const PageStorageKey('home-scroll'),
-            cacheExtent: 500,
+            scrollCacheExtent: const ScrollCacheExtent.pixels(500),
             children: [
               _buildHeader(username),
               const SizedBox(height: 10),

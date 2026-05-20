@@ -8,6 +8,7 @@ import 'package:duckhat/pages/search.dart';
 import 'package:duckhat/services/duckhat_api.dart';
 import 'package:duckhat/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 
 class Home extends StatefulWidget {
@@ -161,7 +162,7 @@ class _HomeState extends State<Home> {
             color: AppColors.accent,
             child: ListView(
               key: const PageStorageKey('home-scroll'),
-              cacheExtent: 500,
+              scrollCacheExtent: const ScrollCacheExtent.pixels(500),
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 HomeHeader(username: username),

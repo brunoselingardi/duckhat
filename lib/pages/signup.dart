@@ -656,6 +656,7 @@ class _BusinessCategoryStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
     final categories = EstablishmentCategory.categories
         .where((category) => category.matches(queryController.text))
         .toList();
@@ -674,20 +675,20 @@ class _BusinessCategoryStep extends StatelessWidget {
           textInputAction: TextInputAction.search,
           decoration: InputDecoration(
             hintText: 'Buscar categoria',
-            prefixIcon: const Icon(Icons.search, color: AppColors.accent),
+            prefixIcon: Icon(Icons.search, color: themeColors.accent),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: themeColors.inputFill,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: themeColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.accent, width: 2),
+              borderSide: BorderSide(color: themeColors.accent, width: 2),
             ),
           ),
         ),
@@ -1047,17 +1048,21 @@ class _SignupServiceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.border),
-        boxShadow: const [
+        border: Border.all(color: themeColors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x10000000),
+            color: themeColors.shadow.withValues(
+              alpha: themeColors.isDark ? 0.30 : 0.10,
+            ),
             blurRadius: 18,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -1237,13 +1242,15 @@ class _DurationStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: themeColors.border),
       ),
       child: Row(
         children: [
@@ -1561,8 +1568,10 @@ class _ChoiceButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Material(
-      color: Colors.white,
+      color: themeColors.surface,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -1571,7 +1580,7 @@ class _ChoiceButton extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: themeColors.border),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x0F000000),
@@ -1638,6 +1647,8 @@ class _AvatarPickerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Material(
       color: Colors.transparent,
       shape: const CircleBorder(),
@@ -1649,8 +1660,8 @@ class _AvatarPickerButton extends StatelessWidget {
           height: 126,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white,
-            border: Border.all(color: AppColors.border, width: 1.5),
+            color: themeColors.surface,
+            border: Border.all(color: themeColors.border, width: 1.5),
             image: image == null
                 ? null
                 : DecorationImage(image: FileImage(image!), fit: BoxFit.cover),
@@ -1712,6 +1723,8 @@ class _BannerPickerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Material(
       color: Colors.transparent,
       borderRadius: BorderRadius.circular(22),
@@ -1721,17 +1734,19 @@ class _BannerPickerButton extends StatelessWidget {
         child: Ink(
           height: 166,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: themeColors.surface,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border, width: 1.5),
+            border: Border.all(color: themeColors.border, width: 1.5),
             image: image == null
                 ? null
                 : DecorationImage(image: FileImage(image!), fit: BoxFit.cover),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                color: Color(0x18000000),
+                color: themeColors.shadow.withValues(
+                  alpha: themeColors.isDark ? 0.30 : 0.12,
+                ),
                 blurRadius: 18,
-                offset: Offset(0, 10),
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -1882,6 +1897,8 @@ class _SignupTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -1891,17 +1908,17 @@ class _SignupTextField extends StatelessWidget {
       onFieldSubmitted: onSubmitted,
       inputFormatters: inputFormatters,
       validator: validator,
-      style: const TextStyle(
-        color: AppColors.textBold,
+      style: TextStyle(
+        color: themeColors.primaryText,
         fontWeight: FontWeight.w600,
       ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        prefixIcon: Icon(icon, color: AppColors.accent),
+        prefixIcon: Icon(icon, color: themeColors.accent),
         suffixIcon: suffix,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: themeColors.inputFill,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 18,
@@ -1912,11 +1929,11 @@ class _SignupTextField extends StatelessWidget {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: themeColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.accent, width: 2),
+          borderSide: BorderSide(color: themeColors.accent, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

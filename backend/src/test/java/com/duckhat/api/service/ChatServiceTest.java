@@ -46,6 +46,7 @@ class ChatServiceTest {
   @Test
   void listarConversasComoPrestadorRetornaClientesEUltimaMensagemEmLote() {
     Usuario cliente = usuario(1L, "Cliente", TipoUsuario.CLIENTE);
+    cliente.setFotoPerfilBase64("foto-cliente");
     Usuario prestador = usuario(2L, "Barbearia", TipoUsuario.PRESTADOR);
     ChatConversa conversa = conversa(10L, cliente, prestador);
     ChatMensagem ultimaMensagem = mensagem(30L, conversa, cliente, "Ainda tem horario hoje?");
@@ -62,7 +63,7 @@ class ChatServiceTest {
     assertEquals(1, responses.size());
     assertEquals(1L, responses.get(0).participanteId());
     assertEquals("Cliente", responses.get(0).participanteNome());
-    assertEquals(null, responses.get(0).participanteFotoPerfilBase64());
+    assertEquals("foto-cliente", responses.get(0).participanteFotoPerfilBase64());
     assertEquals("Ainda tem horario hoje?", responses.get(0).ultimaMensagem());
     verify(mensagemRepository, never()).findFirstByConversaIdOrderByCriadoEmDescIdDesc(10L);
   }

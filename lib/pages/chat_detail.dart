@@ -1,3 +1,4 @@
+import 'package:duckhat/components/shared/profile_avatar.dart';
 import 'package:duckhat/models/chat_mensagem.dart';
 import 'package:duckhat/services/chat_notification_service.dart';
 import 'package:duckhat/services/duckhat_api.dart';
@@ -7,11 +8,13 @@ import 'package:flutter/material.dart';
 class ChatDetailPage extends StatefulWidget {
   final int conversaId;
   final String participanteNome;
+  final String? participanteFotoPerfilBase64;
 
   const ChatDetailPage({
     super.key,
     required this.conversaId,
     required this.participanteNome,
+    this.participanteFotoPerfilBase64,
   });
 
   @override
@@ -123,13 +126,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         onPressed: () => Navigator.pop(context),
         tooltip: 'Voltar',
       ),
-      title: Text(
-        widget.participanteNome,
-        style: TextStyle(
-          color: themeColors.primaryText,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+      titleSpacing: 0,
+      title: Row(
+        children: [
+          ProfileAvatar(
+            name: widget.participanteNome,
+            imageBase64: widget.participanteFotoPerfilBase64,
+            size: 36,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              widget.participanteNome,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: themeColors.primaryText,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
       actions: [
         IconButton(

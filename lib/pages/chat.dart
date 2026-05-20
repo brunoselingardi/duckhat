@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:duckhat/components/shared/profile_avatar.dart';
 import 'package:duckhat/core/app_route.dart';
 import 'package:duckhat/models/chat_conversa.dart';
 import 'package:duckhat/pages/chat_detail.dart';
@@ -87,6 +86,7 @@ class _ChatPageState extends State<ChatPage> {
         builder: (context) => ChatDetailPage(
           conversaId: conversa.id,
           participanteNome: conversa.participanteNome,
+          participanteFotoPerfilBase64: conversa.participanteFotoPerfilBase64,
         ),
       ),
     );
@@ -297,44 +297,11 @@ class _ConversationAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget child;
-    final value = imageBase64?.trim();
-    if (value != null && value.isNotEmpty) {
-      try {
-        child = Image.memory(
-          base64Decode(value),
-          fit: BoxFit.cover,
-          gaplessPlayback: true,
-        );
-      } on FormatException {
-        child = _initial();
-      }
-    } else {
-      child = _initial();
-    }
-
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        color: AppColors.accentLight.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: child,
-    );
-  }
-
-  Widget _initial() {
-    return Center(
-      child: Text(
-        name.isEmpty ? '?' : name[0].toUpperCase(),
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: AppColors.accent,
-        ),
-      ),
+    return ProfileAvatar(
+      name: name,
+      imageBase64: imageBase64,
+      size: 56,
+      borderRadius: 12,
     );
   }
 }

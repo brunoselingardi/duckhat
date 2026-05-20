@@ -71,7 +71,11 @@ public class ChatService {
             prestador(usuario, participante).getId())
         .orElseGet(() -> criarConversa(usuario, participante));
 
-    return toConversaResponse(conversa, usuario, buscarUltimaMensagem(conversa), buscarFotosPerfilPorPrestador(List.of(conversa)));
+    return toConversaResponse(
+        conversa,
+        usuario,
+        buscarUltimaMensagem(conversa),
+        buscarFotosPerfilPorParticipante(List.of(conversa), usuario));
   }
 
   @Transactional(readOnly = true)
@@ -82,7 +86,7 @@ public class ChatService {
     };
 
     Map<Long, ChatMensagem> ultimasMensagens = buscarUltimasMensagens(conversas);
-    Map<Long, String> fotosPerfil = buscarFotosPerfilPorPrestador(conversas);
+    Map<Long, String> fotosPerfil = buscarFotosPerfilPorParticipante(conversas, usuario);
 
     return conversas.stream()
         .map(conversa -> toConversaResponse(
@@ -178,11 +182,12 @@ public class ChatService {
       ChatConversa conversa,
       Usuario usuario,
       ChatMensagem ultimaMensagem,
-      Map<Long, String> fotosPerfilPorPrestador) {
+      Map<Long, String> fotosPerfilPorParticipante) {
     boolean usuarioEhCliente = conversa.getCliente().getId().equals(usuario.getId());
-    String participanteFotoPerfilBase64 = usuarioEhCliente
-        ? fotosPerfilPorPrestador.get(conversa.getPrestador().getId())
-        : null;
+    Long participanteId = usuarioEhCliente
+        ? conversa.getPrestador().getId()
+        : conversa.getCliente().getId();
+    String participanteFotoPerfilBase64 = fotosPerfilPorParticipante.get(participanteId);
     return ChatConversaResponse.fromEntity(
         conversa,
         usuario,
@@ -212,16 +217,25 @@ public class ChatService {
             Function.identity()));
   }
 
-  private Map<Long, String> buscarFotosPerfilPorPrestador(List<ChatConversa> conversas) {
+  private Map<Long, String> buscarFotosPerfilPorParticipante(List<ChatConversa> conversas, Usuario usuario) {
     if (conversas.isEmpty()) {
       return Collections.emptyMap();
+    }
+
+    if (usuario.getTipo() == TipoUsuario.PRESTADOR) {
+      return conversas.stream()
+          .map(ChatConversa::getCliente)
+          .filter(cliente -> cliente.getFotoPerfilBase64() != null)
+          .collect(Collectors.toMap(
+              Usuario::getId,
+              Usuario::getFotoPerfilBase64,
+              (fotoExistente, fotoNova) -> fotoExistente));
     }
 
     List<Long> prestadorIds = conversas.stream()
         .map(conversa -> conversa.getPrestador().getId())
         .distinct()
         .toList();
-
     return estabelecimentoRepository.findByUsuarioIdIn(prestadorIds)
         .stream()
         .filter(estabelecimento -> estabelecimento.getFotoPerfilBase64() != null)

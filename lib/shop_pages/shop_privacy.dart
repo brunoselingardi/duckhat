@@ -190,55 +190,68 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
     bool value,
     ValueChanged<bool> onChanged,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.visibility_outlined,
-              color: AppColors.accent,
-              size: 21,
-            ),
+    return Builder(
+      builder: (context) {
+        final themeColors = AppThemeColors.of(context);
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: themeColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: themeColors.border),
+            boxShadow: buildShopCardDecorationFor(
+              context,
+              radius: 12,
+            ).boxShadow,
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.darkAlt,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                child: const Icon(
+                  Icons.visibility_outlined,
+                  color: AppColors.accent,
+                  size: 21,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: themeColors.primaryText,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: themeColors.mutedText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: value,
+                onChanged: onChanged,
+                activeThumbColor: AppColors.accent,
+              ),
+            ],
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.accent,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -251,44 +264,60 @@ class _ShopPrivacyPageState extends State<ShopPrivacyPage> {
     Widget? trailing,
   }) {
     final color = isDestructive ? AppColors.error : AppColors.accent;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: buildShopCardDecoration(radius: 12).boxShadow,
-      ),
-      child: ListTile(
-        onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        leading: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
+    return Builder(
+      builder: (context) {
+        final themeColors = AppThemeColors.of(context);
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Material(
+            color: themeColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: themeColors.border),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: onTap,
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                leading: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: color, size: 21),
+                ),
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    color: isDestructive
+                        ? AppColors.error
+                        : themeColors.primaryText,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                subtitle: Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: themeColors.mutedText,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing:
+                    trailing ??
+                    Icon(Icons.chevron_right, color: themeColors.mutedText),
+              ),
+            ),
           ),
-          child: Icon(icon, color: color, size: 21),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isDestructive ? AppColors.error : AppColors.darkAlt,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing:
-            trailing ??
-            const Icon(Icons.chevron_right, color: AppColors.textMuted),
-      ),
+        );
+      },
     );
   }
 

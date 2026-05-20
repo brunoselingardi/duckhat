@@ -39,12 +39,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - home visual com header, busca, banner promocional, rebook e agendamentos do dia
   - card de busca abre `SearchPage`
   - cards de rebook abrem `ServicePage` com o `prestadorId` do agendamento/favorito quando disponivel
-  - CTA `Ver promoções` abre `PromotionsPage`, uma curadoria local que direciona para a busca real
+  - banner promocional direciona o usuario para a busca real quando acionado
   - secao de agendamentos do dia usa agendamentos reais do cliente autenticado
-- `lib/pages/promotions.dart`
-  - curadoria local de categorias promocionais, sem inventario persistido no backend
-  - CTAs abrem a busca real para o usuario encontrar estabelecimentos e horarios disponiveis
-  - nao representa descontos persistidos ou estoque real de ofertas
 - `lib/pages/search.dart`
   - tela de busca com filtros, campo de texto, localizacao, sugestoes e recentes
   - botao voltar retorna para a tela anterior
@@ -108,11 +104,13 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - possui estados de carregamento, erro, envio e avaliacao ja enviada
 - `lib/pages/chat.dart`
   - lista conversas reais do usuario autenticado pela API
+  - exibe foto de perfil do outro participante quando a API retorna Base64
   - possui busca local por nome do participante ou ultima mensagem
   - possui refresh manual e pull-to-refresh
   - toque em conversa abre `ChatDetailPage`
 - `lib/pages/chat_detail.dart`
   - tela real de conversa
+  - app bar mostra nome e foto do participante da conversa
   - botao voltar retorna
   - botao atualizar recarrega mensagens
   - lista mensagens da conversa pela API
@@ -120,9 +118,8 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/pages/user.dart`
   - hub do perfil
   - quando nao ha sessao autenticada, mostra tela visitante com CTA de cadastro/login e imagem `assets/patrick.jpg`
-  - quando ha sessao, atualiza a sessao local com `GET /api/me` e mostra nome/e-mail reais
+  - quando ha sessao, atualiza a sessao local com `GET /api/me` e mostra nome/e-mail/foto reais
   - abre subpaginas de editar perfil, notificacoes, seguranca, configuracoes e ajuda
-  - item `Minhas Localizações` exibe `SnackBar` de placeholder
   - `Sair` abre dialogo de confirmacao, limpa a sessao e retorna para `LoginPage`
 - `lib/pages/forgot_password.dart`
   - fluxo real de recuperacao em duas etapas
@@ -142,6 +139,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - para prestador, o fluxo possui etapas para categoria do estabelecimento, banner/nome, descricao da vitrine, servicos iniciais com descricao/preco/duracao, responsavel/contato e acesso
   - a categoria do estabelecimento e escolhida em uma lista pesquisavel com icones contextuais e passa a ser persistida em `estabelecimentos.categoria`
   - para prestador, cria usuario real, salva descricao/banner via `/api/me` e cadastra servicos iniciais via `/api/servicos`; o backend garante disponibilidade padrao de segunda a sexta para novos prestadores
+  - campos e cards principais seguem os tokens de tema para modo claro/escuro
 
 ## Componentes principais por area
 
@@ -155,6 +153,11 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_components/shop_ui.dart`
   - concentra helpers visuais reutilizados da area `shop_*`
   - padroniza app bar secundaria, sombra de card e `InputDecoration`
+- `lib/components/shared/profile_avatar.dart`
+  - avatar reutilizavel para foto de perfil em Base64
+  - usa `Image.memory` quando a imagem e valida e fallback com inicial do nome quando a foto esta ausente ou invalida
+- `lib/theme.dart`
+  - define tokens globais de cor, tema claro/escuro e `AppThemeColors` para surfaces, inputs, bordas e sombras dependentes do `BuildContext`
 
 ### Home
 
@@ -215,16 +218,18 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - formulario real de perfil com botao voltar e botao `Salvar`
   - carrega dados do usuario autenticado via `GET /api/me`
   - salva alteracoes no banco via `PUT /api/me`
-  - para cliente, edita nome, e-mail, telefone, data de nascimento e endereco
+  - para cliente, edita nome, e-mail, telefone, data de nascimento, endereco e foto de perfil em Base64
   - para prestador, tambem edita CNPJ e responsavel
   - campo de data de nascimento usa mascara automatica `DD/MM/AAAA` e valida data plausivel antes de enviar
   - valida e padroniza e-mail, telefone com DDD, data de nascimento plausivel e endereco com rua/numero antes de enviar
+  - campos usam tokens de tema para evitar cards claros no modo escuro
 - `lib/components/user/notificacoes.dart`
   - botao voltar
   - lista notificacoes reais do usuario autenticado
   - permite marcar uma notificacao como lida e marcar todas como lidas
   - carrega e salva preferencias reais de agendamentos, mensagens, promocoes, novidades e resumo por e-mail
   - possui estados de loading, erro, vazio e refresh integrado com API
+  - cards de notificacao e preferencias respeitam modo claro/escuro
 - `lib/components/user/seguranca.dart`
   - botao voltar
   - itens de senha, biometria, 2FA, privacidade e exclusao
@@ -251,6 +256,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - carrega `GET /api/agendamentos/prestador` e exibe cliente, servico, horario, status e observacoes reais
   - permite confirmar agendamentos pendentes e concluir agendamentos confirmados
   - possui estados de carregamento, erro, vazio, refresh e abre `AppointmentDetailPage`
+  - card de agendamento e badge de horario respeitam modo claro/escuro
 - `lib/shop_pages/shop_clients.dart`
   - aba de chat real do estabelecimento
   - reutiliza `ChatPage`, lista conversas reais da API e abre `ChatDetailPage` para responder clientes
@@ -264,6 +270,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - possui configuracoes locais de exposicao publica e atalhos de seguranca ainda demonstrativos
   - `Excluir minha conta` usa `DELETE /api/me`, remove sessao local e volta para `LoginPage`
   - para concluir exclusao, exige digitar o e-mail da conta do estabelecimento como verificacao destrutiva
+  - cards e itens de seguranca usam tokens de tema
   - telas locais/demo de galeria, horarios, notificacoes, privacidade, ajuda e sobre nao ficam mais expostas no menu principal
 - `lib/shop_pages/shop_establishment_data.dart`
   - formulario real de dados do estabelecimento
@@ -296,6 +303,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `lib/shop_pages/shop_about.dart`
   - informacoes mockadas sobre a experiencia de estabelecimento
   - nao fica exposta no menu principal do estabelecimento nesta fase
+  - itens informativos usam `Material`/`InkWell` com tokens de tema para evitar superficies claras no modo escuro
 
 ## Modelos
 
@@ -365,6 +373,7 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
 - `backend/src/main/java/com/duckhat/api/service/ChatService.java`
   - cria/busca conversa entre cliente e prestador
   - lista conversas e mensagens autorizadas por participante, com ultima mensagem carregada em lote
+  - retorna foto real do outro participante: foto do usuario cliente para prestador e foto do estabelecimento para cliente
   - envia mensagens e atualiza `ultima_mensagem_em`
   - gera notificacao real para o outro participante quando uma mensagem e enviada
   - limpa mensagens expiradas diariamente preservando a ultima mensagem por conversa e aplicando graca de 5 dias pela ultima atividade
@@ -396,14 +405,30 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cria `chat_conversas`, `chat_mensagens` e indices do chat real
 - `database/migrations/V6__notification_feed_and_preferences.sql`
   - evolui `notificacao_eventos` para feed por usuario e cria `notificacao_preferencias`
+- `database/migrations/V7__user_profile_fields.sql`
+  - adiciona campos de perfil real do usuario, como data de nascimento e endereco
+- `database/migrations/V8__establishment_profiles.sql`
+  - cria perfis persistidos de estabelecimento vinculados aos usuarios prestadores
+- `database/migrations/V8__public_provider_profile_fields.sql`
+  - migration legada para campos publicos do prestador
+- `database/migrations/V9__establishment_banner_image.sql`
+  - adiciona banner em Base64 para a vitrine publica do estabelecimento
+- `database/migrations/V10__default_provider_availability.sql`
+  - cria disponibilidade padrao para prestadores existentes
 - `database/migrations/V11__establishment_category.sql`
   - adiciona `estabelecimentos.categoria` e preenche categorias para registros existentes
 - `database/migrations/V12__password_reset_token_hash.sql`
   - aumenta a coluna do codigo de recuperacao para armazenar hash BCrypt em vez de codigo puro
+- `database/migrations/V13__establishment_profile_image.sql`
+  - adiciona `estabelecimentos.foto_perfil_base64`
+- `database/migrations/V14__user_profile_image.sql`
+  - adiciona `usuarios.foto_perfil_base64`
 - `database/seed/001_seed_dev.sql`
   - seed de desenvolvimento
 - `database/seed/002_seed_barbie_services.sql`
   - seed incremental dos servicos da Barbie Dream Barber
+- `database/seed/003_seed_plumbing_provider.sql`
+  - seed incremental do prestador Jorje Encanamentos
 
 ## Fluxos reais versus mockados
 
@@ -418,14 +443,15 @@ Leia este arquivo antes de revisar funcionalidades do DuckHat. Ele serve como in
   - cancelamento de agendamento
   - disponibilidade e ocupacao do prestador
   - chat entre cliente e prestador
+  - fotos de perfil em perfil e chat
   - notificacoes in-app e preferencias persistidas
   - avaliacao de agendamento concluido pelo cliente
   - categoria de estabelecimento no cadastro e na busca do catalogo publico
+  - tema claro/escuro nos fluxos principais de cards e formularios
 - Mockados ou locais
   - reviews e FAQ da pagina publica do estabelecimento
   - parte das subpaginas de perfil
-  - minhas localizacoes no perfil
-  - banner/promocoes como curadoria local sem backend dedicado
+  - banner/promocoes como atalho visual sem backend dedicado
 
 ## Regra de manutencao
 

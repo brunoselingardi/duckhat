@@ -356,6 +356,8 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _colorFor(notificacao.tipo);
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -367,13 +369,13 @@ class _NotificationTile extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: notificacao.lida
-                  ? AppColors.cardBackground
-                  : AppColors.accentLight.withValues(alpha: 0.18),
+                  ? themeColors.surface
+                  : themeColors.accentSoft,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: notificacao.lida
-                    ? AppColors.divider
-                    : AppColors.accent.withValues(alpha: 0.22),
+                    ? themeColors.border
+                    : themeColors.accent.withValues(alpha: 0.24),
               ),
             ),
             child: Row(
@@ -400,8 +402,8 @@ class _NotificationTile extends StatelessWidget {
                               notificacao.titulo,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColors.textBold,
+                              style: TextStyle(
+                                color: themeColors.primaryText,
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
                               ),
@@ -421,8 +423,8 @@ class _NotificationTile extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         notificacao.mensagem,
-                        style: const TextStyle(
-                          color: AppColors.textRegular,
+                        style: TextStyle(
+                          color: themeColors.secondaryText,
                           fontSize: 12,
                           height: 1.35,
                         ),
@@ -433,7 +435,7 @@ class _NotificationTile extends StatelessWidget {
                           notificacao.criadoEm ?? notificacao.agendadoPara,
                         ),
                         style: TextStyle(
-                          color: AppColors.textMuted.withValues(alpha: 0.9),
+                          color: themeColors.mutedText,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -498,13 +500,15 @@ class _PreferenceToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeColors = AppThemeColors.of(context);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: themeColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.divider),
+        border: Border.all(color: themeColors.border),
       ),
       child: Row(
         children: [
@@ -514,18 +518,18 @@ class _PreferenceToggle extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.darkAlt,
+                    color: themeColors.primaryText,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textRegular,
+                    color: themeColors.secondaryText,
                     height: 1.35,
                   ),
                 ),
